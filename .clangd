@@ -1,8 +1,0 @@
-CompileFlags:
-  Add: [-I/home/redgrain/Dev/Zeytin/runtime/include,
-        -I/home/redgrain/Dev/Zeytin/runtime/3rdparty/raylib/src,
-        -I/home/redgrain/Dev/Zeytin/runtime/3rdparty/rttr/build/install/include]
-
-Diagnostics:
-  Suppress:
-    - 'unused-include'
