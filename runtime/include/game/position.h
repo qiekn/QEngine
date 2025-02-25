@@ -9,7 +9,7 @@ struct Position final {
     int x;
     int y;
 
-    void print() {
+    void print() const {
         std::cout << "(" << x << "," << y << ")" << std::endl;
     }
 

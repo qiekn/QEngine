@@ -30,10 +30,11 @@ public:
         return true;
     }   
 
-    template<typename T>
-    component_list& query() {
-        return component_store.get_component_list_unsafe<T>();
+    template<typename... Ts>
+    auto query() {
+        return std::tie(component_store.get_component_list_unsafe<Ts>()...);
     }
+
 
 private:
     ComponentStore component_store;

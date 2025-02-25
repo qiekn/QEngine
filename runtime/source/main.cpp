@@ -16,9 +16,18 @@ int main() {
     registery.add_component<Position>(entity, 30, 40);
     registery.add_component<Position>(entity, 60, 70);
 
-    auto& l = registery.query<Position>();
-    for(auto& component : l) {
-        auto& position = component.get<Position>();
+    auto&& [position1, position2] = registery.query<Position, Position>();
+
+
+    for(auto& position_component : position1) {
+        auto& position = position_component.get<Position>();
+        position.x = 31;
+        position.y = 31;
+    }
+
+    for(const auto& position_component : position2) {
+        const auto& position = position_component.get<Position>();
         position.print();
     }
+
 }

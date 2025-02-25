@@ -8,6 +8,11 @@ struct Component final {
     Entity entity;
     
     template<typename T>
+    const T& get() const {
+        return var.get_value<T>();
+    }
+
+    template<typename T>
     T& get() {
         return var.get_value<T>();
     }
