@@ -1,22 +1,24 @@
-#include <iostream>
-#include "rttr/registration.h"
+#include "game/register.h"
 
+#include "ecs/registery.h"
+#include "ecs/internal/entity.h"
+#include "ecs/internal/component_store.h"
 
-struct MyStruct { MyStruct() {}; void func(double) {}; int data; };
+#include "game/position.h"
 
-RTTR_REGISTRATION
-{
-    rttr::registration::class_<MyStruct>("MyStruct")
-         .constructor<>()
-         .property("data", &MyStruct::data)
-         .method("func", &MyStruct::func);
-}
 
 int main() {
-    rttr::type t = rttr::type::get<MyStruct>();
-    for (auto& prop : t.get_properties())
-        std::cout << "name: " << prop.get_name();
+    Registery registery;
+    
+    Entity entity(1);
 
-    for (auto& meth : t.get_methods())
-        std::cout << "name: " << meth.get_name();
+    registery.add_component<Position>(entity, 10, 20);
+    registery.add_component<Position>(entity, 30, 40);
+    registery.add_component<Position>(entity, 60, 70);
+
+    auto& l = registery.query<Position>();
+    for(auto& component : l) {
+        auto& position = component.get<Position>();
+        position.print();
+    }
 }
