@@ -1,41 +1,45 @@
 #pragma once
 
-#include "ecs/internal/component_store.h"
-#include "ecs/internal/component.h"
-#include "ecs/entity.h"
-
 #include <iostream>
 #include <cassert>
+
+#include "ecs/internal/component.h"
+#include "ecs/internal/entity.h"
+
+using component_list = std::vector<Component>;
 
 class Registery {
 
 public:
-    Registery();
+    Registery(const Registery&) = delete;
+    Registery& operator=(const Registery&) = delete;
 
-    template<typename T, typename... Args>
-        bool add_component(Entity entity, Args&&... args) {
-        T t(std::forward<Args>(args)...);
-
-        rttr::variant var(std::move(t));
-        assert(var.is_valid());
-
-
-        Component component = {
-            .var = var,
-            .entity = entity
-        };
-
-        component_store.add(std::move(component));
-
-        return true;
-    }   
-
-    template<typename... Ts>
-    auto query() {
-        return std::tie(component_store.get_component_list_unsafe<Ts>()...);
+    static Registery& singleton() {
+        static Registery registery;
+        return registery;
     }
 
+    void add_component(const entity_id&, Component);
+
+    inline component_list& get_component_list(const entity_id& entity) {
+        assert(m_storage.find(entity) != m_storage.end());
+        return m_storage[entity];
+    }
+
+    template<typename T>
+    T& get_first(const entity_id& entity) {
+        assert(m_storage.find(entity) != m_storage.end());
+        const auto& rttr_type = rttr::type::get<T>();
+        auto& component_list = m_storage[entity];
+        for(auto& component : component_list) {
+            if(component.var.get_type() == rttr_type) {
+                return component.get<T>();
+            }
+        }
+    }
 
 private:
-    ComponentStore component_store;
+    Registery() {}
+
+    std::unordered_map<entity_id, component_list> m_storage;
 };

@@ -2,15 +2,19 @@
 
 #include <cstdint>
 
-using Entity = uint16_t;
-static uint32_t entity_count = 0;
+using entity_id = uint16_t;
 
-namespace entity {
-    Entity new_entity();
+#include "ecs/registery.h"
 
-    template<class T>
-        bool add_component(const Entity entity) {
 
-        }
+class Entity final {
 
-}
+public:
+    inline Entity(entity_id id) : id(id) {}
+
+    entity_id id;
+
+    operator entity_id() const {
+        return id;
+    }
+};

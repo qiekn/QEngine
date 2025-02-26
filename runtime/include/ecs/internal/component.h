@@ -1,11 +1,9 @@
 #pragma once
 
 #include "rttr/variant.h"
-#include "entity.h"
 
 struct Component final {
     rttr::variant var;
-    Entity entity;
     
     template<typename T>
     const T& get() const {
@@ -15,6 +13,14 @@ struct Component final {
     template<typename T>
     T& get() {
         return var.get_value<T>();
+    }
+
+    template<typename T, typename... Args>
+    static Component from_type(Args&&... args) {
+        rttr::variant var(std::move(T(std::forward<Args>(args)...)));
+        return {
+            .var = var
+        };
     }
 
 };
