@@ -12,10 +12,6 @@ struct Component final {
 
     template<typename T>
     T& get() {
-        if(var.get_type().is_pointer()) {
-            return *var.get_value<T*>();
-        }
-
         return var.get_value<T>();
     }
 

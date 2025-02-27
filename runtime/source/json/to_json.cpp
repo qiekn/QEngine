@@ -261,5 +261,18 @@ namespace json
 
         return buffer.GetString();
     }
+
+    void create_dummy(const rttr::type& type) {
+        rttr::variant var = type.create();
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+
+        to_json_recursively(var, writer);
+
+        std::ofstream out("test.dummy");
+        out << buffer.GetString();
+        out.close();
+    }
 }
 

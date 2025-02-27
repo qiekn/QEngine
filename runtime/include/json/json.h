@@ -7,7 +7,8 @@
 namespace json
 {
     std::string to(rttr::instance obj, const std::string& path);
-    bool from(const std::string& json, rttr::instance obj);
-    rttr::type get_type(const std::string& json);
+    rttr::variant from(const std::string& json_as_string);
+    rttr::variant from(const std::filesystem::path& path_to_json);
+    void create_dummy(const rttr::type& type);
 }
 

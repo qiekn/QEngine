@@ -10,6 +10,8 @@ using entity_id = uint16_t;
 class Entity final {
 
 public:
+    Entity() {}
+
     inline Entity(entity_id id) : id(id) {}
 
     entity_id id;

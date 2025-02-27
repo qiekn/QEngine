@@ -252,16 +252,21 @@ rttr::variant from(const std::string& json)
     rttr::variant obj = rttr_type.get_constructor().invoke();
     assert(obj.is_valid());
 
-    std::cout << "from(...)" << std::endl;
-    std::cout << rttr_type.get_name() << std::endl;
-    std::cout << value_as_string(value) << std::endl;
-    std::cout << obj.get_type().get_name() << std::endl;
-    std::cout << "-------------------" << std::endl;
-
     from_internal(value_as_string(value), obj);
 
-
     return obj;
+}
+
+rttr::variant from(const std::filesystem::path& json_path)
+{
+    std::ifstream file(json_path);
+    assert(file.is_open());
+
+    std::string json_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    file.close();
+
+    return from(json_content);
 }
 
 } 
