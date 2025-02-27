@@ -49,6 +49,8 @@ endif
 OBJECTS := \
 	$(OBJDIR)/entity.o \
 	$(OBJDIR)/registery.o \
+	$(OBJDIR)/from_json.o \
+	$(OBJDIR)/to_json.o \
 	$(OBJDIR)/main.o \
 
 RESOURCES := \
@@ -112,6 +114,12 @@ $(OBJDIR)/entity.o: ../source/ecs/internal/entity.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/registery.o: ../source/ecs/registery.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/from_json.o: ../source/json/from_json.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/to_json.o: ../source/json/to_json.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: ../source/main.cpp

@@ -14,6 +14,10 @@ public:
 
     entity_id id;
 
+#if DEBUG
+    std::string name;
+#endif
+
     operator entity_id() const {
         return id;
     }

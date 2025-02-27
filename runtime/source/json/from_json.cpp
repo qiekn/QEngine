@@ -1,0 +1,267 @@
+#include <cstdio>
+#include <string>
+#include <cassert>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+
+#define RAPIDJSON_HAS_STDSTRING 1
+#include <rapidjson/prettywriter.h> 
+#include <rapidjson/document.h>     
+#include <rttr/type>
+
+
+using namespace rapidjson;
+using namespace rttr;
+
+
+namespace
+{
+
+
+void fromjson_recursively(instance obj, Value& json_object);
+
+
+variant extract_basic_types(Value& json_value)
+{
+    switch(json_value.GetType())
+    {
+        case kStringType:
+        {
+            return std::string(json_value.GetString());
+            break;
+        }
+        case kNullType:     break;
+        case kFalseType:
+        case kTrueType:
+        {
+            return json_value.GetBool();
+            break;
+        }
+        case kNumberType:
+        {
+            if (json_value.IsInt())
+                return json_value.GetInt();
+            else if (json_value.IsDouble())
+                return json_value.GetDouble();
+            else if (json_value.IsUint())
+                return json_value.GetUint();
+            else if (json_value.IsInt64())
+                return json_value.GetInt64();
+            else if (json_value.IsUint64())
+                return json_value.GetUint64();
+            break;
+        }
+        // we handle only the basic types here
+        case kObjectType:
+        case kArrayType: return variant();
+    }
+
+    return variant();
+}
+
+
+static void write_array_recursively(variant_sequential_view& view, Value& json_array_value)
+{
+    view.set_size(json_array_value.Size());
+    const type array_value_type = view.get_rank_type(1);
+
+    for (SizeType i = 0; i < json_array_value.Size(); ++i)
+    {
+        auto& json_index_value = json_array_value[i];
+        if (json_index_value.IsArray())
+        {
+            auto sub_array_view = view.get_value(i).create_sequential_view();
+            write_array_recursively(sub_array_view, json_index_value);
+        }
+        else if (json_index_value.IsObject())
+        {
+            variant var_tmp = view.get_value(i);
+            variant wrapped_var = var_tmp.extract_wrapped_value();
+            fromjson_recursively(wrapped_var, json_index_value);
+            view.set_value(i, wrapped_var);
+        }
+        else
+        {
+            variant extracted_value = extract_basic_types(json_index_value);
+            if (extracted_value.convert(array_value_type))
+                view.set_value(i, extracted_value);
+        }
+    }
+}
+
+variant extract_value(Value::MemberIterator& itr, const type& t)
+{
+    auto& json_value = itr->value;
+    variant extracted_value = extract_basic_types(json_value);
+    const bool could_convert = extracted_value.convert(t);
+    if (!could_convert)
+    {
+        if (json_value.IsObject())
+        {
+            constructor ctor = t.get_constructor();
+            for (auto& item : t.get_constructors())
+            {
+                if (item.get_instantiated_type() == t)
+                    ctor = item;
+            }
+            extracted_value = ctor.invoke();
+            fromjson_recursively(extracted_value, json_value);
+        }
+    }
+
+    return extracted_value;
+}
+
+static void write_associative_view_recursively(variant_associative_view& view, Value& json_array_value)
+{
+    for (SizeType i = 0; i < json_array_value.Size(); ++i)
+    {
+        auto& json_index_value = json_array_value[i];
+        if (json_index_value.IsObject()) // a key-value associative view
+        {
+            Value::MemberIterator key_itr = json_index_value.FindMember("key");
+            Value::MemberIterator value_itr = json_index_value.FindMember("value");
+
+            if (key_itr != json_index_value.MemberEnd() &&
+                value_itr != json_index_value.MemberEnd())
+            {
+                auto key_var = extract_value(key_itr, view.get_key_type());
+                auto value_var = extract_value(value_itr, view.get_value_type());
+                if (key_var && value_var)
+                {
+                    view.insert(key_var, value_var);
+                }
+            }
+        }
+        else // a key-only associative view
+        {
+            variant extracted_value = extract_basic_types(json_index_value);
+            if (extracted_value && extracted_value.convert(view.get_key_type()))
+                view.insert(extracted_value);
+        }
+    }
+}
+
+void fromjson_recursively(instance obj2, Value& json_object)
+{
+    assert(obj2.is_valid());
+    assert(json_object.IsObject());
+
+    instance obj = obj2.get_type().get_raw_type().is_wrapper() ? obj2.get_wrapped_instance() : obj2;
+    assert(obj.is_valid());
+
+    const auto prop_list = obj.get_derived_type().get_properties();
+
+    for (auto prop : prop_list)
+    {
+        assert(prop.is_valid());
+        std::cout << "Processing: " << prop.get_name() << " --> ";
+
+        Value::MemberIterator ret = json_object.FindMember(prop.get_name().data());
+        if (ret == json_object.MemberEnd()) {
+            std::cout << "Skipped" << std::endl;
+            continue;
+        }
+
+        const type value_t = prop.get_type();
+        std::cout << "Type name: " <<  value_t.get_name() << ". ";
+
+        auto& json_value = ret->value;
+        switch(json_value.GetType())
+        {
+            case kArrayType:
+            {
+                variant var;
+                if (value_t.is_sequential_container())
+                {
+                    var = prop.get_value(obj);
+                    auto view = var.create_sequential_view();
+                    write_array_recursively(view, json_value);
+                }
+                else if (value_t.is_associative_container())
+                {
+                    var = prop.get_value(obj);
+                    auto associative_view = var.create_associative_view();
+                    write_associative_view_recursively(associative_view, json_value);
+                }
+
+                prop.set_value(obj, var);
+                break;
+            }
+            case kObjectType:
+            {
+                variant var = prop.get_value(obj);
+                fromjson_recursively(var, json_value);
+                prop.set_value(obj, var);
+                break;
+            }
+            default:
+            {
+                variant extracted_value = extract_basic_types(json_value);
+                std::cout << "Value is : " << extracted_value.get_value<int>() << ". ";
+                if (extracted_value.convert(value_t))  {
+                    std::cout << "Able to convert to: " << value_t.get_name() << ". ";
+                    prop.set_value(obj, extracted_value);
+                    auto final_variant = prop.get_value(obj);
+                    int final_int = final_variant.get_value<int>();
+                    std::cout << "Final property value : " << final_int << std::endl;
+                }
+
+            }
+        }
+    }
+}
+
+
+const std::string value_as_string(const rapidjson::Value& value) {
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    value.Accept(writer);
+    return buffer.GetString();
+}
+
+bool from_internal(const std::string& json, rttr::instance obj)
+{
+    Document document;  
+    document.Parse(json.c_str());
+    assert(!document.HasParseError());
+
+    fromjson_recursively(obj, document);
+
+    return true;
+}
+
+} 
+
+namespace json
+{
+
+
+rttr::variant from(const std::string& json)
+{
+    Document document;
+    document.Parse(json.c_str());
+    assert(!document.HasParseError());
+
+    Value& type = document["type"];
+    Value& value = document["value"];
+
+    rttr::type rttr_type = rttr::type::get_by_name(type.GetString());
+
+    rttr::variant obj = rttr_type.get_constructor().invoke();
+    assert(obj.is_valid());
+
+    std::cout << "from(...)" << std::endl;
+    std::cout << rttr_type.get_name() << std::endl;
+    std::cout << value_as_string(value) << std::endl;
+    std::cout << obj.get_type().get_name() << std::endl;
+    std::cout << "-------------------" << std::endl;
+
+    from_internal(value_as_string(value), obj);
+
+
+    return obj;
+}
+
+} 

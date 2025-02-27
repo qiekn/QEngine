@@ -5,6 +5,8 @@
 
 #include "game/position.h"
 
+#include "json/json.h"
+
 
 int main() {
     Entity entity(1);
@@ -12,8 +14,14 @@ int main() {
     Component position = Component::from_type<Position>(10,20);
     Registery::singleton().add_component(entity, std::move(position));
 
-    const component_list& component_list = Registery::singleton().get_component_list(entity);
+    const auto& pos = Registery::singleton().get_first_variant<Position>(entity);
+    auto pos_str = json::to(pos, "test.variant");
 
-    const auto& pos = Registery::singleton().get_first<Position>(entity);
-    pos.print();
+    auto var = json::from(pos_str);
+    std::cout << var.get_type().get_name() << std::endl;
+
+
+    auto wrapped_value = var.get_wrapped_value<Position>();
+    wrapped_value.print();
+
 }

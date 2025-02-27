@@ -38,6 +38,20 @@ public:
         }
     }
 
+    template<typename T>
+    const rttr::variant& get_first_variant(const entity_id& entity) {
+        assert(m_storage.find(entity) != m_storage.end());
+        const auto& rttr_type = rttr::type::get<T>();
+        auto& component_list = m_storage[entity];
+        for(auto& component : component_list) {
+            if(component.var.get_type() == rttr_type) {
+                return component.get_variant();
+            }
+        }
+    }
+
+
+
 private:
     Registery() {}
 
