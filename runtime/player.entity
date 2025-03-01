@@ -1,0 +1,19 @@
+{
+  "entity_id": 1,
+  "variants": [
+    {
+      "type": "Position",
+      "value": {
+        "x": 2,
+        "y": 4
+      }
+    },
+    {
+      "type": "Position",
+      "value": {
+        "x": 50,
+        "y": 60
+      }
+    }
+  ]
+}

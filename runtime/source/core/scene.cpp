@@ -11,3 +11,7 @@ void Scene::add_variant(const entity_id& entity, rttr::variant variant) {
     }
     m_storage[entity].push_back(std::move(variant));
 }
+
+entity_id Scene::new_entity() {
+    return ++m_entity_count;
+}

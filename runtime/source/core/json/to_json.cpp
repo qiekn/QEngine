@@ -302,8 +302,6 @@ std::string to(const entity_id& entity_id) {
     return buffer.GetString();
 }
 
-
-
     void create_dummy(const rttr::type& type) {
         rttr::variant var = type.create();
 

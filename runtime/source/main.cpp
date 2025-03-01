@@ -6,7 +6,7 @@
 
 
 int main() {
-    Entity entity(1);
+    Entity entity(2);
     Position position(2,4);
 
     Scene::singleton().add_variant(entity, position);
@@ -14,8 +14,11 @@ int main() {
 
     auto& variants = Scene::singleton().get_variants(entity);
 
+    json::from_entity("player.entity");
 
-    //Scene::singleton().tick_variants();
+    std::cout << "-------------" << std::endl;
 
-    std::cout << json::to(1) << std::endl;
+    for(const auto& var : Scene::singleton().get_variants(1)) {
+        var.get_value<Position>().print();
+    }
 }

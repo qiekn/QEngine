@@ -20,7 +20,7 @@ public:
         return registery;
     }
 
-    Entity new_entity();
+    entity_id new_entity();
     void add_variant(const entity_id&, rttr::variant);
 
     template<typename T, typename... Args>
@@ -77,5 +77,6 @@ public:
 private:
     Scene() {}
 
+    int m_entity_count = 0;
     std::unordered_map<entity_id, variants> m_storage;
 };

@@ -10,6 +10,8 @@
 #include <rapidjson/document.h>     
 #include <rttr/type>
 
+#include "core/internal/entity.h"
+#include "core/scene.h"
 
 using namespace rapidjson;
 using namespace rttr;
@@ -165,7 +167,7 @@ void fromjson_recursively(instance obj2, Value& json_object)
         }
 
         const type value_t = prop.get_type();
-        std::cout << "Type name: " <<  value_t.get_name() << ". ";
+        std::cout << "Type name: " <<  value_t.get_name() << ". " << std::endl;
 
         auto& json_value = ret->value;
         switch(json_value.GetType())
@@ -199,13 +201,8 @@ void fromjson_recursively(instance obj2, Value& json_object)
             default:
             {
                 variant extracted_value = extract_basic_types(json_value);
-                std::cout << "Value is : " << extracted_value.get_value<int>() << ". ";
                 if (extracted_value.convert(value_t))  {
-                    std::cout << "Able to convert to: " << value_t.get_name() << ". ";
                     prop.set_value(obj, extracted_value);
-                    auto final_variant = prop.get_value(obj);
-                    int final_int = final_variant.get_value<int>();
-                    std::cout << "Final property value : " << final_int << std::endl;
                 }
 
             }
@@ -269,4 +266,41 @@ rttr::variant from(const std::filesystem::path& json_path)
     return from(json_content);
 }
 
-} 
+
+void from_entity(const std::filesystem::path& path_to_entity) {
+    std::ifstream file(path_to_entity);
+    assert(file.is_open());
+
+    std::string entity_json((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    file.close();
+    assert(!file.is_open());
+
+    Document document;
+    document.Parse(entity_json.c_str());
+    assert(!document.HasParseError());
+
+    assert(document.HasMember("entity_id") && document["entity_id"].IsInt());
+    int entity_id = document["entity_id"].GetInt();
+
+    assert(document.HasMember("variants") && document["variants"].IsArray());
+    const rapidjson::Value& variants = document["variants"];
+
+
+    for(rapidjson::SizeType i = 0; i < variants.Size(); ++i) {
+        const rapidjson::Value& variant = variants[i];
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        variant.Accept(writer);
+        const std::string variant_str = buffer.GetString();
+
+        std::cout << variant_str << std::endl;
+
+        rttr::variant var = from(variant_str);
+        Scene::singleton().add_variant(entity_id, std::move(var));
+    }
+}
+
+
+}  // end of namespace
