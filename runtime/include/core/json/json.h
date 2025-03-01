@@ -3,6 +3,7 @@
 #include <string>
 #include <rttr/type>
 #include <filesystem>
+#include "core/internal/entity.h"
 
 namespace json
 {
@@ -10,5 +11,7 @@ namespace json
     rttr::variant from(const std::string& json_as_string);
     rttr::variant from(const std::filesystem::path& path_to_json);
     void create_dummy(const rttr::type& type);
+
+    std::string to(const entity_id& entity);
 }
 

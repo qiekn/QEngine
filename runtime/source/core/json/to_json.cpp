@@ -4,10 +4,14 @@
 #include <fstream>
 
 #define RAPIDJSON_HAS_STDSTRING 1
-#include "rapidjson/prettywriter.h"
+#include "rapidjson/writer.h"
 #include <rapidjson/document.h>     
 #include <rttr/type.h>
 
+#include "core/internal/entity.h"
+#include "core/scene.h"
+
+#include "game/position.h"
 
 using namespace rapidjson;
 using namespace rttr;
@@ -16,11 +20,11 @@ using namespace rttr;
 namespace
 {
 
-void to_json_recursively(const instance& obj, PrettyWriter<StringBuffer>& writer);
+void to_json_recursively(const instance& obj, Writer<StringBuffer>& writer);
 
-bool write_variant(const variant& var, PrettyWriter<StringBuffer>& writer);
+bool write_variant(const variant& var, Writer<StringBuffer>& writer);
 
-bool write_atomic_types_to_json(const type& t, const variant& var, PrettyWriter<StringBuffer>& writer)
+bool write_atomic_types_to_json(const type& t, const variant& var, Writer<StringBuffer>& writer)
 {
     if (t.is_arithmetic())
     {
@@ -81,7 +85,7 @@ bool write_atomic_types_to_json(const type& t, const variant& var, PrettyWriter<
 }
 
 
-static void write_array(const variant_sequential_view& view, PrettyWriter<StringBuffer>& writer)
+static void write_array(const variant_sequential_view& view, Writer<StringBuffer>& writer)
 {
     writer.StartArray();
     for (const auto& item : view)
@@ -108,7 +112,7 @@ static void write_array(const variant_sequential_view& view, PrettyWriter<String
 }
 
 
-static void write_associative_container(const variant_associative_view& view, PrettyWriter<StringBuffer>& writer)
+static void write_associative_container(const variant_associative_view& view, Writer<StringBuffer>& writer)
 {
     static const string_view key_name("key");
     static const string_view value_name("value");
@@ -142,7 +146,7 @@ static void write_associative_container(const variant_associative_view& view, Pr
     writer.EndArray();
 }
 
-bool write_variant(const variant& var, PrettyWriter<StringBuffer>& writer)
+bool write_variant(const variant& var, Writer<StringBuffer>& writer)
 {
     auto value_type = var.get_type();
     auto wrapped_type = value_type.is_wrapper() ? value_type.get_wrapped_type() : value_type;
@@ -185,7 +189,7 @@ bool write_variant(const variant& var, PrettyWriter<StringBuffer>& writer)
 }
 
 
-void to_json_recursively(const instance& obj2, PrettyWriter<StringBuffer>& writer)
+void to_json_recursively(const instance& obj2, Writer<StringBuffer>& writer)
 {
     writer.StartObject();
 
@@ -219,7 +223,7 @@ std::string serialize_value(rttr::instance obj)
         return std::string();
 
     StringBuffer sb;
-    PrettyWriter<StringBuffer> writer(sb);
+    Writer<StringBuffer> writer(sb);
 
     to_json_recursively(obj, writer);
 
@@ -242,16 +246,14 @@ namespace json
 
         rapidjson::Document value_doc;
         value_doc.Parse(serialized_value.c_str());
+        assert(!value_doc.HasParseError());
+        assert(value_doc.IsObject());
 
-        if (value_doc.IsObject()) {
-            document.AddMember("value", value_doc, allocator);
-        } else {
-            document.AddMember("value", rapidjson::Value().SetString(serialized_value.c_str(), allocator), allocator);
-        }
+        document.AddMember("value", value_doc, allocator);
 
         std::ofstream out(path);
         rapidjson::StringBuffer buffer;
-        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 
         document.Accept(writer);
 
@@ -261,11 +263,52 @@ namespace json
         return buffer.GetString();
     }
 
+std::string to(const entity_id& entity_id) {
+    rapidjson::Document document;
+    document.SetObject();
+    rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+
+    document.AddMember("entity_id", entity_id, allocator);
+
+    const auto& variants = Scene::singleton().get_variants(entity_id);
+    rapidjson::Value variants_array(rapidjson::kArrayType);
+
+    for (const auto& variant : variants) {
+        const std::string serialized_variant = serialize_value(variant);
+
+        std::cout << serialized_variant << std::endl;
+
+        rapidjson::Document variant_document;
+        variant_document.Parse(serialized_variant.c_str());
+        assert(!variant_document.HasParseError());
+        assert(variant_document.IsObject());
+
+        rapidjson::Value variant_obj(rapidjson::kObjectType);
+        variant_obj.AddMember("type", variant.get_type().get_name().to_string(), allocator);
+
+        rapidjson::Value value_obj(rapidjson::kObjectType);
+        value_obj.CopyFrom(variant_document, allocator);
+        variant_obj.AddMember("value", value_obj, allocator);
+
+        variants_array.PushBack(variant_obj, allocator);
+    }
+
+    document.AddMember("variants", variants_array, allocator);
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    document.Accept(writer);
+
+    return buffer.GetString();
+}
+
+
+
     void create_dummy(const rttr::type& type) {
         rttr::variant var = type.create();
 
         rapidjson::StringBuffer buffer;
-        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 
         to_json_recursively(var, writer);
 

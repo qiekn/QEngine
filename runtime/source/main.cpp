@@ -2,6 +2,7 @@
 
 #include "core/internal/entity.h"
 #include "core/scene.h"
+#include "core/json/json.h"
 
 
 int main() {
@@ -14,5 +15,7 @@ int main() {
     auto& variants = Scene::singleton().get_variants(entity);
 
 
-    Scene::singleton().tick_variants();
+    //Scene::singleton().tick_variants();
+
+    std::cout << json::to(1) << std::endl;
 }
