@@ -2,16 +2,15 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #define RAPIDJSON_HAS_STDSTRING 1
 #include "rapidjson/writer.h"
 #include <rapidjson/document.h>     
 #include <rttr/type.h>
 
-#include "core/internal/entity.h"
-#include "core/scene.h"
+#include "core/entity.h"
 
-#include "game/position.h"
 
 using namespace rapidjson;
 using namespace rttr;
@@ -230,11 +229,7 @@ std::string serialize_value(rttr::instance obj)
     return sb.GetString();
 }
 
-}  // end of anonymous namespace
-
-namespace json
-{
-    std::string to(rttr::instance obj, const std::string& path) {
+std::string to(rttr::instance obj, const std::string& path) {
         const std::string serialized_value = serialize_value(obj);
 
         rapidjson::Document document;
@@ -263,14 +258,17 @@ namespace json
         return buffer.GetString();
     }
 
-std::string to(const entity_id& entity_id) {
+}  // end of anonymous namespace
+
+namespace zeytin { namespace json  {
+
+std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::variant>& variants) {
     rapidjson::Document document;
     document.SetObject();
     rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
     document.AddMember("entity_id", entity_id, allocator);
 
-    const auto& variants = Scene::singleton().get_variants(entity_id);
     rapidjson::Value variants_array(rapidjson::kArrayType);
 
     for (const auto& variant : variants) {
@@ -302,17 +300,60 @@ std::string to(const entity_id& entity_id) {
     return buffer.GetString();
 }
 
-    void create_dummy(const rttr::type& type) {
-        rttr::variant var = type.create();
+std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::variant>& variants, const std::filesystem::path& path) {
+    rapidjson::Document document;
+    document.SetObject();
+    rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    document.AddMember("entity_id", entity_id, allocator);
 
-        to_json_recursively(var, writer);
+    rapidjson::Value variants_array(rapidjson::kArrayType);
 
-        std::ofstream out("test.dummy");
-        out << buffer.GetString();
-        out.close();
+    for (const auto& variant : variants) {
+        const std::string serialized_variant = serialize_value(variant);
+
+        std::cout << serialized_variant << std::endl;
+
+        rapidjson::Document variant_document;
+        variant_document.Parse(serialized_variant.c_str());
+        assert(!variant_document.HasParseError());
+        assert(variant_document.IsObject());
+
+        rapidjson::Value variant_obj(rapidjson::kObjectType);
+        variant_obj.AddMember("type", variant.get_type().get_name().to_string(), allocator);
+
+        rapidjson::Value value_obj(rapidjson::kObjectType);
+        value_obj.CopyFrom(variant_document, allocator);
+        variant_obj.AddMember("value", value_obj, allocator);
+
+        variants_array.PushBack(variant_obj, allocator);
     }
+
+    document.AddMember("variants", variants_array, allocator);
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    document.Accept(writer);
+
+    std::ofstream out(path);
+    out << buffer.GetString();
+    out.close();
+
+    return buffer.GetString();
 }
+
+void create_dummy(const rttr::type& type, const std::filesystem::path& path) {
+    rttr::variant var = type.create();
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+    to_json_recursively(var, writer);
+
+    std::ofstream out(path);
+    out << buffer.GetString();
+    out.close();
+}
+
+}} // end of namespace
 

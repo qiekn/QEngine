@@ -1,6 +1,5 @@
 #include "position.h"
 #include "player.h"
-#include "core/internal/entity.h"
 #include "rttr/registration.h"
 
 RTTR_REGISTRATION

@@ -1,1 +1,1 @@
-#include "core/internal/entity.h"
+#include "core/entity.h" // IWYU pragma: keep

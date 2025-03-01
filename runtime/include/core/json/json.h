@@ -3,18 +3,17 @@
 #include <string>
 #include <rttr/type>
 #include <filesystem>
-#include "core/internal/entity.h"
+#include "core/entity.h"
 
-namespace json
+namespace zeytin
 {
-    std::string to(rttr::instance obj, const std::string& path);
-    rttr::variant from(const std::string& json_as_string);
-    rttr::variant from(const std::filesystem::path& path_to_json);
-    void create_dummy(const rttr::type& type);
-    // TODO: remove above
-
-
-    std::string to(const entity_id& entity);
-    void from_entity(const std::filesystem::path& path_to_entity);
+    namespace json 
+    {
+        std::string serialize_entity(const entity_id id, const std::vector<rttr::variant>& variants);
+        std::string serialize_entity(const entity_id id, const std::vector<rttr::variant>& variants, const std::filesystem::path& path);
+        
+        void deserialize_entity(const std::filesystem::path& path, entity_id& entity_id, std::vector<rttr::variant>& variants);
+        void deserialize_entity(const std::string& entity, entity_id& entity_id, std::vector<rttr::variant>& variants);
+    }
 }
 

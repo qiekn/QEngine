@@ -10,12 +10,10 @@
 #include <rapidjson/document.h>     
 #include <rttr/type>
 
-#include "core/internal/entity.h"
-#include "core/scene.h"
+#include "core/entity.h"
 
 using namespace rapidjson;
 using namespace rttr;
-
 
 namespace
 {
@@ -229,11 +227,6 @@ bool from_internal(const std::string& json, rttr::instance obj)
     return true;
 }
 
-} 
-
-namespace json
-{
-
 
 rttr::variant from(const std::string& json)
 {
@@ -266,9 +259,12 @@ rttr::variant from(const std::filesystem::path& json_path)
     return from(json_content);
 }
 
+} 
 
-void from_entity(const std::filesystem::path& path_to_entity) {
-    std::ifstream file(path_to_entity);
+namespace zeytin { namespace json {
+
+void deserialize_entity(const std::filesystem::path& path, entity_id& entity, std::vector<rttr::variant>& variants) {
+    std::ifstream file(path);
     assert(file.is_open());
 
     std::string entity_json((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -282,13 +278,13 @@ void from_entity(const std::filesystem::path& path_to_entity) {
 
     assert(document.HasMember("entity_id") && document["entity_id"].IsInt());
     int entity_id = document["entity_id"].GetInt();
+    entity = entity_id;
 
     assert(document.HasMember("variants") && document["variants"].IsArray());
-    const rapidjson::Value& variants = document["variants"];
+    const rapidjson::Value& variant_values = document["variants"];
 
-
-    for(rapidjson::SizeType i = 0; i < variants.Size(); ++i) {
-        const rapidjson::Value& variant = variants[i];
+    for(rapidjson::SizeType i = 0; i < variant_values.Size(); ++i) {
+        const rapidjson::Value& variant = variant_values[i];
 
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -298,9 +294,36 @@ void from_entity(const std::filesystem::path& path_to_entity) {
         std::cout << variant_str << std::endl;
 
         rttr::variant var = from(variant_str);
-        Scene::singleton().add_variant(entity_id, std::move(var));
+        variants.push_back(std::move(var));
+    }
+}
+
+void deserialize_entity(const std::string& entity_json, entity_id& entity, std::vector<rttr::variant>& variants) {
+    Document document;
+    document.Parse(entity_json.c_str());
+    assert(!document.HasParseError());
+
+    assert(document.HasMember("entity_id") && document["entity_id"].IsInt());
+    int entity_id = document["entity_id"].GetInt();
+    entity = entity_id;
+
+    assert(document.HasMember("variants") && document["variants"].IsArray());
+    const rapidjson::Value& variant_values = document["variants"];
+
+    for(rapidjson::SizeType i = 0; i < variant_values.Size(); ++i) {
+        const rapidjson::Value& variant = variant_values[i];
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        variant.Accept(writer);
+        const std::string variant_str = buffer.GetString();
+
+        std::cout << variant_str << std::endl;
+
+        rttr::variant var = from(variant_str);
+        variants.push_back(std::move(var));
     }
 }
 
 
-}  // end of namespace
+} }  // end of namespace

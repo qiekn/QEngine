@@ -1,24 +1,32 @@
 #include "game/register.h" // IWYU pragma: keep
 
-#include "core/internal/entity.h"
-#include "core/scene.h"
+#include "core/entity.h"
+#include "core/zeytin.h"
 #include "core/json/json.h"
 
-
 int main() {
-    Entity entity(2);
-    Position position(2,4);
+    //Entity entity(1);
+    //Position position(2,4);
 
-    Scene::singleton().add_variant(entity, position);
-    Scene::singleton().add_variant<Position>(entity,50,60);
+    //Zeytin::singleton().add_variant(entity, position);
+    //Zeytin::singleton().add_variant<Position>(entity,50,60);
 
-    auto& variants = Scene::singleton().get_variants(entity);
+    //const std::vector<rttr::variant>& variants = Zeytin::singleton().get_variants(entity);
 
-    json::from_entity("player.entity");
+    //std::cout << zeytin::json::serialize_entity(entity.get_id(), variants, "test.entity") << std::endl;
 
-    std::cout << "-------------" << std::endl;
+    entity_id id;
+    std::vector<rttr::variant> variants;
+    variants.reserve(10);
 
-    for(const auto& var : Scene::singleton().get_variants(1)) {
-        var.get_value<Position>().print();
+    std::filesystem::path path = "test.entity";
+    
+    zeytin::json::deserialize_entity(path, id, variants);
+
+    std::cout << id << std::endl;
+
+    for(const auto& variant : variants) {
+        variant.get_value<Position>().print();
     }
+
 }
