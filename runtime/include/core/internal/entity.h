@@ -1,11 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 using entity_id = uint16_t;
-
-#include "ecs/registery.h"
-
 
 class Entity final {
 

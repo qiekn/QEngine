@@ -1,13 +1,18 @@
-#include "game/register.h"
+#include "game/register.h" // IWYU pragma: keep
 
-#include "ecs/registery.h"
-#include "ecs/internal/entity.h"
-
-#include "game/position.h"
-
-#include "json/json.h"
+#include "core/internal/entity.h"
+#include "core/scene.h"
 
 
 int main() {
-    json::create_dummy(rttr::type::get_by_name("Entity"));
+    Entity entity(1);
+    Position position(2,4);
+
+    Scene::singleton().add_variant(entity, position);
+    Scene::singleton().add_variant<Position>(entity,50,60);
+
+    auto& variants = Scene::singleton().get_variants(entity);
+
+
+    Scene::singleton().tick_variants();
 }

@@ -13,14 +13,10 @@ struct Position final {
     int x = 0;
     int y = 0;
 
-    Position* base = nullptr;
-
 
     void print() const {
         std::cout << "(" << x << "," << y << ")" << std::endl;
     }
-
-
 
     RTTR_ENABLE()
 };

@@ -8,7 +8,6 @@
 #include <rapidjson/document.h>     
 #include <rttr/type.h>
 
-#include "json/json.h"
 
 using namespace rapidjson;
 using namespace rttr;
