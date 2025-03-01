@@ -1,17 +1,51 @@
 #include <cassert>
 
 #include "core/zeytin.h"
-
-constexpr int RESERVED = 10;
+#include "core/json/json.h"
+#include "core/guid/guid.h"
 
 void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
-    if(m_storage.find(entity) == m_storage.end()) {
-        m_storage[entity] = std::vector<rttr::variant>();
-        m_storage.reserve(RESERVED);
-    }
     m_storage[entity].push_back(std::move(variant));
 }
 
-entity_id Zeytin::new_entity() {
-    return ++m_entity_count;
+std::string Zeytin::serialize_entity(const entity_id id) {
+    return zeytin::json::serialize_entity(id, get_variants(id));
+}
+
+std::string Zeytin::serialize_entity(const entity_id id, const std::filesystem::path& path) {
+    return zeytin::json::serialize_entity(id, get_variants(id), path);
+}
+
+void Zeytin::deserialize_entity(const std::string& str) {
+    // TODO: implement a system where we read entity id by file name instead of parsing it which removes copying of variants
+
+    entity_id id;
+    std::vector<rttr::variant> variants;
+
+    zeytin::json::deserialize_entity(str, id, variants);
+
+    auto& entity_variants = get_variants(id);
+    for(const auto& var : variants) {
+        entity_variants.push_back(std::move(var));
+    }        
+}
+
+
+void Zeytin::deserialize_entity(const std::filesystem::path& path) {
+    // TODO: implement a system where we read entity id by file name instead of parsing it which removes copying of variants
+
+    entity_id id;
+    std::vector<rttr::variant> variants;
+
+    zeytin::json::deserialize_entity(path, id, variants);
+
+    auto& entity_variants = get_variants(id);
+    for(const auto& var : variants) {
+        entity_variants.push_back(std::move(var));
+    }
+}
+
+
+entity_id Zeytin::new_entity_id() {
+    return generateUniqueID();
 }

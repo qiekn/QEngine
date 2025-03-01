@@ -6,6 +6,7 @@
 
 #include "core/entity.h"
 #include "rttr/variant.h"
+#include <filesystem>
 
 class Zeytin {
 
@@ -18,24 +19,27 @@ public:
         return registery;
     }
 
-    entity_id new_entity();
+    std::string serialize_entity(const entity_id id);
+    std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
+    
+    void deserialize_entity(const std::filesystem::path& path);
+    void deserialize_entity(const std::string& entity);
+
+    entity_id new_entity_id();
     void add_variant(const entity_id&, rttr::variant);
+
+    inline std::vector<rttr::variant>& get_variants(const entity_id& entity) {
+        return m_storage[entity];
+    }
 
     template<typename T, typename... Args>
     void add_variant(const entity_id& entity, Args&&... args) {
-        assert(m_storage.find(entity) != m_storage.end());
         T t(std::forward<Args>(args)...);
         m_storage[entity].push_back(std::move(t));
     }
 
-    inline std::vector<rttr::variant>& get_variants(const entity_id& entity) {
-        assert(m_storage.find(entity) != m_storage.end());
-        return m_storage[entity];
-    }
-
     template<typename T>
     T& get_first(const entity_id& entity) {
-        assert(m_storage.find(entity) != m_storage.end());
         const auto& rttr_type = rttr::type::get<T>();
         auto& variants = m_storage[entity];
         for(auto& variant : variants) {
@@ -47,7 +51,6 @@ public:
 
     template<typename T>
     const rttr::variant& get_first(const entity_id& entity) {
-        assert(m_storage.find(entity) != m_storage.end());
         const auto& rttr_type = rttr::type::get<T>();
         auto& variants = m_storage[entity];
         for(auto& variant : variants) {
