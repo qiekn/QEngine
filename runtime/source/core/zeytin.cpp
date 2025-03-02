@@ -4,6 +4,16 @@
 #include "core/json/json.h"
 #include "core/guid/guid.h"
 
+Zeytin::Zeytin() {
+    const auto& types = rttr::type::get_types();
+    for(const auto& type : types) {
+        if(type.is_wrapper() || type.is_pointer() || !type.is_class() || type.is_template_instantiation()) {
+            continue;
+        }
+        create_dummy(type);
+    }
+}
+
 void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
     m_storage[entity].push_back(std::move(variant));
 }

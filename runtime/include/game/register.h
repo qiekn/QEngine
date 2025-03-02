@@ -12,15 +12,17 @@ RTTR_REGISTRATION
         .method("Tick", &Position::print);
 
     rttr::registration::class_<Velocity>("Velocity")
-        .constructor<>()
+        .constructor<>()(rttr::policy::ctor::as_object)
         .property("x", &Velocity::x)
         .property("y", &Velocity::y);
 
-    rttr::registration::class_<Player>("Player")
-        .constructor<>()
-        .property("position", &Player::position)
-        .property("velocity", &Player::velocity);
-}
 
+    rttr::registration::class_<Player>("Player")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("position", &Player::position)
+        .property("velocity", &Player::velocity)
+        .property("display_name", &Player::display_name);
+    
+}
 
 

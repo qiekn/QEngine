@@ -274,8 +274,6 @@ std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::
     for (const auto& variant : variants) {
         const std::string serialized_variant = serialize_value(variant);
 
-        std::cout << serialized_variant << std::endl;
-
         rapidjson::Document variant_document;
         variant_document.Parse(serialized_variant.c_str());
         assert(!variant_document.HasParseError());
@@ -312,8 +310,6 @@ std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::
     for (const auto& variant : variants) {
         const std::string serialized_variant = serialize_value(variant);
 
-        std::cout << serialized_variant << std::endl;
-
         rapidjson::Document variant_document;
         variant_document.Parse(serialized_variant.c_str());
         assert(!variant_document.HasParseError());
@@ -343,18 +339,10 @@ std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::
 }
 
 void create_dummy(const rttr::type& type) {
-    const std::filesystem::path path = type.get_name().to_string() + ".dummy";
+    const std::filesystem::path path = "../shared/dummies/" + type.get_name().to_string() + ".dummy";
 
     rttr::variant var = type.create();
-
-    rapidjson::StringBuffer buffer;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-
-    to_json_recursively(var, writer);
-
-    std::ofstream out(path);
-    out << buffer.GetString();
-    out.close();
+    to(var, path);
 }
 
 }} // end of namespace

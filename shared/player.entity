@@ -1,19 +1,18 @@
 {
-    "entity_id": 1,
+    "id": 123456789,
     "variants": [
         {
-            "type": "stats",
+            "type": "Player",
             "value": {
-                "health": 100,
-                "speed": 5.5,
-                "is_alive": true
-            }
-        },
-        {
-            "type": "equipment",
-            "value": {
-                "weapon": "sword",
-                "damage": 40
+                "position": {
+                    "x": 0,
+                    "y": 0
+                },
+                "velocity": {
+                    "x": 0,
+                    "y": 0
+                },
+                "display_name": ""
             }
         }
     ]

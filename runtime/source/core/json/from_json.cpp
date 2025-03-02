@@ -156,16 +156,13 @@ void fromjson_recursively(instance obj2, Value& json_object)
     for (auto prop : prop_list)
     {
         assert(prop.is_valid());
-        std::cout << "Processing: " << prop.get_name() << " --> ";
 
         Value::MemberIterator ret = json_object.FindMember(prop.get_name().data());
         if (ret == json_object.MemberEnd()) {
-            std::cout << "Skipped" << std::endl;
             continue;
         }
 
         const type value_t = prop.get_type();
-        std::cout << "Type name: " <<  value_t.get_name() << ". " << std::endl;
 
         auto& json_value = ret->value;
         switch(json_value.GetType())
@@ -291,8 +288,6 @@ void deserialize_entity(const std::filesystem::path& path, entity_id& entity, st
         variant.Accept(writer);
         const std::string variant_str = buffer.GetString();
 
-        std::cout << variant_str << std::endl;
-
         rttr::variant var = from(variant_str);
         variants.push_back(std::move(var));
     }
@@ -318,12 +313,9 @@ void deserialize_entity(const std::string& entity_json, entity_id& entity, std::
         variant.Accept(writer);
         const std::string variant_str = buffer.GetString();
 
-        std::cout << variant_str << std::endl;
-
         rttr::variant var = from(variant_str);
         variants.push_back(std::move(var));
     }
 }
-
 
 } }  // end of namespace

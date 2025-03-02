@@ -14,10 +14,7 @@ public:
     Zeytin(const Zeytin&) = delete;
     Zeytin& operator=(const Zeytin&) = delete;
 
-    static Zeytin& singleton() {
-        static Zeytin registery;
-        return registery;
-    }
+    Zeytin();
 
     std::string serialize_entity(const entity_id id);
     std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
@@ -77,7 +74,6 @@ public:
     }
 
 private:
-    Zeytin() {}
 
     int m_entity_count = 0;
     std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage;

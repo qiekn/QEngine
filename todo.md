@@ -2,6 +2,12 @@
 * Implemenet a long entity for sample
 * Implement adding variants to entity
 * Implement adding elements to array
+* investigate enums
+
+* make deserialize entity return entity id 
+* remove zeytin singleton
+
+* add ai support to generate register code
 
 -----------------------------------------
 
