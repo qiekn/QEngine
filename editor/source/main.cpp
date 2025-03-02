@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <vector>
 
 #include "raylib.h"
 #include "imgui.h"
@@ -141,7 +142,7 @@ void RenderJsonObject(rapidjson::Value& object, const fs::path& filePath, rapidj
             }
         }
         else if (value.IsObject()) {
-            if (ImGui::CollapsingHeader(("Object: " + key).c_str())) {
+            if (ImGui::CollapsingHeader((key).c_str())) {
                 ImGui::Indent();
                 RenderJsonObject(value, filePath, document);
                 ImGui::Unindent();
@@ -172,6 +173,29 @@ void ShowJsonEditor(const fs::path& folderPath) {
     static char newEntityName[128] = "";
     static bool showNewEntityPopup = false;
 
+    
+    std::vector<std::pair<std::string, rapidjson::Document>> availableVariants;
+    fs::path dummyFolder = "../shared/dummies/";
+    
+    if (fs::exists(dummyFolder) && fs::is_directory(dummyFolder)) {
+        for (const auto& entry : fs::directory_iterator(dummyFolder)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".dummy") {
+                std::ifstream inFile(entry.path());
+                if (!inFile) continue;
+                
+                std::string jsonString((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+                inFile.close();
+
+                rapidjson::Document variantJson;
+                variantJson.Parse(jsonString.c_str());
+                if (!variantJson.HasParseError()) {
+                    availableVariants.emplace_back(entry.path().stem().string(), std::move(variantJson));
+                }
+            }
+        }
+    }
+
+    
     if (ImGui::Button("Create New Entity")) {
         showNewEntityPopup = true;
     }
@@ -190,9 +214,7 @@ void ShowJsonEditor(const fs::path& folderPath) {
             rapidjson::Document::AllocatorType& allocator = newDoc.GetAllocator();
 
             newDoc.AddMember("id", 123456789, allocator);
-
-            rapidjson::Value variants(rapidjson::kArrayType);
-            newDoc.AddMember("variants", variants, allocator);
+            newDoc.AddMember("variants", rapidjson::kArrayType, allocator);
 
             SaveJsonToFile(filePath, newDoc);
             ImGui::CloseCurrentPopup();
@@ -205,11 +227,13 @@ void ShowJsonEditor(const fs::path& folderPath) {
         ImGui::EndPopup();
     }
 
+    
     if (!fs::exists(folderPath) || !fs::is_directory(folderPath)) {
         std::cerr << "Error: Folder does not exist or is not a directory: " << folderPath << std::endl;
         return;
     }
 
+    
     for (const auto& entry : fs::directory_iterator(folderPath)) {
         if (entry.is_regular_file() && entry.path().extension() == ".entity") {
             fs::path filePath = entry.path();
@@ -222,10 +246,56 @@ void ShowJsonEditor(const fs::path& folderPath) {
 
             ImGui::PushID(fileName.c_str());
             if (ImGui::CollapsingHeader(fileName.c_str())) {
-                if (document.HasMember("variants")) {
+                
+                
+                if (document.HasMember("variants") && document["variants"].IsArray()) {
                     rapidjson::Value& variants = document["variants"];
+
                     for (rapidjson::SizeType i = 0; i < variants.Size(); ++i) {
+                        ImGui::PushID(i);
+                        
+                        
                         RenderVariant(variants[i], filePath, document, i);
+
+                       
+                        ImGui::SameLine();
+                        if (ImGui::Button("Remove")) {
+                            variants.Erase(variants.Begin() + i);
+                            SaveJsonToFile(filePath, document);
+                        }
+
+                        ImGui::PopID();
+                    }
+                }
+
+             
+                static int selectedVariantIndex = 0;
+
+                if (!availableVariants.empty()) {
+                    ImGui::Text("Add Variant:");
+                    ImGui::SameLine();
+                    if (ImGui::BeginCombo("##variantList", availableVariants[selectedVariantIndex].first.c_str())) {
+                        for (size_t i = 0; i < availableVariants.size(); ++i) {
+                            bool isSelected = (selectedVariantIndex == i);
+                            if (ImGui::Selectable(availableVariants[i].first.c_str(), isSelected)) {
+                                selectedVariantIndex = i;
+                            }
+                            if (isSelected) {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+                    ImGui::SameLine();
+
+                    if (ImGui::Button("Add Variant")) {
+                        if (document.HasMember("variants") && document["variants"].IsArray()) {
+                            rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+                            rapidjson::Value newVariant(availableVariants[selectedVariantIndex].second, allocator);
+                            document["variants"].PushBack(newVariant, allocator);
+
+                            SaveJsonToFile(filePath, document);
+                        }
                     }
                 }
             }
@@ -233,6 +303,8 @@ void ShowJsonEditor(const fs::path& folderPath) {
         }
     }
 }
+
+
 
 int main(int argc, char* argv[])
 {
