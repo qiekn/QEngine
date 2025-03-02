@@ -10,4 +10,17 @@ RTTR_REGISTRATION
         .property("x", &Position::x)
         .property("y", &Position::y)
         .method("Tick", &Position::print);
+
+    rttr::registration::class_<Velocity>("Velocity")
+        .constructor<>()
+        .property("x", &Velocity::x)
+        .property("y", &Velocity::y);
+
+    rttr::registration::class_<Player>("Player")
+        .constructor<>()
+        .property("position", &Player::position)
+        .property("velocity", &Player::velocity);
 }
+
+
+
