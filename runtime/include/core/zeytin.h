@@ -25,6 +25,8 @@ public:
     void deserialize_entity(const std::filesystem::path& path);
     void deserialize_entity(const std::string& entity);
 
+    void create_dummy(const rttr::type& type);
+
     entity_id new_entity_id();
     void add_variant(const entity_id&, rttr::variant);
 

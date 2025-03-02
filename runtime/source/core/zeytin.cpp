@@ -45,6 +45,9 @@ void Zeytin::deserialize_entity(const std::filesystem::path& path) {
     }
 }
 
+void Zeytin::create_dummy(const rttr::type& type) {
+    zeytin::json::create_dummy(type);
+}
 
 entity_id Zeytin::new_entity_id() {
     return generateUniqueID();

@@ -6,4 +6,6 @@
 int main() {
     auto id = generateUniqueID();
     std::cout << id << std::endl;
+
+    Zeytin::singleton().create_dummy(rttr::type::get_by_name("Position"));
 }

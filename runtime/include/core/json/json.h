@@ -14,6 +14,8 @@ namespace zeytin
         
         void deserialize_entity(const std::filesystem::path& path, entity_id& entity_id, std::vector<rttr::variant>& variants);
         void deserialize_entity(const std::string& entity, entity_id& entity_id, std::vector<rttr::variant>& variants);
+        
+        void create_dummy(const rttr::type& type);
     }
 }
 

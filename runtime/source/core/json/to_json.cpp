@@ -342,7 +342,9 @@ std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::
     return buffer.GetString();
 }
 
-void create_dummy(const rttr::type& type, const std::filesystem::path& path) {
+void create_dummy(const rttr::type& type) {
+    const std::filesystem::path path = type.get_name().to_string() + ".dummy";
+
     rttr::variant var = type.create();
 
     rapidjson::StringBuffer buffer;
