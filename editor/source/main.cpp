@@ -6,10 +6,10 @@
 #include "imgui.h"
 #include "rlImGui.h"
 
-#include "rapidjson/prettywriter.h"
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <imgui.h>
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
@@ -253,14 +253,10 @@ int main(int argc, char* argv[])
 
 		bool open = true;
 
-		open = true;
-		
-
         if (ImGui::Begin("Entity List", &open))
 		{
             ShowJsonEditor("../shared/");
 		}
-
 
 		ImGui::End();
 
