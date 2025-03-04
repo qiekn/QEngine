@@ -1,0 +1,12 @@
+{
+    "id": 15978419120319625719,
+    "variants": [
+        {
+            "type": "dialogue",
+            "value": {
+                "greeting": "Hello, traveler!",
+                "farewell": "Safe travels!"
+            }
+        }
+    ]
+}

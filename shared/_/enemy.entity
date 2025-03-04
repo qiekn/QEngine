@@ -1,0 +1,21 @@
+{
+    "entity_id": 2,
+    "variants": [
+        {
+            "type": "stats",
+            "value": {
+                "health": 150,
+                "speed": 3.0,
+                "is_alive": true
+            }
+        },
+        {
+            "type": "loot",
+            "value": {
+                "gold": 50,
+                "items": ["potion", "shield"]
+            }
+        }
+    ]
+}
+

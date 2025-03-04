@@ -7,6 +7,7 @@ workspace "Zeytin"
 
     includedirs {
         "include", 
+        "include/imgui",
         "3rdparty/raylib/src", 
         "3rdparty/rapidjson/include", 
     }
