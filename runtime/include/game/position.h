@@ -1,14 +1,13 @@
 #pragma once
 
-#include "rttr/registration.h"
 #include <iostream>
 
-struct Position final {
-    Position() {}
+#include "rttr/registration.h"
+#include "core/entity.h"
+#include "core/variant/variant_base.h"
 
-    Position(int in_x, int in_y) : x(in_x), y(in_y) {}
-
-    Position(const Position& other) : x(other.x), y(other.y) {}
+struct Position : IVariantBase {
+    Position(VariantCreateInfo info) : IVariantBase(entity_id) {}
 
     int x = 0;
     int y = 0;
@@ -18,6 +17,6 @@ struct Position final {
         std::cout << "(" << x << "," << y << ")" << std::endl;
     }
 
-    RTTR_ENABLE()
+    RTTR_ENABLE(IVariantBase);
 };
 

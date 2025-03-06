@@ -34,6 +34,7 @@ public:
     template<typename T, typename... Args>
     void add_variant(const entity_id& entity, Args&&... args) {
         T t(std::forward<Args>(args)...);
+        t.entity_id = 31;
         m_storage[entity].push_back(std::move(t));
     }
 
@@ -44,17 +45,6 @@ public:
         for(auto& variant : variants) {
             if(variant.get_type() == rttr_type) {
                 return variant.get_value<T>();
-            }
-        }
-    }
-
-    template<typename T>
-    const rttr::variant& get_first(const entity_id& entity) {
-        const auto& rttr_type = rttr::type::get<T>();
-        auto& variants = m_storage[entity];
-        for(auto& variant : variants) {
-            if(variant.get_type() == rttr_type) {
-                return variant;
             }
         }
     }

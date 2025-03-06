@@ -10,7 +10,7 @@ Zeytin::Zeytin() {
         if(type.is_wrapper() || type.is_pointer() || !type.is_class() || type.is_template_instantiation()) {
             continue;
         }
-        create_dummy(type);
+        //create_dummy(type);
     }
 }
 

@@ -225,7 +225,7 @@ bool from_internal(const std::string& json, rttr::instance obj)
 }
 
 
-rttr::variant from(const std::string& json)
+rttr::variant from(entity_id entity_id, const std::string& json)
 {
     Document document;
     document.Parse(json.c_str());
@@ -236,7 +236,10 @@ rttr::variant from(const std::string& json)
 
     rttr::type rttr_type = rttr::type::get_by_name(type.GetString());
 
-    rttr::variant obj = rttr_type.get_constructor().invoke();
+    std::vector<rttr::argument> args;
+    args.push_back(entity_id);
+
+    rttr::variant obj = rttr_type.create(args);
     assert(obj.is_valid());
 
     from_internal(value_as_string(value), obj);
@@ -244,7 +247,7 @@ rttr::variant from(const std::string& json)
     return obj;
 }
 
-rttr::variant from(const std::filesystem::path& json_path)
+rttr::variant from(entity_id entity_id, const std::filesystem::path& json_path)
 {
     std::ifstream file(json_path);
     assert(file.is_open());
@@ -253,7 +256,7 @@ rttr::variant from(const std::filesystem::path& json_path)
 
     file.close();
 
-    return from(json_content);
+    return from(entity_id, json_content);
 }
 
 } 
@@ -288,7 +291,7 @@ void deserialize_entity(const std::filesystem::path& path, entity_id& entity, st
         variant.Accept(writer);
         const std::string variant_str = buffer.GetString();
 
-        rttr::variant var = from(variant_str);
+        rttr::variant var = from(entity_id, variant_str);
         variants.push_back(std::move(var));
     }
 }
@@ -313,7 +316,8 @@ void deserialize_entity(const std::string& entity_json, entity_id& entity, std::
         variant.Accept(writer);
         const std::string variant_str = buffer.GetString();
 
-        rttr::variant var = from(variant_str);
+        rttr::variant var = from(entity_id, variant_str);
+        var.get_type().set_property_value("entity_id", var, entity_id);
         variants.push_back(std::move(var));
     }
 }
