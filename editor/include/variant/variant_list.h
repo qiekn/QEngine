@@ -6,6 +6,7 @@
 class VariantList final {
 
 public:
+    void load_variant(const std::filesystem::path& path);
     void load_variants();
 
     inline std::vector<VariantDocument>& get_variants() { return m_variants;}

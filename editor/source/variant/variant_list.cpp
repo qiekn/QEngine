@@ -22,3 +22,8 @@ void VariantList::load_variants() {
         variant.load_from_file();
     }
 }
+void VariantList::load_variant(const std::filesystem::path& path) {
+    std::string name = path.stem().string();
+    auto& rv = m_variants.emplace_back<VariantDocument>(std::move(name));
+    rv.load_from_file();
+}

@@ -10,7 +10,7 @@ struct Velocity : VariantBase {
     int x = 0;
     int y = 0;
 
-    void print() {
+    void tick() {
         std::cout << get_id() << ": "<< "(" << x << "," << y << ")" << std::endl;
     }
 

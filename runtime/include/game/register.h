@@ -1,7 +1,9 @@
-#include "position.h"
-#include "player.h"
 #include "rttr/registration.h"
 #include "core/variant/variant_base.h"
+
+#include "position.h"
+#include "player.h"
+#include "sprite.h"
 
 RTTR_REGISTRATION
 {
@@ -18,14 +20,18 @@ RTTR_REGISTRATION
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Position::x)
-        .property("y", &Position::y)
-        .method("Tick", &Position::print);
+        .property("y", &Position::y);
 
     rttr::registration::class_<Velocity>("Velocity")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Velocity::x)
         .property("y", &Velocity::y);
+
+    rttr::registration::class_<Sprite>("Sprite")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("path_to_sprite", &Sprite::path_to_sprite);
 }
 
 

@@ -12,9 +12,8 @@ struct Position : VariantBase {
 
     Position(VariantCreateInfo info) : VariantBase(info) {}
 
-    void print() {
+    void tick() {
         std::cout << get_id() << ": "<< "(" << x << "," << y << ")" << std::endl;
-        entity_get_variant<Velocity>().print();
     }
 
     int x = 0;

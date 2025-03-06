@@ -4,6 +4,8 @@
 #include "core/json/json.h"
 #include "core/guid/guid.h"
 
+#include "core/variant/variant_base.h"
+
 
 void Zeytin::init() {
     for(const auto& type : rttr::type::get_types()) {
@@ -103,3 +105,43 @@ void Zeytin::create_dummy(const rttr::type& type) {
 entity_id Zeytin::new_entity_id() {
     return generateUniqueID();
 }
+
+void Zeytin::awake_variants() {
+    std::cout << "Awake variants" << std::endl;
+    int counter = 0;
+    for(auto& pair : m_storage) {   
+        for(auto& variant : pair.second) {
+            std::cout << "Processing variant #" << counter++ << std::endl;
+            try {
+                VariantBase& base = variant.get_value<VariantBase&>();
+                std::cout << variant.get_type().get_name() << std::endl;
+                std::cout << "Got base reference, calling awake()" << std::endl;
+                base.awake();
+                std::cout << "Awake completed successfully" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "Exception caught: " << e.what() << std::endl;
+            }
+        }
+    }
+}
+
+void Zeytin::tick_variants() {
+    std::cout << "Tick variants" << std::endl;
+    int counter = 0;
+    for(auto& pair : m_storage) {   
+        for(auto& variant : pair.second) {
+            std::cout << "Processing variant #" << counter++ << std::endl;
+            try {
+                VariantBase& base = variant.get_value<VariantBase&>();
+                std::cout << variant.get_type().get_name() << std::endl;
+                std::cout << "Got base reference, calling tick()" << std::endl;
+                base.tick();
+                std::cout << "Tick completed successfully" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "Exception caught: " << e.what() << std::endl;
+            }
+        }
+    }
+}
+
+

@@ -14,6 +14,9 @@ struct VariantBase {
     VariantBase() = default;
     VariantBase(VariantCreateInfo info) : entity_id(info.entity_id) {}
 
+    virtual void awake() {}
+    virtual void tick() {}
+
     uint64_t get_id() { return entity_id; }
     const uint64_t get_id() const { return entity_id; }
 

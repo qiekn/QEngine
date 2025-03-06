@@ -91,7 +91,7 @@ void Hierarchy::render_create_entity() {
                 newDoc.SetObject();
                 rapidjson::Document::AllocatorType& allocator = newDoc.GetAllocator();
                 
-                newDoc.AddMember("id", uuid, allocator);
+                newDoc.AddMember("entity_id", uuid, allocator);
                 rapidjson::Value variantsArray(rapidjson::kArrayType);
                 newDoc.AddMember("variants", variantsArray, allocator);
                 

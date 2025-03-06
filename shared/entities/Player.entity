@@ -1,0 +1,18 @@
+{
+    "entity_id": 7142883451738285645,
+    "variants": [
+        {
+            "type": "Position",
+            "value": {
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "type": "Sprite",
+            "value": {
+                "path_to_sprite": "resources/mario_head.png"
+            }
+        }
+    ]
+}

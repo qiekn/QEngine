@@ -1,4 +1,5 @@
 #include <iostream> // IWYU pragma: keep
+#include <thread>
 
 #include "raylib.h"
 #include "imgui.h"
@@ -13,8 +14,14 @@
 #include "hierarchy/hierarchy.h"
 #include "hierarchy/theme.h"
 
+#include "file_watcher/file_watcher.h"
+
+#include "engine/engine_controls.h"
+
 int main(int argc, char* argv[])
 {
+    EngineControls engine_controls;
+
 	int screenWidth = 1280;
 	int screenHeight = 800;
 
@@ -33,10 +40,15 @@ int main(int argc, char* argv[])
 
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
 
-    for(auto& variant : variant_list.get_variants()) {
-        std::cout << "name: " << variant.get_name() << std::endl;
-    }
 
+    FileWatcher variant_watcher("../shared/variants/", std::chrono::milliseconds(500));
+
+    variant_watcher.addCallback({ ".variant"}, [&variant_list](const fs::path& path, const std::string& status) {
+        std::cout << "Variant file " << path << " was " << status << std::endl;
+        variant_list.load_variant(path);
+    });
+
+    variant_watcher.start();
 
 	while (!WindowShouldClose())    
 	{
@@ -45,6 +57,7 @@ int main(int argc, char* argv[])
 
 		rlImGuiBegin();
 
+        engine_controls.renderMainMenuControls();
         hierarchy.update();
 
 		ImGui::End();
@@ -58,3 +71,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+

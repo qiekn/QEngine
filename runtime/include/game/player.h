@@ -8,12 +8,5 @@
 
 
 struct Player final {
-    std::string display_name;
-
-    double health = 0;
-
-    Position position;
-    Velocity velocity;
-
     RTTR_ENABLE()
 };

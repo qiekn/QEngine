@@ -3,10 +3,10 @@
 #include <iostream>
 #include <cassert>
 #include <vector>
-
-#include "core/entity.h"
-#include "rttr/variant.h"
 #include <filesystem>
+
+#include "rttr/type.h"
+#include "core/entity.h"
 
 class Zeytin {      
 public:
@@ -52,20 +52,9 @@ public:
         }
         throw std::runtime_error("No matching variant found for the given type");
     }
-    
-    // TODO: improve performance    
-    void tick_variants() {
-        for(auto& pair : m_storage) {   
-            for(auto& variant : pair.second) {
-                const rttr::type& type = variant.get_type();
-                const rttr::method& method = type.get_method("Tick");
 
-                if(method.is_valid()) {     
-                    method.invoke(variant);
-                }
-            }
-        }
-    }
+    void awake_variants();
+    void tick_variants();
 
 private:
     Zeytin() = default;
