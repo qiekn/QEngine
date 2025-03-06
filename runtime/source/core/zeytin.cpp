@@ -4,13 +4,54 @@
 #include "core/json/json.h"
 #include "core/guid/guid.h"
 
-Zeytin::Zeytin() {
-    const auto& types = rttr::type::get_types();
-    for(const auto& type : types) {
-        if(type.is_wrapper() || type.is_pointer() || !type.is_class() || type.is_template_instantiation()) {
-            continue;
+
+void Zeytin::init() {
+    for(const auto& type : rttr::type::get_types()) {
+        const auto& name = type.get_name().to_string();
+        
+        if(!type.is_class() || 
+           type.is_wrapper() || 
+           type.is_pointer() || 
+           type.is_template_instantiation() || 
+           name == "VariantBase" || 
+           name == "VariantCreateInfo") {
+            continue;      
         }
-        //create_dummy(type);
+        
+        try {
+            create_dummy(type);
+            std::cout << "Created variant for: " << name << ".variant" << std::endl;
+        } catch(const std::exception& e) {
+            std::cerr << "Error creating variant for " << name << ": " << e.what() << std::endl;
+        }
+    }    
+
+    std::cout << "Parsing entities from path: " << std::filesystem::absolute("../shared/entities") << std::endl;
+
+    try {
+        int file_count = 0;
+        int entity_count = 0;
+
+        for(const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator("../shared/entities")) {
+            file_count++;
+            std::cout << "Found file: " << entry.path().filename() << std::endl;
+
+            if(!entry.is_regular_file() || entry.path().extension() != ".entity") {
+                std::cout << "  Skipping (not a .entity file)" << std::endl;
+                continue;
+            }
+
+            std::filesystem::path file_path = entry.path();
+            std::string file_name = file_path.stem().string();
+            std::cout << "  Parsing entity: " << file_name << std::endl;
+
+            deserialize_entity(file_path);
+            entity_count++;
+        }
+
+        std::cout << "Parsed " << entity_count << " entities out of " << file_count << std::endl;
+    } catch(const std::filesystem::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
 }
 
@@ -26,8 +67,8 @@ std::string Zeytin::serialize_entity(const entity_id id, const std::filesystem::
     return zeytin::json::serialize_entity(id, get_variants(id), path);
 }
 
-void Zeytin::deserialize_entity(const std::string& str) {
-    // TODO: implement a system where we read entity id by file name instead of parsing it which removes copying of variants
+entity_id Zeytin::deserialize_entity(const std::string& str) {
+    std::cout << "Deserializng entity: " << str << std::endl;
 
     entity_id id;
     std::vector<rttr::variant> variants;
@@ -38,12 +79,11 @@ void Zeytin::deserialize_entity(const std::string& str) {
     for(const auto& var : variants) {
         entity_variants.push_back(std::move(var));
     }        
+    return id;
 }
 
 
-void Zeytin::deserialize_entity(const std::filesystem::path& path) {
-    // TODO: implement a system where we read entity id by file name instead of parsing it which removes copying of variants
-
+entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
     entity_id id;
     std::vector<rttr::variant> variants;
 
@@ -53,6 +93,7 @@ void Zeytin::deserialize_entity(const std::filesystem::path& path) {
     for(const auto& var : variants) {
         entity_variants.push_back(std::move(var));
     }
+    return id;
 }
 
 void Zeytin::create_dummy(const rttr::type& type) {

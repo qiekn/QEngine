@@ -11,7 +11,6 @@
 
 #include "core/entity.h"
 
-
 using namespace rapidjson;
 using namespace rttr;
 
@@ -339,8 +338,8 @@ std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::
 }
 
 void create_dummy(const rttr::type& type) {
-    const std::filesystem::path path = "../shared/dummies/" + type.get_name().to_string() + ".dummy";
-
+    std::filesystem::create_directory("../shared/variants");
+    const std::filesystem::path path = "../shared/variants/" + type.get_name().to_string() + ".variant";
     rttr::variant var = type.create();
     to(var, path);
 }

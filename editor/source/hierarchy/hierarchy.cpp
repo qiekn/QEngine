@@ -331,11 +331,15 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
     
     rapidjson::Value& entity_variants = entity_doc["variants"];
     
-    if (variant_doc.HasMember("variants") && variant_doc["variants"].IsArray()) {
+    if (variant_doc.HasMember("variants") && variant_doc["variants"].IsArray()) { // entity variant case
         for (auto& variant : variant_doc["variants"].GetArray()) {
             rapidjson::Value copied_variant(variant, entity_doc.GetAllocator());
             entity_variants.PushBack(copied_variant, entity_doc.GetAllocator());
         }
+    }
+    else { // plain variant case
+        rapidjson::Value copied_variant(variant_doc, entity_doc.GetAllocator());
+        entity_variants.PushBack(copied_variant, entity_doc.GetAllocator());
     }
 }
 

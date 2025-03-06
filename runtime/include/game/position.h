@@ -4,17 +4,22 @@
 
 #include "rttr/registration.h"
 #include "core/entity.h"
-#include "core/variant_base/base.h"
+#include "core/variant/variant_base.h"
+#include "game/velocity.h"
 
-struct Position{
+struct Position : VariantBase {
+    Position() = default;
+
+    Position(VariantCreateInfo info) : VariantBase(info) {}
+
+    void print() {
+        std::cout << get_id() << ": "<< "(" << x << "," << y << ")" << std::endl;
+        entity_get_variant<Velocity>().print();
+    }
 
     int x = 0;
     int y = 0;
 
-
-    void print() const {
-        std::cout << "(" << x << "," << y << ")" << std::endl;
-    }
-
+    RTTR_ENABLE(VariantBase);
 };
 

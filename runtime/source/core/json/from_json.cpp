@@ -11,6 +11,7 @@
 #include <rttr/type>
 
 #include "core/entity.h"
+#include "core/variant/variant_base.h"
 
 using namespace rapidjson;
 using namespace rttr;
@@ -236,8 +237,10 @@ rttr::variant from(entity_id entity_id, const std::string& json)
 
     rttr::type rttr_type = rttr::type::get_by_name(type.GetString());
 
+    VariantCreateInfo info;
+    info.entity_id = entity_id;
     std::vector<rttr::argument> args;
-    args.push_back(entity_id);
+    args.push_back(info);
 
     rttr::variant obj = rttr_type.create(args);
     assert(obj.is_valid());
@@ -263,7 +266,7 @@ rttr::variant from(entity_id entity_id, const std::filesystem::path& json_path)
 
 namespace zeytin { namespace json {
 
-void deserialize_entity(const std::filesystem::path& path, entity_id& entity, std::vector<rttr::variant>& variants) {
+entity_id deserialize_entity(const std::filesystem::path& path, entity_id& entity, std::vector<rttr::variant>& variants) {
     std::ifstream file(path);
     assert(file.is_open());
 
@@ -276,8 +279,8 @@ void deserialize_entity(const std::filesystem::path& path, entity_id& entity, st
     document.Parse(entity_json.c_str());
     assert(!document.HasParseError());
 
-    assert(document.HasMember("entity_id") && document["entity_id"].IsInt());
-    int entity_id = document["entity_id"].GetInt();
+    assert(document.HasMember("entity_id") && document["entity_id"].IsNumber());
+    auto entity_id = document["entity_id"].GetUint64();
     entity = entity_id;
 
     assert(document.HasMember("variants") && document["variants"].IsArray());
@@ -294,15 +297,16 @@ void deserialize_entity(const std::filesystem::path& path, entity_id& entity, st
         rttr::variant var = from(entity_id, variant_str);
         variants.push_back(std::move(var));
     }
+    return entity_id;
 }
 
-void deserialize_entity(const std::string& entity_json, entity_id& entity, std::vector<rttr::variant>& variants) {
+entity_id deserialize_entity(const std::string& entity_json, entity_id& entity, std::vector<rttr::variant>& variants) {
     Document document;
     document.Parse(entity_json.c_str());
     assert(!document.HasParseError());
 
-    assert(document.HasMember("entity_id") && document["entity_id"].IsInt());
-    int entity_id = document["entity_id"].GetInt();
+    assert(document.HasMember("entity_id") && document["entity_id"].GetUint64());
+    auto entity_id = document["entity_id"].GetUint64();
     entity = entity_id;
 
     assert(document.HasMember("variants") && document["variants"].IsArray());
@@ -320,6 +324,7 @@ void deserialize_entity(const std::string& entity_json, entity_id& entity, std::
         var.get_type().set_property_value("entity_id", var, entity_id);
         variants.push_back(std::move(var));
     }
+    return entity_id;
 }
 
 } }  // end of namespace

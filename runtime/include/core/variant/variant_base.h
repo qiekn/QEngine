@@ -4,11 +4,30 @@
 #include "core/entity.h"
 #include "core/zeytin.h"
 
+struct VariantCreateInfo {
+    entity_id entity_id;
 
-struct IVariantBase {
-    IVariantBase(entity_id id) : id(id) {}
+    RTTR_ENABLE();
+};
 
-    entity_id id;
+struct VariantBase {
+    VariantBase() = default;
+    VariantBase(VariantCreateInfo info) : entity_id(info.entity_id) {}
+
+    uint64_t get_id() { return entity_id; }
+    const uint64_t get_id() const { return entity_id; }
+
+    template<typename T>
+    T& entity_get_variant() {
+        return Zeytin::get().get_first<T>(entity_id);
+    }
+
+    template<typename T>
+    T& entity_get_variant(entity_id id) {
+        return Zeytin::get().get_first<T>(id);
+    }
+
+    entity_id entity_id;
 
     RTTR_ENABLE();
 };
