@@ -4,10 +4,9 @@
 
 #include "rttr/registration.h"
 #include "core/entity.h"
-#include "core/variant/variant_base.h"
+#include "core/variant/base.h"
 
-struct Position : IVariantBase {
-    Position(VariantCreateInfo info) : IVariantBase(entity_id) {}
+struct Position{
 
     int x = 0;
     int y = 0;
@@ -17,6 +16,5 @@ struct Position : IVariantBase {
         std::cout << "(" << x << "," << y << ")" << std::endl;
     }
 
-    RTTR_ENABLE(IVariantBase);
 };
 
