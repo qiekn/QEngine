@@ -4,7 +4,7 @@
 
 #include "rttr/registration.h"
 #include "core/entity.h"
-#include "core/variant/base.h"
+#include "core/variant_base/base.h"
 
 struct Position{
 
