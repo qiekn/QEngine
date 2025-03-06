@@ -7,6 +7,7 @@
 class EntityList final {
 
 public:
+    void load_entity_from_file(const std::filesystem::path&);
     void load_entities();
     void save_entities();
     

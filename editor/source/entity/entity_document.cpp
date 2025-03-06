@@ -9,9 +9,6 @@
 void EntityDocument::save_to_file() const {
     std::filesystem::create_directories(ENTITY_FOLDER);
     std::filesystem::path path = std::filesystem::path(ENTITY_FOLDER) / (m_name + ".entity");
-
-    std::cout << "Writing entity to: " << path << std::endl;
-
     std::ofstream out_file(path);
 
     if (!out_file.is_open()) {

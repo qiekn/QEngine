@@ -12,7 +12,6 @@ void EntityList::load_entities() {
 
         std::filesystem::path file_path = entry.path();
         std::string file_name = file_path.stem().string();
-
         m_entities.emplace_back<EntityDocument>(std::move(file_name));
     }
 
@@ -20,4 +19,9 @@ void EntityList::load_entities() {
     for(auto& entity : m_entities) {
         entity.load_from_file();
     }
+}
+void EntityList::load_entity_from_file(const std::filesystem::path& path) {
+        std::string file_name = path.stem().string();
+        auto& rv = m_entities.emplace_back<EntityDocument>(std::move(file_name));
+        rv.load_from_file();
 }

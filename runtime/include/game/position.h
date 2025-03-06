@@ -12,8 +12,13 @@ struct Position : VariantBase {
 
     Position(VariantCreateInfo info) : VariantBase(info) {}
 
-    void tick() {
+    void awake() override {
+        std::cout << "----------------------------------AWAKE CALLED----------------" << std::endl;
         std::cout << get_id() << ": "<< "(" << x << "," << y << ")" << std::endl;
+    }
+
+    void tick() override {
+        //std::cout << get_id() << ": "<< "(" << x << "," << y << ")" << std::endl;
     }
 
     int x = 0;

@@ -78,12 +78,21 @@ entity_id Zeytin::deserialize_entity(const std::string& str) {
     zeytin::json::deserialize_entity(str, id, variants);
 
     auto& entity_variants = get_variants(id);
-    for(const auto& var : variants) {
-        entity_variants.push_back(std::move(var));
+    entity_variants.clear();
+    entity_variants.reserve(variants.size());
+
+    for(auto& var : variants) {
+        try {
+            VariantBase& base = var.get_value<VariantBase&>();
+            base.awake();
+            entity_variants.push_back(std::move(var));
+        }
+        catch(const std::exception& e) {
+            std::cerr << "Exception caught: " << e.what() << std::endl;
+        }
     }        
     return id;
 }
-
 
 entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
     entity_id id;
@@ -92,8 +101,17 @@ entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
     zeytin::json::deserialize_entity(path, id, variants);
 
     auto& entity_variants = get_variants(id);
-    for(const auto& var : variants) {
-        entity_variants.push_back(std::move(var));
+    entity_variants.clear();
+    entity_variants.reserve(variants.size());
+
+    for(auto& var : variants) {
+        try {
+            VariantBase& base = var.get_value<VariantBase&>();
+            base.awake();
+            entity_variants.push_back(std::move(var));
+        } catch(const std::exception& e) {
+            std::cerr << "Exception caught: " << e.what() << std::endl;
+        }
     }
     return id;
 }
@@ -107,17 +125,11 @@ entity_id Zeytin::new_entity_id() {
 }
 
 void Zeytin::awake_variants() {
-    std::cout << "Awake variants" << std::endl;
-    int counter = 0;
     for(auto& pair : m_storage) {   
         for(auto& variant : pair.second) {
-            std::cout << "Processing variant #" << counter++ << std::endl;
             try {
                 VariantBase& base = variant.get_value<VariantBase&>();
-                std::cout << variant.get_type().get_name() << std::endl;
-                std::cout << "Got base reference, calling awake()" << std::endl;
                 base.awake();
-                std::cout << "Awake completed successfully" << std::endl;
             } catch (const std::exception& e) {
                 std::cerr << "Exception caught: " << e.what() << std::endl;
             }
@@ -126,19 +138,12 @@ void Zeytin::awake_variants() {
 }
 
 void Zeytin::tick_variants() {
-    std::cout << "Tick variants" << std::endl;
-    int counter = 0;
     for(auto& pair : m_storage) {   
         for(auto& variant : pair.second) {
-            std::cout << "Processing variant #" << counter++ << std::endl;
             try {
                 VariantBase& base = variant.get_value<VariantBase&>();
-                std::cout << variant.get_type().get_name() << std::endl;
-                std::cout << "Got base reference, calling tick()" << std::endl;
                 base.tick();
-                std::cout << "Tick completed successfully" << std::endl;
             } catch (const std::exception& e) {
-                std::cerr << "Exception caught: " << e.what() << std::endl;
             }
         }
     }

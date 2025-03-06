@@ -2,6 +2,7 @@
 
 #include "core/zeytin.h"
 #include "game/register.h"
+#include "file_watcher/file_watcher.h"
 
 int main() {
     Zeytin::get().init();
@@ -12,7 +13,22 @@ int main() {
 
     SetTargetFPS(60);
 
-    Zeytin::get().awake_variants();
+    FileWatcher entity_watcher("../shared/entities/", std::chrono::milliseconds(500));
+    entity_watcher.addCallback({ ".entity" }, [](const fs::path& path, const std::string& status) -> void {
+        std::cout << "Entity file " << path << " was " << status << std::endl;
+
+        if (status == "created") {
+            Zeytin::get().deserialize_entity(path);
+        }
+        else if (status == "modified") {
+            Zeytin::get().deserialize_entity(path);
+        }
+        else if (status == "deleted") {
+            std::cout << "Not implemented deleted status" << std::endl;
+        }
+    });
+
+    entity_watcher.start();
 
     while (!WindowShouldClose()) {
         BeginDrawing();

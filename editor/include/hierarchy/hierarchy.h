@@ -13,6 +13,9 @@ public:
 
     void update();
 
+    bool ignore_file_events = false; // NOTE: temp solution to recursive save/read new data issue
+
+
 private:
     std::vector<EntityDocument>& m_entities;
     std::vector<VariantDocument>& m_variants;
@@ -22,4 +25,5 @@ private:
     void render_variant(rapidjson::Document& document, rapidjson::Value& variant, int index); // index is required for unique id
     void render_object(rapidjson::Document& document, rapidjson::Value& object);
     void add_variant_to_entity(EntityDocument& entity_document, VariantDocument& variant_document);
+    void save_all_entities();
 };

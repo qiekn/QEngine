@@ -3,26 +3,45 @@
 #include <iostream> // IWYU pragma: keep
 #include <random>
 #include <algorithm>
+#include <thread>
 
 #include "imgui.h"
 
 void Hierarchy::update() {
     if (ImGui::Begin("Entity List"))
     {
+        render_create_entity();
+
+        static bool saveRealtime = false;
+        static float saveInterval = 1.0f;
+        static float timeSinceLastSave = 0.0f;
+
+        if (saveRealtime) {
+            timeSinceLastSave += ImGui::GetIO().DeltaTime;
+        }
+
         if (ImGui::Button("Save All")) {
-            for (auto& entity : m_entities) {
-                if (!entity.is_dead()) {
-                    entity.save_to_file();
-                }
-                else {
-                    entity.delete_entity_file();
-                }
+            save_all_entities();
+            timeSinceLastSave = 0.0f;
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Save Realtime", &saveRealtime)) {
+            timeSinceLastSave = 0.0f;
+        }
+
+        if (saveRealtime) {
+            ImGui::SameLine();
+
+            float timeRemaining = saveInterval - timeSinceLastSave;
+
+            if (timeSinceLastSave >= saveInterval) {
+                save_all_entities();
+                timeSinceLastSave = 0.0f;
             }
         }
 
         ImGui::Separator();
-
-        render_create_entity();
 
         for (auto& entity : m_entities) {
             if (entity.is_dead()) {
@@ -32,6 +51,24 @@ void Hierarchy::update() {
             render_entity(entity);
         }
     }
+}
+
+void Hierarchy::save_all_entities() {
+    ignore_file_events = true;
+
+    for (auto& entity : m_entities) {
+        if (!entity.is_dead()) {
+            entity.save_to_file();
+        }
+        else {
+            entity.delete_entity_file();
+        }
+    }
+
+    std::thread([this]() {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            ignore_file_events = false;
+    }).detach();
 }
 
 void Hierarchy::render_create_entity() {
