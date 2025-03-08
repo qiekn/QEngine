@@ -1,10 +1,15 @@
 #include <raylib.h>
 
-#include "core/zeytin.h"
+#include "core/zeytin.h" // IWYU pragma: keep
 #include "game/register.h"
-#include "file_watcher/file_watcher.h"
+#include "editor/editor_communication.h"
 
 int main() {
+    SetTraceLogLevel(LOG_ERROR);
+
+    EditorCommunication editor;
+    editor.initialize();
+
     Zeytin::get().init();
 
     const int screenWidth = 800;
@@ -13,33 +18,18 @@ int main() {
 
     SetTargetFPS(60);
 
-    FileWatcher entity_watcher("../shared/entities/", std::chrono::milliseconds(500));
-    entity_watcher.addCallback({ ".entity" }, [](const fs::path& path, const std::string& status) -> void {
-        std::cout << "Entity file " << path << " was " << status << std::endl;
-
-        if (status == "created") {
-            Zeytin::get().deserialize_entity(path);
-        }
-        else if (status == "modified") {
-            Zeytin::get().deserialize_entity(path);
-        }
-        else if (status == "deleted") {
-            std::cout << "Not implemented deleted status" << std::endl;
-        }
-    });
-
-    entity_watcher.start();
-
+    editor.notify_engine_started();
     while (!WindowShouldClose()) {
         BeginDrawing();
             ClearBackground(RAYWHITE);
+            editor.process_messages();
             Zeytin::get().tick_variants();
             DrawFPS(10, 10);
         EndDrawing();
     }
 
-    //CloseWindow();
-
+    CloseWindow();
+    
     return 0;
 }
 

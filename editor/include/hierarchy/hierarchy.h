@@ -22,8 +22,8 @@ private:
 
     void render_create_entity();
     void render_entity(EntityDocument& entity);
-    void render_variant(rapidjson::Document& document, rapidjson::Value& variant, int index); // index is required for unique id
-    void render_object(rapidjson::Document& document, rapidjson::Value& object);
+    void render_variant(rapidjson::Document& document, rapidjson::Value& variant, int index, const uint64_t entity_id); // index is required for unique id
+    void render_object(rapidjson::Document& document, rapidjson::Value& object, const uint64_t entity_id, const std::string& variant_type, const std::string& parent_path = "");
     void add_variant_to_entity(EntityDocument& entity_document, VariantDocument& variant_document);
     void save_all_entities();
 };

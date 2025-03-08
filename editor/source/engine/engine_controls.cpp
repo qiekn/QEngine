@@ -2,17 +2,25 @@
 #include <iostream>
 #include <cstdlib>
 
+#include "engine/engine_event.h"
+
 EngineControls::EngineControls() 
-    : m_isCompiling(false)
-    , m_isRunning(false) {
+    : m_compiled(false)
+    , m_is_running(false) {
+
+        EngineEventBus::get().subscribe<bool>(EngineEvent::EngineStarted, [this](const bool& success) {
+        if (success) {
+            m_is_running = true;
+        }
+    });
 }
 
-void EngineControls::renderMainMenuControls() {
+void EngineControls::render_main_menu_controls() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open", "Ctrl+O")) { /* Open file code */ }
-            if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Save file code */ }
-            if (ImGui::MenuItem("Exit", "Alt+F4")) { /* Exit code */ }
+            if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+            if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+            if (ImGui::MenuItem("Exit", "Alt+F4")) {}
             ImGui::EndMenu();
         }
 
@@ -20,25 +28,14 @@ void EngineControls::renderMainMenuControls() {
             ImGui::EndMenu();
         }
 
-        ImGui::SameLine(ImGui::GetWindowWidth() * 0.3f);
+        ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
 
-        if (ImGui::Button("Compile Engine")) {
-            if (!m_isCompiling) {
-                compileEngine();
+        if(!m_is_running) {
+            if (ImGui::Button("Start Engine")) {
+                start_engine();
             }
         }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Start Engine")) {
-            if (!m_isRunning && !m_isCompiling) {
-                startEngine();
-            }
-        }
-
-        ImGui::SameLine(ImGui::GetWindowWidth() - 150);
-        if (m_isCompiling) {
-            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Compiling...");
-        } else if (m_isRunning) {
+        else {
             ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Engine Running");
         }
 
@@ -46,38 +43,29 @@ void EngineControls::renderMainMenuControls() {
     }
 }
 
-void EngineControls::compileEngine() {
-    m_isCompiling = true;
-
+void EngineControls::start_engine() {
     std::thread([this]() {
         #ifdef _WIN32
-            int result = std::system("cd ../runtime && build.sh");
+            int result = std::system("cd ../runtime && build.sh && run.sh");
         #else
-            int result = std::system("cd ../runtime && ./build.sh");
+            int result = std::system("cd ../runtime && ./build.sh && ./run.sh");
         #endif
 
-        if (result == 0) {
-            std::cout << "Compilation succeeded" << std::endl;
-        } else {
-            std::cerr << "Compilation failed with code " << result << std::endl;
-        }
-        m_isCompiling = false;
-    }).detach();
-}
-
-void EngineControls::startEngine() {
-    m_isRunning = true;
-
-    std::thread([this]() {
-        #ifdef _WIN32
-            int result = std::system("cd ../runtime && run.sh");
-        #else
-            int result = std::system("cd ../runtime && ./run.sh");
-        #endif
-
-        if (m_isRunning) {
+        if (m_is_running) {
             std::cout << "Engine process exited with code " << result << std::endl;
-            m_isRunning = false;
+            m_is_running = false;
         }
     }).detach();
 }
+
+
+
+
+
+
+
+
+
+
+
+

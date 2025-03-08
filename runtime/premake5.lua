@@ -26,7 +26,8 @@ workspace "Zeytin"
         "X11", 
         "asound", 
         "stdc++", 
-        "rttr_core" 
+        "rttr_core",
+        "zmq"
     }
 
     buildoptions { 

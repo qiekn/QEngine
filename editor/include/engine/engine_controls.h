@@ -9,12 +9,11 @@ public:
     EngineControls();
     ~EngineControls() = default;
 
-    void renderMainMenuControls();
+    void render_main_menu_controls();
 
 private:
-    std::atomic<bool> m_isCompiling;
-    std::atomic<bool> m_isRunning;
+    std::atomic<bool> m_compiled;
+    std::atomic<bool> m_is_running;
 
-    void compileEngine();
-    void startEngine();
+    void start_engine();
 };

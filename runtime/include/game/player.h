@@ -7,6 +7,12 @@
 #include "velocity.h"
 
 
-struct Player final {
-    RTTR_ENABLE()
+struct Player : VariantBase {
+    Player() = default;
+    Player(VariantCreateInfo info) : VariantBase(info) {}
+
+    Position position;
+    Velocity velocity;
+
+    RTTR_ENABLE(VariantBase)
 };

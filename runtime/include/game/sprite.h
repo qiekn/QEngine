@@ -10,17 +10,18 @@ struct Sprite : VariantBase {
     Sprite(VariantCreateInfo info) : VariantBase(info) {}
 
     std::string path_to_sprite;
-    Texture2D texture;
+    Image mario_image;
+    Texture texture;
     bool isLoaded = false;
 
     void awake() override {
-        //std::cout << "||||||||||||||||||||||||||||||||||||||||||" << std::endl;
-        //texture = LoadTexture(path_to_sprite.c_str());
+        std::cout << "||||||||||||||||||||||||||||||||||||||||||" << std::endl;
+        mario_image = LoadImage(path_to_sprite.c_str());
     }
 
     void tick() override { 
         if(!isLoaded) {
-            texture = LoadTexture(path_to_sprite.c_str());
+            texture = LoadTextureFromImage(mario_image);
             isLoaded = true;
         }
 

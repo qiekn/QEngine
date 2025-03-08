@@ -32,6 +32,12 @@ RTTR_REGISTRATION
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("path_to_sprite", &Sprite::path_to_sprite);
+
+    rttr::registration::class_<Player>("Player")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("position", &Player::position)
+        .property("velocity", &Player::velocity);
 }
 
 

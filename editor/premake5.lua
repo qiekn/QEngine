@@ -25,6 +25,7 @@ workspace "Zeytin"
         "X11", 
         "asound", 
         "stdc++", 
+        "zmq"
     }
 
     buildoptions { 

@@ -25,3 +25,4 @@ void EntityList::load_entity_from_file(const std::filesystem::path& path) {
         auto& rv = m_entities.emplace_back<EntityDocument>(std::move(file_name));
         rv.load_from_file();
 }
+

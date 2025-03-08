@@ -1,11 +1,13 @@
 #include <cassert>
 
+#include "rapidjson/document.h"
+
 #include "core/zeytin.h"
 #include "core/json/json.h"
 #include "core/guid/guid.h"
 
 #include "core/variant/variant_base.h"
-
+#include "editor/editor_event.h"
 
 void Zeytin::init() {
     for(const auto& type : rttr::type::get_types()) {
@@ -55,6 +57,34 @@ void Zeytin::init() {
     } catch(const std::filesystem::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
+
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityModifiedEditor, [this](const rapidjson::Document& doc) {
+            assert(!doc.HasParseError());
+            assert(doc.HasMember("entity_id"));
+
+            const std::string& entity_id_str = doc["entity_id"].GetString();
+            const std::string& variant_type = doc["variant_type"].GetString();
+            const std::string& key_type = doc["key_type"].GetString();
+            const std::string& key_path = doc["key_path"].GetString();
+            int value = doc["value"].GetInt();
+
+            uint64_t entity_id = std::stoull(entity_id_str);
+            std::cout << entity_id << std::endl;
+
+            for(auto& variant : m_storage[entity_id]) {
+                if(variant.get_type().get_name() == variant_type) {
+                    if(key_type == "int") {
+                        for(auto& property : variant.get_type().get_properties()) {
+                            if(property.get_name() == key_path)  {
+                                property.set_value(variant, value);;
+                            }
+                        }
+                    }
+                }
+            }
+
+    });
+
 }
 
 void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
