@@ -109,8 +109,6 @@ void EditorCommunication::receive_messages() {
                         std::lock_guard<std::mutex> lock(m_queue_mutex);
                         m_message_queue.push(message_str);
                     }
-
-                    std::cout << "Engine received: " << message_str << std::endl;
                 }
             }
         }
@@ -125,7 +123,6 @@ void EditorCommunication::process_messages() {
 
     while(!m_message_queue.empty()) {
         const auto& msg = m_message_queue.front();
-        std::cout << msg << std::endl;
 
         rapidjson::Document doc;
         doc.Parse(msg.c_str());
@@ -137,7 +134,6 @@ void EditorCommunication::process_messages() {
         const std::string& type = doc["type"].GetString();
 
         if(type == "entity_changed") {
-            std::cout << "entity changed" << std::endl;
             EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityModifiedEditor, doc);
         }
 

@@ -14,7 +14,6 @@ EngineCommunication::EngineCommunication()
     , m_subscriber(m_context, zmq::socket_type::sub) {
 
         EngineEventBus::get().subscribe<const std::string&>(EngineEvent::EntityModifiedEditor, [this](const std::string& msg) {
-                std::cout << msg << std::endl;
                 send_message(msg);
         });
 }

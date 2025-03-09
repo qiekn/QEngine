@@ -9,6 +9,38 @@
 #include "core/variant/variant_base.h"
 #include "editor/editor_event.h"
 
+template<typename T>
+void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, size_t path_index, const T& value) {
+    if (path_index >= path_parts.size()) {
+        return; 
+    }
+
+    const std::string& current_path = path_parts[path_index];
+
+    if (path_index == path_parts.size() - 1) {
+        // we re at the leaf property so set the value directly
+        for (auto& property : obj.get_type().get_properties()) {
+            if (property.get_name() == current_path) {
+                std::cout << "Variant type: " << obj.get_type().get_name() << " | " << "Property type: " << property.get_type().get_name() << " | " << "Property name: " << property.get_name() << std::endl;
+
+                property.set_value(obj, value);
+                return;
+            }
+        }
+    } else {
+        // we need to navigate to a nested object
+        for (auto& property : obj.get_type().get_properties()) {
+            if (property.get_name() == current_path) {
+                rttr::variant nested_obj = property.get_value(obj);
+                update_property(nested_obj, path_parts, path_index + 1, value);
+                return;
+            }
+        }
+    }
+
+    std::cerr << "Property " << current_path << " not found in path" << std::endl;
+}
+
 void Zeytin::init() {
     for(const auto& type : rttr::type::get_types()) {
         const auto& name = type.get_name().to_string();
@@ -58,34 +90,63 @@ void Zeytin::init() {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
 
-    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityModifiedEditor, [this](const rapidjson::Document& doc) {
-            assert(!doc.HasParseError());
-            assert(doc.HasMember("entity_id"));
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityModifiedEditor, [this](const rapidjson::Document& doc) -> void {
+        assert(!doc.HasParseError());
+        assert(doc.HasMember("entity_id"));
+        assert(doc.HasMember("variant_type"));
+        assert(doc.HasMember("key_type"));
+        assert(doc.HasMember("key_path"));
+        assert(doc.HasMember("value"));
 
-            const std::string& entity_id_str = doc["entity_id"].GetString();
-            const std::string& variant_type = doc["variant_type"].GetString();
-            const std::string& key_type = doc["key_type"].GetString();
-            const std::string& key_path = doc["key_path"].GetString();
-            int value = doc["value"].GetInt();
+        uint64_t entity_id = doc["entity_id"].GetUint64();
+        const std::string& variant_type = doc["variant_type"].GetString();
+        const std::string& key_type = doc["key_type"].GetString();
+        const std::string& key_path = doc["key_path"].GetString();
+        const std::string& value_str = doc["value"].GetString();
 
-            uint64_t entity_id = std::stoull(entity_id_str);
-            std::cout << entity_id << std::endl;
+        if (m_storage.find(entity_id) == m_storage.end()) {
+            std::cerr << "Entity " << entity_id << " not found" << std::endl;
+            return;
+        }
 
-            for(auto& variant : m_storage[entity_id]) {
-                if(variant.get_type().get_name() == variant_type) {
-                    if(key_type == "int") {
-                        for(auto& property : variant.get_type().get_properties()) {
-                            if(property.get_name() == key_path)  {
-                                property.set_value(variant, value);;
-                            }
-                        }
-                    }
+        for (auto& variant : m_storage[entity_id]) {
+            if (variant.get_type().get_name() == variant_type) {
+                std::vector<std::string> path_parts;
+                std::string current_part;
+                std::istringstream path_stream(key_path);
+
+                while (std::getline(path_stream, current_part, '.')) {
+                    path_parts.push_back(current_part);
                 }
-            }
 
+                if (path_parts.empty()) {
+                    std::cerr << "Invalid key path: " << key_path << std::endl;
+                    return;
+                }
+
+                if (key_type == "int") {
+                    int value = std::stoi(value_str);
+                    update_property(variant, path_parts, 0, value);
+                }
+                else if (key_type == "float") {
+                    float value = std::stof(value_str);
+                    update_property(variant, path_parts, 0, value);
+                }
+                else if (key_type == "bool") {
+                    bool value = (value_str == "true" || value_str == "1");
+                    update_property(variant, path_parts, 0, value);
+                }
+                else if (key_type == "string") {
+                    update_property(variant, path_parts, 0, value_str);
+                }
+
+                break; 
+            }
+        }
     });
 
 }
+
 
 void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
     m_storage[entity].push_back(std::move(variant));
