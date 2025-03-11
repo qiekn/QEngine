@@ -44,14 +44,9 @@ void update_property(rttr::variant& obj, const std::vector<std::string>& path_pa
 void Zeytin::init() {
     for(const auto& type : rttr::type::get_types()) {
         const auto& name = type.get_name().to_string();
-        
-        if(!type.is_class() || 
-           type.is_wrapper() || 
-           type.is_pointer() || 
-           type.is_template_instantiation() || 
-           name == "VariantBase" || 
-           name == "VariantCreateInfo") {
-            continue;      
+
+        if(!type.is_derived_from<VariantBase>()) {
+            continue;
         }
         
         try {
@@ -90,7 +85,7 @@ void Zeytin::init() {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
 
-    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityModifiedEditor, [this](const rapidjson::Document& doc) -> void {
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityPropertyChanged, [this](const rapidjson::Document& doc) -> void {
         assert(!doc.HasParseError());
         assert(doc.HasMember("entity_id"));
         assert(doc.HasMember("variant_type"));
@@ -143,6 +138,25 @@ void Zeytin::init() {
                 break; 
             }
         }
+    });
+
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityVariantAdded, [this](const rapidjson::Document& msg) {
+        assert(!msg.HasParseError());
+        assert(msg.HasMember("entity_id"));
+        assert(msg.HasMember("variant_type"));
+
+        entity_id entity_id = msg["entity_id"].GetUint64();
+        auto& variants = m_storage[entity_id];
+
+        VariantCreateInfo info;
+        info.entity_id = entity_id;
+        std::vector<rttr::argument> args;
+        args.push_back(info);
+
+        rttr::type rttr_type = rttr::type::get_by_name(msg["variant_type"].GetString());
+        rttr::variant obj = rttr_type.create(args);
+
+        variants.push_back(std::move(obj));
     });
 
 }
@@ -215,25 +229,14 @@ entity_id Zeytin::new_entity_id() {
     return generateUniqueID();
 }
 
-void Zeytin::awake_variants() {
-    for(auto& pair : m_storage) {   
-        for(auto& variant : pair.second) {
-            try {
-                VariantBase& base = variant.get_value<VariantBase&>();
-                base.awake();
-            } catch (const std::exception& e) {
-                std::cerr << "Exception caught: " << e.what() << std::endl;
-            }
-        }
-    }
-}
-
 void Zeytin::tick_variants() {
     for(auto& pair : m_storage) {   
         for(auto& variant : pair.second) {
             try {
                 VariantBase& base = variant.get_value<VariantBase&>();
-                base.tick();
+                if(!base.is_dead) {
+                    base.tick();
+                }
             } catch (const std::exception& e) {
             }
         }

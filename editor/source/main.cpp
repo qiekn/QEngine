@@ -13,22 +13,22 @@
 #include "engine/engine_controls.h"
 #include "engine/engine_communication.h"
 
-
 int main(int argc, char* argv[])
 {
-    SetTraceLogLevel(LOG_ERROR); // raylib
+    SetTraceLogLevel(LOG_ERROR);
 
     EngineControls engine_controls;
     EngineCommunication engine_communication;
     engine_communication.initialize();
 
-	int screenWidth = 1280;
-	int screenHeight = 800;
+    int screenWidth = 1280;
+    int screenHeight = 800;
 
-	SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-	InitWindow(screenWidth, screenHeight, "Zeytin");
-	SetTargetFPS(144);
-	rlImGuiSetup(false);
+    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
+    InitWindow(screenWidth, screenHeight, "Zeytin");
+    SetTargetFPS(144);
+    SetExitKey(0);
+    rlImGuiSetup(false);
 
     SetEditorTheme();
 
@@ -40,28 +40,25 @@ int main(int argc, char* argv[])
 
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
 
-    int frame_count = 0;
+    while (!WindowShouldClose())
+    {
+        BeginDrawing();
+        ClearBackground(BLACK);
 
-	while (!WindowShouldClose())    
-	{
-		BeginDrawing();
-		ClearBackground(DARKGRAY);
+        rlImGuiBegin();
 
-		rlImGuiBegin();
-
-        engine_communication.process_recieved_messages();
-
+        engine_communication.raise_events();
         engine_controls.render_main_menu_controls();
         hierarchy.update();
 
-		ImGui::End();
+        ImGui::End();
 
-		rlImGuiEnd();
-		EndDrawing();
-	}
+        rlImGuiEnd();
+        EndDrawing();
+    }
 
     rlImGuiShutdown();
-	CloseWindow(); 
+    CloseWindow();
 
-	return 0;
+    return 0;
 }

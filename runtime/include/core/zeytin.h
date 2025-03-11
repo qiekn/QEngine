@@ -42,18 +42,16 @@ public:
     }
 
     template<typename T>
-    T& get_first(const entity_id& entity) {
+    void try_get_variant(const entity_id entity_id, rttr::variant& out_variant) {
         const auto& rttr_type = rttr::type::get<T>();
-        auto& variants = m_storage[entity];
+        auto& variants = m_storage[entity_id];
         for(auto& variant : variants) {
             if(variant.get_type() == rttr_type) {
-                return variant.get_value<T>();  
+                out_variant = variant;
             }
         }
-        throw std::runtime_error("No matching variant found for the given type");
     }
 
-    void awake_variants();
     void tick_variants();
 
 private:

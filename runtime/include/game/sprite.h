@@ -5,28 +5,31 @@
 
 #include "game/position.h"
 
-struct Sprite : VariantBase {
+
+class Sprite : public VariantBase {
+
+public:
     Sprite() = default;
     Sprite(VariantCreateInfo info) : VariantBase(info) {}
 
-    std::string path_to_sprite;
-    Image mario_image;
-    Texture texture;
-    bool isLoaded = false;
+    std::string path_to_sprite; PROPERTY();
+ 
 
     void awake() override {
-        std::cout << "||||||||||||||||||||||||||||||||||||||||||" << std::endl;
-        mario_image = LoadImage(path_to_sprite.c_str());
+        this->texture = LoadTexture(path_to_sprite.c_str()); 
     }
 
     void tick() override { 
-        if(!isLoaded) {
-            texture = LoadTextureFromImage(mario_image);
-            isLoaded = true;
+
+        rttr::variant pos_var;
+        entity_get_variant<Position>(pos_var);
+
+        if(!pos_var.is_valid()) {
+            std::cerr << "Position component is not found where sprite is attached" << std::endl;
+            return;
         }
 
-
-        const auto& pos = entity_get_variant<Position>(); 
+        const auto& pos = pos_var.get_value<Position>();
         const float x = pos.x;
         const float y = pos.y;
 
@@ -42,7 +45,10 @@ struct Sprite : VariantBase {
             0.0f,  
             WHITE   
         );
-}
+    }
+
+private:
+    Texture texture; 
 
     RTTR_ENABLE(VariantBase);
 };

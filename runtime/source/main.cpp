@@ -6,14 +6,10 @@
 #include "game/register.h"
 #include "editor/editor_communication.h"
 
+
 int main() {
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_TOPMOST);
-
-    EditorCommunication editor;
-    editor.initialize();
-
-    Zeytin::get().init();
 
     const int virtualWidth = 1920;
     const int virtualHeight = 1080;
@@ -23,6 +19,7 @@ int main() {
 
     InitWindow(windowWidth, windowHeight, "");
     SetWindowPosition(1051, 393);
+    SetExitKey(0);
 
     RenderTexture2D target = LoadRenderTexture(virtualWidth, virtualHeight);
 
@@ -37,8 +34,14 @@ int main() {
 
     SetTargetFPS(60);
 
-    editor.notify_engine_started();
+    EditorCommunication editor_comm;
+    editor_comm.initialize();
+
+    Zeytin::get().init();
+
     while (!WindowShouldClose()) {
+        editor_comm.heartbeet();
+
         Vector2 mousePosition = GetMousePosition();
 
         Vector2 virtualMousePosition = {
@@ -53,7 +56,7 @@ int main() {
             DrawText("1920x1080", 20, 20, 40, BLACK);
             DrawCircle(960, 540, 100, RED);
 
-            editor.process_messages();
+            editor_comm.raise_events();
             Zeytin::get().tick_variants();
 
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);

@@ -18,13 +18,14 @@ public:
     void shutdown();
     bool send_message(const std::string& json);
     bool is_engine_connected() const;
-    void process_recieved_messages();
+    void raise_events();
 
 private:
+
     void recieve_messages();
 
-    std::atomic<bool> m_running;
-    bool m_initialized;
+    std::atomic<bool> m_running = false;
+    bool m_initialized = false;
     
     zmq::context_t m_context;
     zmq::socket_t m_publisher;  

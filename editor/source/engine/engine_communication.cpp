@@ -109,7 +109,7 @@ void EngineCommunication::recieve_messages() {
     }
 }
 
-void EngineCommunication::process_recieved_messages() {
+void EngineCommunication::raise_events() {
     rapidjson::Document doc;
 
     while(!m_message_queue.empty()) {
@@ -120,13 +120,16 @@ void EngineCommunication::process_recieved_messages() {
 
         const std::string& type = doc["type"].GetString();
 
-        if(type == "greet") {
+        if(type == "heartbeet") {
+            EngineEventBus::get().publish<bool>(EngineEvent::EngineHeartbeet, true);
             EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
         }
 
         m_message_queue.pop();
     }
+
 }
+
 
 
 

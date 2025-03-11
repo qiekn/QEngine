@@ -18,8 +18,8 @@ public:
     bool initialize();
     void shutdown();
     bool send_message(const std::string& message);
-    void notify_engine_started();
-    void process_messages();
+    void heartbeet();
+    void raise_events();
 
 private:
     void receive_messages();

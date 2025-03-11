@@ -12,8 +12,10 @@ public:
     void render_main_menu_controls();
 
 private:
-    std::atomic<bool> m_compiled;
     std::atomic<bool> m_is_running;
+    bool m_is_play_mode ;
+    bool m_is_paused;
+    //bool m_start_pressed;
 
     void start_engine();
 };

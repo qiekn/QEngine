@@ -8,6 +8,7 @@
 enum class EngineEvent {
     EngineStarted,
     EngineStopped,
+    EngineHeartbeet,
     EntityModifiedEditor,
     EntityModifiedEngine
 };

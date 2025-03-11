@@ -1,6 +1,20 @@
+lifetime methods:
+
+on_register()
+on_update()
+on_play_start()
+on_play_update()
+on_play_late_update()
+
+
+* add playmode
+* add remove variant from entity to runtime
+* add runtime to editor
+
 * Add generate button to editor for variant generations. just run the engine headless and kill it a few seconds later
 * Find a way to real time edit entities from the editor-engine and reflect to each other
 
+* make sure an entity can have 1 instance of a variant type
 * support double type
 * Implement adding elements to array
 * investigate enums

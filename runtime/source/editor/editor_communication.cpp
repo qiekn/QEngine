@@ -75,10 +75,10 @@ bool EditorCommunication::send_message(const std::string& message) {
     }
 }
 
-void EditorCommunication::notify_engine_started() {
+void EditorCommunication::heartbeet() {
     rapidjson::Document msg;
     msg.SetObject();
-    msg.AddMember("type", "greet", msg.GetAllocator());
+    msg.AddMember("type", "heartbeet", msg.GetAllocator());
 
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -119,7 +119,7 @@ void EditorCommunication::receive_messages() {
     }
 }
 
-void EditorCommunication::process_messages() {
+void EditorCommunication::raise_events() {
 
     while(!m_message_queue.empty()) {
         const auto& msg = m_message_queue.front();
@@ -133,8 +133,11 @@ void EditorCommunication::process_messages() {
 
         const std::string& type = doc["type"].GetString();
 
-        if(type == "entity_changed") {
-            EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityModifiedEditor, doc);
+        if(type == "entity_property_changed") {
+            EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityPropertyChanged, doc);
+        }
+        else if (type == "entity_variant_added") {
+            EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityVariantAdded, doc);
         }
 
         m_message_queue.pop();

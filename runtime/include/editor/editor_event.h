@@ -6,10 +6,9 @@
 #include <shared_mutex>
 
 enum class EditorEvent {
-    EngineStarted,
-    EngineStopped,
-    EntityModifiedEditor,
-    EntityModifiedEngine
+    EntityPropertyChanged,
+    EntityVariantAdded,
+    EntityVariantRemoved,
 };
 
 class EditorEventBus {
