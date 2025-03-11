@@ -41,7 +41,7 @@ void update_property(rttr::variant& obj, const std::vector<std::string>& path_pa
     std::cerr << "Property " << current_path << " not found in path" << std::endl;
 }
 
-void Zeytin::init() {
+void Zeytin::generate_variants() {
     for(const auto& type : rttr::type::get_types()) {
         const auto& name = type.get_name().to_string();
 
@@ -56,7 +56,9 @@ void Zeytin::init() {
             std::cerr << "Error creating variant for " << name << ": " << e.what() << std::endl;
         }
     }    
+}
 
+void Zeytin::init() {
     std::cout << "Parsing entities from path: " << std::filesystem::absolute("../shared/entities") << std::endl;
 
     try {

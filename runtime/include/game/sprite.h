@@ -7,7 +7,7 @@
 
 
 class Sprite : public VariantBase { 
-    VARIANT(Sprite)
+    VARIANT(Sprite);
 
 public:
     std::string path_to_sprite; PROPERTY();

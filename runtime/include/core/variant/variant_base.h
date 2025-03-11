@@ -4,11 +4,7 @@
 #include "core/entity.h"
 #include "core/zeytin.h"
 
-#define VARIANT(ClassName) \
-    public: \
-    ClassName() = default; \
-    ClassName(VariantCreateInfo info) : VariantBase(info) {} \
-    RTTR_ENABLE(VariantBase);
+#define VARIANT(ClassName) public: ClassName() = default; ClassName(VariantCreateInfo info) : VariantBase(info) {} RTTR_ENABLE(VariantBase); private:
 
 #define PROPERTY() 
 

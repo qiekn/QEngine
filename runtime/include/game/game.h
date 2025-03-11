@@ -4,6 +4,6 @@
 #include "core/variant/variant_base.h"
 
 class Game : public VariantBase {
-    VARIANT(Game)
+    VARIANT(Game);
 };
 

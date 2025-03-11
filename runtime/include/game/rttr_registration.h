@@ -1,3 +1,4 @@
+#include "game/debug/debug.h"
 #include "game/game.h"
 #include "game/position.h"
 #include "game/sprite.h"
@@ -34,5 +35,9 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Position::x)
         .property("y", &Position::y);
+
+    rttr::registration::class_<Debug>("Debug")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 
 }

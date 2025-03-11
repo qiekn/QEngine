@@ -19,6 +19,7 @@ public:
         return instance;
     }
 
+    void generate_variants();
     void init();
               
     std::string serialize_entity(const entity_id id);
@@ -27,8 +28,6 @@ public:
     entity_id deserialize_entity(const std::filesystem::path& path);
     entity_id deserialize_entity(const std::string& entity);
 
-    void create_dummy(const rttr::type& type);
-    
     entity_id new_entity_id();
     void add_variant(const entity_id&, rttr::variant);
 
@@ -62,5 +61,7 @@ private:
     Zeytin() = default;
     ~Zeytin() = default;
     
+    void create_dummy(const rttr::type& type);
+
     std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage;
 };

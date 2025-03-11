@@ -13,13 +13,28 @@ int main(int argc, char* argv[]) {
     SetConfigFlags(FLAG_WINDOW_TOPMOST);
 #endif
 
+    bool kill_after_generate = false;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--kill-after-generate") == 0) {
+            kill_after_generate = true;
+            break;
+        }
+    }
+
+    Zeytin::get().generate_variants();
+
+    if(kill_after_generate) {
+        std::cout << "Kill After Generate" << std::endl;
+        exit(0);
+    }
+
     const int virtualWidth = 1920;
     const int virtualHeight = 1080;
 
     const int windowWidth = 800;
     const int windowHeight = 600;
 
-    InitWindow(windowWidth, windowHeight, "");
+    InitWindow(windowWidth, windowHeight, "Game - ZeytinEngine");
     SetWindowPosition(1051, 393);
     SetExitKey(0);
 

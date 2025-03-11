@@ -4,7 +4,7 @@
 #include "core/variant/variant_base.h"
 
 class Velocity : public VariantBase {
-    VARIANT(Velocity)
+    VARIANT(Velocity);
 
 public:
     int x = 0; PROPERTY()
