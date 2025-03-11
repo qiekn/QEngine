@@ -45,7 +45,7 @@ void Zeytin::init() {
     for(const auto& type : rttr::type::get_types()) {
         const auto& name = type.get_name().to_string();
 
-        if(!type.is_derived_from<VariantBase>()) {
+        if(!type.is_derived_from<VariantBase>() || type.get_name() == "VariantBase") {
             continue;
         }
         
@@ -189,7 +189,7 @@ entity_id Zeytin::deserialize_entity(const std::string& str) {
     for(auto& var : variants) {
         try {
             VariantBase& base = var.get_value<VariantBase&>();
-            base.awake();
+            base.on_init();
             entity_variants.push_back(std::move(var));
         }
         catch(const std::exception& e) {
@@ -210,13 +210,9 @@ entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
     entity_variants.reserve(variants.size());
 
     for(auto& var : variants) {
-        try {
-            VariantBase& base = var.get_value<VariantBase&>();
-            base.awake();
-            entity_variants.push_back(std::move(var));
-        } catch(const std::exception& e) {
-            std::cerr << "Exception caught: " << e.what() << std::endl;
-        }
+        VariantBase& base = var.get_value<VariantBase&>();
+        base.on_init();
+        entity_variants.push_back(std::move(var));
     }
     return id;
 }
@@ -229,18 +225,35 @@ entity_id Zeytin::new_entity_id() {
     return generateUniqueID();
 }
 
-void Zeytin::tick_variants() {
+void Zeytin::update_variants() {
     for(auto& pair : m_storage) {   
         for(auto& variant : pair.second) {
-            try {
-                VariantBase& base = variant.get_value<VariantBase&>();
-                if(!base.is_dead) {
-                    base.tick();
-                }
-            } catch (const std::exception& e) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if(!base.is_dead) {
+                base.on_update();
             }
         }
     }
 }
 
+void Zeytin::play_update_variants() {
+    for(auto& pair : m_storage) {   
+        for(auto& variant : pair.second) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if(!base.is_dead) {
+                base.on_play_update();
+            }
+        }
+    }
+}
 
+void Zeytin::play_start_variants() {
+    for(auto& pair : m_storage) {   
+        for(auto& variant : pair.second) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if(!base.is_dead) {
+                base.on_play_start();
+            }
+        }
+    }
+}

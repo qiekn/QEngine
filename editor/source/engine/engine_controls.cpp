@@ -3,9 +3,10 @@
 #include <cstdlib>
 
 #include "engine/engine_event.h"
+#include "engine/engine_event_enter_play_mode.state.h"
 
 EngineControls::EngineControls() 
-    : m_is_running(false), m_is_play_mode(false) {
+    : m_is_running(false), m_is_play_mode(false), m_is_paused(false) {
 
         EngineEventBus::get().subscribe<bool>(EngineEvent::EngineStarted, [this](const bool& success) {
         if (success) {
@@ -28,7 +29,6 @@ void EngineControls::render_main_menu_controls() {
 
         ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
   
-        // Engine status display
         if(!m_is_running) {
             if (ImGui::Button("Start Engine")) {
                 start_engine();
@@ -38,42 +38,31 @@ void EngineControls::render_main_menu_controls() {
             ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Engine Running");
         }
         
-        // Play mode section (Unity-like)
         ImGui::SameLine(ImGui::GetWindowWidth() * 0.7f);
         
-        // Play mode buttons with colors similar to Unity's play mode controls
-        // Only enable play controls if engine is running
         if (m_is_running) {
-            // Change Play button color based on play mode state
             ImGui::PushStyleColor(ImGuiCol_Button, m_is_play_mode ? ImVec4(0.0f, 0.5f, 0.0f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, m_is_play_mode ? ImVec4(0.0f, 0.7f, 0.0f, 1.0f) : ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, m_is_play_mode ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f) : ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
             
             if (ImGui::Button("Play")) {
                 m_is_play_mode = !m_is_play_mode;
-                if (m_is_play_mode) {
-                    //enter_play_mode();
-                    m_is_paused = false;
-                } else {
-                    //exit_play_mode();
-                    m_is_paused = false;
-                }
+                m_is_play_mode ? enter_play_mode() : exit_play_mode();
             }
+
             ImGui::PopStyleColor(3);
             
             ImGui::SameLine();
-            // Change Pause button color based on paused state
             ImGui::PushStyleColor(ImGuiCol_Button, m_is_paused ? ImVec4(0.8f, 0.5f, 0.0f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, m_is_paused ? ImVec4(0.9f, 0.6f, 0.0f, 1.0f) : ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, m_is_paused ? ImVec4(1.0f, 0.7f, 0.0f, 1.0f) : ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
             
             if (ImGui::Button("Pause")) {
-                //toggle_pause();
                 m_is_paused = !m_is_paused;
             }
+
             ImGui::PopStyleColor(3);
             
-            // Display play mode status text
             ImGui::SameLine();
             if (m_is_play_mode) {
                 if (m_is_paused) {
@@ -81,11 +70,9 @@ void EngineControls::render_main_menu_controls() {
                 } else {
                     ImGui::TextColored(ImVec4(0.0f, 0.8f, 0.0f, 1.0f), "PLAYING");
                 }
-            } else {
-                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "STOPPED");
-            }
-        } else {
-            // Display disabled play controls when engine is not running
+            } 
+            } 
+        else {
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
@@ -117,9 +104,17 @@ void EngineControls::start_engine() {
     }).detach();
 }
 
+void EngineControls::enter_play_mode() {
+    EnterPlayModeState state = {
+        .is_paused = m_is_paused
+    };
 
+    EngineEventBus::get().publish<EnterPlayModeState>(EngineEvent::EnterPlayMode, state);
+}
 
-
+void EngineControls::exit_play_mode() {
+    EngineEventBus::get().publish<bool>(EngineEvent::ExitPlayMode, true);
+}
 
 
 

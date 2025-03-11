@@ -1,15 +1,17 @@
-#include <raylib.h>
-
-#include "core/zeytin.h" // IWYU pragma: keep
+#include <raylib.h> // IWYU pragme: keep
 #include <iostream> // IWYU pragma: keep
 
-#include "game/register.h"
-#include "editor/editor_communication.h"
+#include "core/zeytin.h" // IWYU pragma: keep
+#include "editor/editor_communication.h" // IWYU pragma: keep
+#include "game/rttr_registration.h"
 
 
-int main() {
+int main(int argc, char* argv[]) {
+
+#ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_TOPMOST);
+#endif
 
     const int virtualWidth = 1920;
     const int virtualHeight = 1080;
@@ -34,13 +36,19 @@ int main() {
 
     SetTargetFPS(60);
 
+#ifdef EDITOR_MODE
     EditorCommunication editor_comm;
     editor_comm.initialize();
+#endif
 
     Zeytin::get().init();
 
     while (!WindowShouldClose()) {
+
+#ifdef EDITOR_MODE
         editor_comm.heartbeet();
+        editor_comm.raise_events();
+#endif
 
         Vector2 mousePosition = GetMousePosition();
 
@@ -49,17 +57,16 @@ int main() {
             (mousePosition.y - position.y) / scale
         };
 
-
         BeginTextureMode(target);
             ClearBackground(RAYWHITE);
 
+            Zeytin::get().update_variants(); // this should be here because variants may render something
+
+#ifdef EDITOR_MODE
             DrawText("1920x1080", 20, 20, 40, BLACK);
-            DrawCircle(960, 540, 100, RED);
-
-            editor_comm.raise_events();
-            Zeytin::get().tick_variants();
-
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
+#endif
+
         EndTextureMode();
 
         BeginDrawing();
@@ -79,6 +86,7 @@ int main() {
     }
 
     UnloadRenderTexture(target);
+
     CloseWindow();
 
     return 0;

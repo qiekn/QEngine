@@ -139,6 +139,15 @@ void EditorCommunication::raise_events() {
         else if (type == "entity_variant_added") {
             EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityVariantAdded, doc);
         }
+        else if (type == "enter_play_mode") {
+            bool is_paused = doc["is_paused"].GetBool();
+            EditorEventBus::get().publish<bool>(EditorEvent::EnterPlayMode, is_paused);
+            std::cout << "Engine enter play mode >> is_paused: " << is_paused << std::endl;
+        }
+        else if (type == "exit_play_mode") {
+            EditorEventBus::get().publish<bool>(EditorEvent::ExitPlayMode, false);
+            std::cout << "Engine exit play mode" << std::endl;
+        }
 
         m_message_queue.pop();
     }

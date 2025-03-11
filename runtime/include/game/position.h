@@ -7,13 +7,11 @@
 #include "core/variant/variant_base.h"
 #include "game/velocity.h"
 
-struct Position : VariantBase {
-    Position() = default;
-    Position(VariantCreateInfo info) : VariantBase(info) {}
+class Position : public VariantBase {
+    VARIANT(Position)
 
-    int x = 0;
-    int y = 0;
-
-    RTTR_ENABLE(VariantBase);
+public:
+    int x = 0; PROPERTY()
+    int y = 0; PROPERTY()
 };
 

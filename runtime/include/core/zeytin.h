@@ -8,6 +8,7 @@
 #include "rttr/type.h"
 #include "core/entity.h"
 
+
 class Zeytin {      
 public:
     Zeytin(const Zeytin&) = delete; 
@@ -52,7 +53,10 @@ public:
         }
     }
 
-    void tick_variants();
+    void update_variants();
+
+    void play_start_variants();
+    void play_update_variants();
 
 private:
     Zeytin() = default;

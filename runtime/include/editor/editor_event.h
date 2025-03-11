@@ -9,6 +9,8 @@ enum class EditorEvent {
     EntityPropertyChanged,
     EntityVariantAdded,
     EntityVariantRemoved,
+    EnterPlayMode,
+    ExitPlayMode,
 };
 
 class EditorEventBus {

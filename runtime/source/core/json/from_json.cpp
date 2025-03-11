@@ -3,7 +3,6 @@
 #include <cassert>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 #define RAPIDJSON_HAS_STDSTRING 1
 #include <rapidjson/prettywriter.h> 

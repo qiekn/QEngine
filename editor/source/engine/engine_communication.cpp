@@ -3,8 +3,12 @@
 #include <iostream>
 #include <chrono>
 
-#include "engine/engine_event.h"
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+
+#include "engine/engine_event.h"
+#include "engine/engine_event_enter_play_mode.state.h"
 
 EngineCommunication::EngineCommunication()
     : m_running(false)
@@ -15,6 +19,31 @@ EngineCommunication::EngineCommunication()
 
         EngineEventBus::get().subscribe<const std::string&>(EngineEvent::EntityModifiedEditor, [this](const std::string& msg) {
                 send_message(msg);
+        });
+
+        EngineEventBus::get().subscribe<EnterPlayModeState>(EngineEvent::EnterPlayMode, [this](EnterPlayModeState state) {
+                rapidjson::Document msg;
+                msg.SetObject();
+                msg.AddMember("type", "enter_play_mode", msg.GetAllocator());
+                msg.AddMember("is_paused", state.is_paused, msg.GetAllocator());
+
+                rapidjson::StringBuffer buffer;
+                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+                msg.Accept(writer);
+
+                send_message(buffer.GetString());
+        });
+
+        EngineEventBus::get().subscribe<bool>(EngineEvent::ExitPlayMode, [this](bool _) {
+                rapidjson::Document msg;
+                msg.SetObject();
+                msg.AddMember("type", "exit_play_mode", msg.GetAllocator());
+
+                rapidjson::StringBuffer buffer;
+                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+                msg.Accept(writer);
+
+                send_message(buffer.GetString());
         });
 }
 

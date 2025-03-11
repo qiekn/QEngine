@@ -3,16 +3,14 @@
 #include "rttr/registration.h"
 #include "core/variant/variant_base.h"
 
-struct Velocity : VariantBase {
-    Velocity() = default;
-    Velocity(VariantCreateInfo info) : VariantBase(info) {}
+class Velocity : public VariantBase {
+    VARIANT(Velocity)
 
-    int x = 0;
-    int y = 0;
+public:
+    int x = 0; PROPERTY()
+    int y = 0; PROPERTY()
 
     void tick() {
         std::cout << get_id() << ": "<< "(" << x << "," << y << ")" << std::endl;
     }
-
-    RTTR_ENABLE(VariantBase)
 };

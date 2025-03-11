@@ -1,15 +1,17 @@
+* implement .scene file
+* tmp files for storing scene file when going into play mode
+
 lifetime methods:
 
-on_register()
+on_init()
 on_update()
 on_play_start()
 on_play_update()
-on_play_late_update()
 
 
 * add playmode
 * add remove variant from entity to runtime
-* add runtime to editor
+* add runtime to editor sync
 
 * Add generate button to editor for variant generations. just run the engine headless and kill it a few seconds later
 * Find a way to real time edit entities from the editor-engine and reflect to each other

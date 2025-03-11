@@ -1,4 +1,4 @@
-workspace "Zeytin"
+workspace "ZeytinEditor"
     configurations { "Debug" }
 
     location "build"

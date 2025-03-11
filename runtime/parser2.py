@@ -1,0 +1,102 @@
+import os
+import re
+import glob
+from pathlib import Path
+
+def parse_header(file_path):
+    with open(file_path, 'r') as f:
+        content = f.read()
+    
+    variant_match = re.search(r'VARIANT\((\w+)\)', content)
+    if not variant_match:
+        return None
+    
+    class_match = re.search(r'(struct|class)\s+(\w+)\s*(?::\s*public\s+(\w+))?', content)
+    if not class_match:
+        return None
+    
+    class_name = class_match.group(2)
+    
+    if class_name in ["VariantCreateInfo", "VariantBase"]:
+        return None
+    
+    variant_class_name = variant_match.group(1)
+    if variant_class_name != class_name:
+        return None
+    
+    properties = []
+    property_matches = re.finditer(r'(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)(?:\s*=\s*[^;]*)?;\s*PROPERTY\(\)', content) 
+    for match in property_matches:
+        prop_type = match.group(1).strip()
+        prop_name = match.group(2).strip()
+        properties.append((prop_type, prop_name))
+    
+    base_class = class_match.group(3) if class_match.group(3) else "VariantBase"
+    
+    return {
+        'class_name': class_name,
+        'base_class': base_class,
+        'properties': properties
+    }
+
+def generate_rttr_registration(classes_info):
+    registration_code = "RTTR_REGISTRATION\n{\n"
+    
+    registration_code += """    rttr::registration::class_<VariantCreateInfo>("VariantCreateInfo")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("entity_id", &VariantCreateInfo::entity_id);
+    
+    rttr::registration::class_<VariantBase>("VariantBase")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("entity_id", &VariantBase::entity_id)(rttr::metadata("NO_SERIALIZE", true));\n\n"""
+    
+    for class_info in classes_info:
+        registration_code += f'    rttr::registration::class_<{class_info["class_name"]}>("{class_info["class_name"]}")\n'
+        registration_code += '        .constructor<>()(rttr::policy::ctor::as_object)\n'
+        registration_code += '        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)'
+        
+        for _, prop_name in class_info['properties']:
+            registration_code += f'\n        .property("{prop_name}", &{class_info["class_name"]}::{prop_name})'
+        
+        registration_code += ';\n\n'
+    
+    registration_code += "}\n"
+    
+    return registration_code
+
+def main(headers_dir="."):
+    headers_dir = os.path.normpath(headers_dir).replace('\\', '/')
+    
+    header_files = glob.glob(os.path.join(headers_dir, "**/*.h"), recursive=True)
+    
+    classes_info = []
+    includes = set()
+    
+    for header_file in header_files:
+        relative_path = os.path.normpath(header_file).replace('\\', '/')
+        
+        if headers_dir.startswith('include'):
+            include_pattern = r'^include/'
+            relative_path = re.sub(include_pattern, '', relative_path)
+            
+        if class_info := parse_header(header_file):
+            classes_info.append(class_info)
+            includes.add(f'#include "{relative_path}"')
+    
+    includes_code = "\n".join(sorted(includes)) + "\n\n"
+    registration_code = generate_rttr_registration(classes_info)
+    final_code = includes_code + registration_code
+    
+    output_path = os.path.join(headers_dir, "rttr_registration.h")
+    with open(output_path, "w") as f:
+        f.write(final_code)
+    
+    print(f"Generated RTTR registration code for {len(classes_info)} classes.")
+    print(f"Output written to {output_path}")
+
+if __name__ == "__main__":
+    import sys
+    headers_dir = sys.argv[1] if len(sys.argv) > 1 else "."
+    main(headers_dir)
+

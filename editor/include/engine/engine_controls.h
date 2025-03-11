@@ -15,7 +15,11 @@ private:
     std::atomic<bool> m_is_running;
     bool m_is_play_mode ;
     bool m_is_paused;
-    //bool m_start_pressed;
 
     void start_engine();
+
+    void enter_play_mode();
+    void pause_play_mode();
+    void unpause_play_mode();
+    void exit_play_mode();
 };

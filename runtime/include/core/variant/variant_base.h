@@ -4,7 +4,15 @@
 #include "core/entity.h"
 #include "core/zeytin.h"
 
-#define PROPERTY() // does not do anything. just to hint
+#define VARIANT(ClassName) \
+    public: \
+    ClassName() = default; \
+    ClassName(VariantCreateInfo info) : VariantBase(info) {} \
+    RTTR_ENABLE(VariantBase);
+
+#define PROPERTY() 
+
+#define REGISTER RTTR_ENABLE(VariantBase)
 
 struct VariantCreateInfo {
     entity_id entity_id;
@@ -16,8 +24,10 @@ struct VariantBase {
     VariantBase() = default;
     VariantBase(VariantCreateInfo info) : entity_id(info.entity_id) {}
 
-    virtual void awake() {}
-    virtual void tick() {}
+    virtual void on_init() {}
+    virtual void on_update() {}
+    virtual void on_play_start() {}
+    virtual void on_play_update() {}
 
     uint64_t get_id() { return entity_id; }
     const uint64_t get_id() const { return entity_id; }

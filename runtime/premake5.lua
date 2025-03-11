@@ -1,5 +1,5 @@
 workspace "Zeytin"
-    configurations { "Debug" }
+    configurations {"EDITOR_MODE"}
 
     location "build"
     toolset "clang"
@@ -45,7 +45,7 @@ workspace "Zeytin"
 
         files { "source/**.cpp" }
 
-        filter "configurations:Debug"
-            defines {"DEBUG=1"}
+        filter "configurations:EDITOR_MODE"
+            defines {"DEBUG=1", "EDITOR_MODE=1"}
             symbols "On"
 

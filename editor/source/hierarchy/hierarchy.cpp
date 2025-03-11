@@ -298,8 +298,8 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
         if (value.IsInt()) {
             int intValue = value.GetInt();
 
-            ImGui::SetNextItemWidth(200.0f);
-            bool edited = ImGui::InputInt(("Int: " + key).c_str(), &intValue);
+            ImGui::SetNextItemWidth(50.0f);
+            bool edited = ImGui::InputInt((key + " : Int").c_str(), &intValue, 0);
 
             if (edited) {
                 value.SetInt(intValue);
@@ -316,7 +316,7 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
             float floatValue = value.GetFloat();
 
             ImGui::SetNextItemWidth(200.0f);
-            bool edited = ImGui::InputFloat(("Float: " + key).c_str(), &floatValue, 0.1f, 1.0f, "%.3f");
+            bool edited = ImGui::InputFloat((key + ": Float").c_str(), &floatValue, 0.1f, 1.0f, "%.3f");
 
             if (edited) {
                 value.SetFloat(floatValue);
@@ -345,7 +345,7 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
             buffer[sizeof(buffer) - 1] = '\0';
 
             ImGui::SetNextItemWidth(200.0f);
-            bool edited = ImGui::InputText(("String: " + key).c_str(), buffer, sizeof(buffer));
+            bool edited = ImGui::InputText((key + " : Str").c_str(), buffer, sizeof(buffer));
 
             if (edited) {
                 value.SetString(buffer, document.GetAllocator());
@@ -359,7 +359,7 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
             }
         }
         else if (value.IsArray()) {
-            if (ImGui::CollapsingHeader(("Array: " + key).c_str())) {
+            if (ImGui::CollapsingHeader((key + " : Arr").c_str())) {
                 ImGui::Indent();
                 for (rapidjson::SizeType i = 0; i < value.Size(); ++i) {
                     ImGui::PushID(i);

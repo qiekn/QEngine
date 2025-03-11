@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./bin/Debug/Zeytin
+./bin/EDITOR_MODE/Zeytin

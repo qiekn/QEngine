@@ -10,7 +10,11 @@ enum class EngineEvent {
     EngineStopped,
     EngineHeartbeet,
     EntityModifiedEditor,
-    EntityModifiedEngine
+    EntityModifiedEngine,
+    EnterPlayMode,
+    PausePlayMode,
+    UnPausePlayMode,
+    ExitPlayMode,
 };
 
 class EngineEventBus {
