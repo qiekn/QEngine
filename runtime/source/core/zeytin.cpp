@@ -41,22 +41,7 @@ void update_property(rttr::variant& obj, const std::vector<std::string>& path_pa
     std::cerr << "Property " << current_path << " not found in path" << std::endl;
 }
 
-void Zeytin::generate_variants() {
-    for(const auto& type : rttr::type::get_types()) {
-        const auto& name = type.get_name().to_string();
 
-        if(!type.is_derived_from<VariantBase>() || type.get_name() == "VariantBase") {
-            continue;
-        }
-        
-        try {
-            create_dummy(type);
-            std::cout << "Created variant for: " << name << ".variant" << std::endl;
-        } catch(const std::exception& e) {
-            std::cerr << "Error creating variant for " << name << ": " << e.what() << std::endl;
-        }
-    }    
-}
 
 void Zeytin::init() {
     std::cout << "Parsing entities from path: " << std::filesystem::absolute("../shared/entities") << std::endl;
@@ -87,6 +72,15 @@ void Zeytin::init() {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
 
+#ifdef EDITOR_MODE
+    subscribe_editor_events();
+#endif
+
+}
+
+#ifdef EDITOR_MODE
+
+void Zeytin::subscribe_editor_events() {
     EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityPropertyChanged, [this](const rapidjson::Document& doc) -> void {
         assert(!doc.HasParseError());
         assert(doc.HasMember("entity_id"));
@@ -161,8 +155,46 @@ void Zeytin::init() {
         variants.push_back(std::move(obj));
     });
 
+    EditorEventBus::get().subscribe<bool>(EditorEvent::EnterPlayMode, [this](bool is_paused) {
+            enter_play_mode(is_paused);
+    });
+
+    EditorEventBus::get().subscribe<bool>(EditorEvent::ExitPlayMode, [this](bool is_paused) {
+            exit_play_mode();
+    });
+
+    EditorEventBus::get().subscribe<bool>(EditorEvent::PausePlayMode, [this](bool _) {
+            m_is_pause_play_mode = true;
+    });
+
+    EditorEventBus::get().subscribe<bool>(EditorEvent::UnPausePlayMode, [this](bool _) {
+            m_is_pause_play_mode = false;
+    });
 }
 
+
+void Zeytin::generate_variants() {
+    for(const auto& type : rttr::type::get_types()) {
+        const auto& name = type.get_name().to_string();
+
+        if(!type.is_derived_from<VariantBase>() || type.get_name() == "VariantBase") {
+            continue;
+        }
+        
+        try {
+            generate_variant(type);
+            std::cout << "Created variant for: " << name << ".variant" << std::endl;
+        } catch(const std::exception& e) {
+            std::cerr << "Error creating variant for " << name << ": " << e.what() << std::endl;
+        }
+    }    
+}
+
+void Zeytin::generate_variant(const rttr::type& type) {
+    zeytin::json::create_dummy(type);
+}
+
+#endif
 
 void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
     m_storage[entity].push_back(std::move(variant));
@@ -219,13 +251,37 @@ entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
     return id;
 }
 
-void Zeytin::create_dummy(const rttr::type& type) {
-    zeytin::json::create_dummy(type);
-}
 
 entity_id Zeytin::new_entity_id() {
     return generateUniqueID();
 }
+
+#ifdef EDITOR_MODE
+void Zeytin::enter_play_mode(bool is_paused) { // NOTE: not a deep copy
+    m_storage_backup.clear();
+    for(const auto& [id, variants] : m_storage) {
+        std::vector<rttr::variant> variants_copy;
+        variants_copy.reserve(variants.size());
+
+        for(const auto& variant : variants) {
+            variants_copy.push_back(variant);
+        }
+
+        m_storage_backup[id] = std::move(variants_copy);
+    }
+
+    m_is_pause_play_mode = is_paused;
+    m_is_play_mode = true;
+}
+
+void Zeytin::exit_play_mode() {
+    m_started = false;
+    m_is_play_mode = false;
+
+    m_storage = m_storage_backup; 
+}
+
+#endif
 
 void Zeytin::update_variants() {
     for(auto& pair : m_storage) {   
@@ -239,6 +295,13 @@ void Zeytin::update_variants() {
 }
 
 void Zeytin::play_update_variants() {
+
+#ifdef EDITOR_MODE
+    if(!m_is_play_mode || m_is_pause_play_mode) {
+        return;
+    }
+#endif
+
     for(auto& pair : m_storage) {   
         for(auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
@@ -250,6 +313,10 @@ void Zeytin::play_update_variants() {
 }
 
 void Zeytin::play_start_variants() {
+    if(m_started) { return; }
+
+    m_started = true;
+
     for(auto& pair : m_storage) {   
         for(auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
@@ -259,3 +326,9 @@ void Zeytin::play_start_variants() {
         }
     }
 }
+
+
+
+
+
+

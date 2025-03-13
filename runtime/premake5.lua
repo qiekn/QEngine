@@ -1,5 +1,5 @@
 workspace "Zeytin"
-    configurations {"EDITOR_MODE"}
+    configurations {"EDITOR_MODE", "STANDALONE"}
 
     location "build"
     toolset "clang"

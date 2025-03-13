@@ -10,6 +10,8 @@ enum class EditorEvent {
     EntityVariantAdded,
     EntityVariantRemoved,
     EnterPlayMode,
+    PausePlayMode,
+    UnPausePlayMode,
     ExitPlayMode,
 };
 

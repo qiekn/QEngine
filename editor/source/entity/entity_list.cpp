@@ -2,6 +2,10 @@
 
 #include <filesystem>
 
+EntityList::EntityList() {
+    load_entities();
+}
+
 void EntityList::load_entities() {
     m_entities.clear();
 

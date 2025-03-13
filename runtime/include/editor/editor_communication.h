@@ -1,3 +1,5 @@
+#ifdef EDITOR_MODE
+
 #pragma once
 
 #include <string>
@@ -9,6 +11,7 @@
 #include <queue>
 
 #include "zmq/zmq.hpp"
+
 
 class EditorCommunication {
 public:
@@ -35,3 +38,5 @@ private:
     std::queue<std::string> m_message_queue;
     std::mutex m_queue_mutex;
 };
+
+#endif

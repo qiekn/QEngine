@@ -1,20 +1,14 @@
-* implement .scene file
+* [INPROGRESS] add runtime to editor sync
+
 * tmp files for storing scene file when going into play mode
+* make entity list and variant list coherent because modified/removed variants may cause issue 
+* stop variants being duplicated on editor side
+* embed engine window
+* implement pause
 
-lifetime methods:
+// variant list is watching variant folder for any changes. in cause of a change to variant entity list should be notified
 
-on_init()
-on_update()
-on_play_start()
-on_play_update()
-
-
-* add playmode
 * add remove variant from entity to runtime
-* add runtime to editor sync
-
-* Add generate button to editor for variant generations. just run the engine headless and kill it a few seconds later
-* Find a way to real time edit entities from the editor-engine and reflect to each other
 
 * make sure an entity can have 1 instance of a variant type
 * support double type
@@ -22,21 +16,27 @@ on_play_update()
 * investigate enums
 
 
-* value should be string
-* entity_id should be uint64
-
 * implement other entity operations: new entity, add variant to entity, remove variant from entity, 
 
 * implement playmode
-* implement stop engine
-
+* implement a way to refer other entities (using ids)
 
 -----------------------------------------
 
-* implement a way to refer other entities (using ids)
-* implement raylib layer
-
-
+* [DONE] Find a way to real time edit entities from the editor
+* [DONE] implement stop engine
+* [DONE] value should be string
+* [DONE] implement kill button
+* [DONE] add property parser and code generation tools
+* [DONE] add macros for common variant code
+* [DONE] lifetime methods:
+* [DONE] on_init()
+* [DONE] on_update()
+* [DONE] on_play_start()
+* [DONE] on_play_update()
+* [DONE] implement raylib layer
+* [DONE] entity_id should be uint64
+* [DONE] Add generate button to editor for variant generations. just run the engine headless and kill it a few seconds later
 * [DONE] implement component ref, entity ref
 * [DONE] make deserialize entity return entity id 
 * [DONE] Implemenet a long entity for sample
@@ -47,3 +47,4 @@ on_play_update()
 * [DONE] improve api
 * [DONE] add update methods to variants ()
 * [DONE] Start editor layer
+

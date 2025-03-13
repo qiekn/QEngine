@@ -1,3 +1,5 @@
+#ifdef EDITOR_MODE
+
 #include "editor/editor_communication.h"
 #include <iostream>
 #include <chrono>
@@ -148,13 +150,21 @@ void EditorCommunication::raise_events() {
             EditorEventBus::get().publish<bool>(EditorEvent::ExitPlayMode, false);
             std::cout << "Engine exit play mode" << std::endl;
         }
+        else if(type == "pause_play_mode") {
+            EditorEventBus::get().publish<bool>(EditorEvent::PausePlayMode, true);
+        }
+        else if(type == "unpause_play_mode") {
+            EditorEventBus::get().publish<bool>(EditorEvent::UnPausePlayMode, true);
+        }
+        else {
+            std::cout << "ENGINE: unknown message type received from editor" << std::endl;
+        }
 
         m_message_queue.pop();
     }
 }
 
-
-
+#endif
 
 
 

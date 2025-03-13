@@ -14,10 +14,13 @@ public:
 
     inline const rapidjson::Document& get_document() const { return m_document; }
     inline const std::string& get_name() { return m_name ; }
+    inline const bool is_dead() { return m_is_dead; }
+    inline void mark_dead() { m_is_dead = true; }
 
     void load_from_file();
 
 private:
+    bool m_is_dead = false;
     std::string m_name;
     rapidjson::Document m_document;
 };

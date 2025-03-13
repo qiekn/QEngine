@@ -195,6 +195,7 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
     if (ImGui::BeginPopup("entity_context_menu")) {
         if (ImGui::BeginMenu("Add Variant")) {
             for (int i = 0; i < m_variants.size(); i++) {
+                if(m_variants[i].is_dead()) continue;
                 const std::string& variant_name = m_variants[i].get_name();
                 if (ImGui::MenuItem(variant_name.c_str())) {
                     add_variant_to_entity(entity_document, m_variants[i]);

@@ -19,8 +19,11 @@ public:
         return instance;
     }
 
-    void generate_variants();
     void init();
+
+#ifdef EDITOR_MODE
+    void generate_variants();
+#endif 
               
     std::string serialize_entity(const entity_id id);
     std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
@@ -53,15 +56,37 @@ public:
     }
 
     void update_variants();
-
     void play_start_variants();
     void play_update_variants();
+
+#ifdef EDITOR_MODE
+    inline bool is_play_mode() const {return m_is_play_mode;}
+    inline bool is_paused_play_mode() const {return m_is_pause_play_mode;}
+
+    void enter_play_mode(bool is_paused);
+    void exit_play_mode();
+    void pause_play_mode();
+#endif
 
 private:
     Zeytin() = default;
     ~Zeytin() = default;
     
-    void create_dummy(const rttr::type& type);
-
+    bool m_started = false;
     std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage;
+
+#ifdef EDITOR_MODE
+    void generate_variant(const rttr::type& type);
+    void subscribe_editor_events();
+
+    bool m_is_play_mode;
+    bool m_is_pause_play_mode;
+    std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage_backup; // used for backing up entities on entering play mode
+#endif
 };
+
+
+
+
+
+

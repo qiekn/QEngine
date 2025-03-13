@@ -17,6 +17,8 @@ private:
     bool m_is_paused;
 
     void start_engine();
+    void generate();
+    void kill_engine();
 
     void enter_play_mode();
     void pause_play_mode();

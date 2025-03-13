@@ -27,3 +27,6 @@ void Sprite::on_update() {
         WHITE   
     );
 }
+
+void Sprite::on_play_update() {
+}

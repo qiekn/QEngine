@@ -11,30 +11,28 @@ int main(int argc, char* argv[]) {
 #ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_TOPMOST);
-#endif
-
-    bool kill_after_generate = false;
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--kill-after-generate") == 0) {
-            kill_after_generate = true;
-            break;
-        }
-    }
-
     Zeytin::get().generate_variants();
 
-    if(kill_after_generate) {
-        std::cout << "Kill After Generate" << std::endl;
-        exit(0);
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--kill-after-generate") == 0) {
+            exit(0);
+        }
     }
-
-    const int virtualWidth = 1920;
-    const int virtualHeight = 1080;
 
     const int windowWidth = 800;
     const int windowHeight = 600;
 
     InitWindow(windowWidth, windowHeight, "Game - ZeytinEngine");
+#else
+    const int windowWidth = 1920;
+    const int windowHeight = 1080;
+    InitWindow(windowWidth, windowHeight, "Jam Game");
+
+#endif
+
+    const int virtualWidth = 1920;
+    const int virtualHeight = 1080;
+
     SetWindowPosition(1051, 393);
     SetExitKey(0);
 
@@ -75,11 +73,28 @@ int main(int argc, char* argv[]) {
         BeginTextureMode(target);
             ClearBackground(RAYWHITE);
 
-            Zeytin::get().update_variants(); // this should be here because variants may render something
+            Zeytin::get().update_variants(); 
+            Zeytin::get().play_start_variants();
+            Zeytin::get().play_update_variants();
+
+#ifdef EDITOR_MODE
+            //Zeytin::get().sync_editor(); // NOTE: implement
+#endif
 
 #ifdef EDITOR_MODE
             DrawText("1920x1080", 20, 20, 40, BLACK);
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
+            if(Zeytin::get().is_play_mode()) {
+                if(Zeytin::get().is_paused_play_mode()) {
+                    DrawText("PAUSED", 1610, 20, 70, GRAY);
+                }
+                else {
+                    DrawText("PLAY MODE", 1490, 20, 70, BLUE);
+                }
+            }
+            else {
+                DrawText("DESIGN", 1610, 20, 70, BLACK);
+            }
 #endif
 
         EndTextureMode();

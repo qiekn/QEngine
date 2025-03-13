@@ -7,12 +7,13 @@
 class EntityList final {
 
 public:
-    void load_entity_from_file(const std::filesystem::path&);
-    void load_entities();
-    void save_entities();
-    
+    EntityList();
     inline std::vector<EntityDocument>& get_entities() { return m_entities;}
 
 private:
+    void load_entity_from_file(const std::filesystem::path&);
+    void load_entities();
+    void save_entities();
+
     std::vector<EntityDocument> m_entities;
 };

@@ -28,8 +28,15 @@ void EngineControls::render_main_menu_controls() {
         }                  
 
         ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
+
+        if (ImGui::Button("Kill Engine")) {
+            kill_engine();
+        }              
   
         if(!m_is_running) {
+            if (ImGui::Button("Generate")) {
+                generate();
+            }              
             if (ImGui::Button("Start Engine")) {
                 start_engine();
             }              
@@ -37,6 +44,8 @@ void EngineControls::render_main_menu_controls() {
         else {             
             ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Engine Running");
         }
+
+
         
         ImGui::SameLine(ImGui::GetWindowWidth() * 0.7f);
         
@@ -59,6 +68,12 @@ void EngineControls::render_main_menu_controls() {
             
             if (ImGui::Button("Pause")) {
                 m_is_paused = !m_is_paused;
+                if(m_is_paused) {
+                    EngineEventBus::get().publish<bool>(EngineEvent::PausePlayMode, true);
+                }
+                else {
+                    EngineEventBus::get().publish<bool>(EngineEvent::UnPausePlayMode, true);
+                }
             }
 
             ImGui::PopStyleColor(3);
@@ -101,6 +116,26 @@ void EngineControls::start_engine() {
             std::cout << "Engine process exited with code " << result << std::endl;
             m_is_running = false;
         }
+    }).detach();
+}
+
+void EngineControls::generate() {
+    std::thread([this]() {
+        #ifdef _WIN32
+            int result = std::system("cd ../runtime && build.sh && generate_run.sh");
+        #else
+            int result = std::system("cd ../runtime && ./build.sh && ./generate_run.sh");
+        #endif
+    }).detach();
+}
+
+void EngineControls::kill_engine() {
+    std::thread([this]() {
+        #ifdef _WIN32
+            int result = std::system("kill_all_engines.sh");
+        #else
+            int result = std::system("./kill_all_engines.sh");
+        #endif
     }).detach();
 }
 

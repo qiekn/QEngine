@@ -45,6 +45,30 @@ EngineCommunication::EngineCommunication()
 
                 send_message(buffer.GetString());
         });
+
+        EngineEventBus::get().subscribe<bool>(EngineEvent::PausePlayMode, [this](bool _) {
+                rapidjson::Document msg;
+                msg.SetObject();
+                msg.AddMember("type", "pause_play_mode", msg.GetAllocator());
+
+                rapidjson::StringBuffer buffer;
+                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+                msg.Accept(writer);
+
+                send_message(buffer.GetString());
+        });
+
+        EngineEventBus::get().subscribe<bool>(EngineEvent::UnPausePlayMode, [this](bool _) {
+                rapidjson::Document msg;
+                msg.SetObject();
+                msg.AddMember("type", "unpause_play_mode", msg.GetAllocator());
+
+                rapidjson::StringBuffer buffer;
+                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+                msg.Accept(writer);
+
+                send_message(buffer.GetString());
+        });
 }
 
 EngineCommunication::~EngineCommunication() {

@@ -25,18 +25,15 @@ int main(int argc, char* argv[])
     int screenHeight = 800;
 
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-    InitWindow(screenWidth, screenHeight, "Zeytin");
+    InitWindow(screenWidth, screenHeight, "ZeytinEditor");
     SetTargetFPS(144);
     SetExitKey(0);
     rlImGuiSetup(false);
 
     SetEditorTheme();
 
-    EntityList entity_list;
-    entity_list.load_entities();
-
-    VariantList variant_list;
-    variant_list.load_variants();
+    EntityList entity_list{};
+    VariantList variant_list{};
 
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
 

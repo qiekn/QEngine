@@ -14,6 +14,7 @@ public:
 
     void on_init() override;
     void on_update() override;
+    void on_play_update() override;
 
 private:
     Texture texture; 
