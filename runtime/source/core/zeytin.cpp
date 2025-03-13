@@ -1,6 +1,8 @@
 #include <cassert>
 
 #include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+
 
 #include "core/zeytin.h"
 #include "core/json/json.h"
@@ -281,6 +283,12 @@ void Zeytin::exit_play_mode() {
     m_storage = m_storage_backup; 
 }
 
+void Zeytin::sync_editor() {
+    if(!m_is_play_mode || m_is_pause_play_mode) return;
+    std::string scene = serialize_scene();
+    EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
+}
+
 #endif
 
 void Zeytin::update_variants() {
@@ -327,8 +335,33 @@ void Zeytin::play_start_variants() {
     }
 }
 
+std::string Zeytin::serialize_scene() {
+    rapidjson::Document document;
+    document.SetObject();
 
+    rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+    rapidjson::Value entitiesArray(rapidjson::kArrayType);
 
+    for (const auto& [entity_id, variants] : m_storage) {
+        std::string entityJson = serialize_entity(entity_id);
 
+        rapidjson::Document entityDoc;
+        entityDoc.Parse(entityJson.c_str());
 
+        if (!entityDoc.HasParseError()) {
+            rapidjson::Value entityValue;
+            entityValue.CopyFrom(entityDoc, allocator);
+            entitiesArray.PushBack(entityValue, allocator);
+        }
+    }
+
+    document.AddMember("type", "scene", allocator);
+    document.AddMember("entities", entitiesArray, allocator);
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    document.Accept(writer);
+
+    return std::string(buffer.GetString(), buffer.GetSize());
+}
 

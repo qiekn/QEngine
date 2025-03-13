@@ -130,6 +130,10 @@ void EngineControls::generate() {
 }
 
 void EngineControls::kill_engine() {
+    m_is_play_mode = false;
+    m_is_running  = false;
+    m_is_paused = false;
+
     std::thread([this]() {
         #ifdef _WIN32
             int result = std::system("kill_all_engines.sh");

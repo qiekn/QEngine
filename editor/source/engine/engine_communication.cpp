@@ -177,6 +177,12 @@ void EngineCommunication::raise_events() {
             EngineEventBus::get().publish<bool>(EngineEvent::EngineHeartbeet, true);
             EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
         }
+        else if(type == "scene") {
+            EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);
+        }
+        else {
+            std::cout << "Editor: Unknown message received from engine" << std::endl;
+        }
 
         m_message_queue.pop();
     }

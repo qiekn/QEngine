@@ -1,9 +1,45 @@
 #include "entity/entity_list.h"
 
+#include <iostream>
 #include <filesystem>
+
+#include "rapidjson/document.h"
+#include "engine/engine_event.h"
+
 
 EntityList::EntityList() {
     load_entities();
+
+    EngineEventBus::get().subscribe<const rapidjson::Document&>(
+        EngineEvent::SyncEditor,
+        [this](const rapidjson::Document& document) -> void {
+            if (document.HasMember("entities") && document["entities"].IsArray()) {
+                const auto& entities = document["entities"].GetArray();
+
+                for (const auto& entity : entities) {
+                    if (entity.HasMember("entity_id") && entity.HasMember("variants")) {
+                        uint64_t entityId = entity["entity_id"].GetUint64();
+
+                        bool found = false;
+                        for (auto& entityDoc : m_entities) {
+                            const auto& existingDoc = entityDoc.get_document();
+                            if (existingDoc.HasMember("entity_id") &&
+                                existingDoc["entity_id"].GetUint64() == entityId) {
+
+                                rapidjson::Document newDoc;
+                                newDoc.CopyFrom(entity, newDoc.GetAllocator());
+                                entityDoc.set_document(std::move(newDoc));
+                                found = true;
+                                break;
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    );
+
 }
 
 void EntityList::load_entities() {

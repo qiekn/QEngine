@@ -15,6 +15,11 @@ EditorCommunication::EditorCommunication()
     , m_context(1)
     , m_publisher(m_context, zmq::socket_type::pub)
     , m_subscriber(m_context, zmq::socket_type::sub) {
+
+    EditorEventBus::get().subscribe<std::string>(EditorEvent::SyncEditor, [this](std::string json) {
+            send_message(json);
+    });
+
 }
 
 EditorCommunication::~EditorCommunication() {
@@ -42,6 +47,8 @@ bool EditorCommunication::initialize() {
         std::cerr << "ZeroMQ error: " << e.what() << std::endl;
         return false;
     }
+
+
 }
 
 void EditorCommunication::shutdown() {

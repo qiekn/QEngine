@@ -12,6 +12,7 @@
 #include "rapidjson/writer.h"
 
 #include "engine/engine_event.h"
+#include "engine/engine_event_enter_play_mode.state.h"
 
 void notify_engine_entity_property_changed(const uint64_t entity_id, 
                                           const std::string& variant_type, 
@@ -475,9 +476,18 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
         }
     }
     else {
+        const std::string& type = variant_doc["type"].GetString();
+
+        for(const auto& variant : entity_document.get_document()["variants"].GetArray()) {
+            if(variant["type"].GetString() == type) {
+                std::cout << type << " is already added to entity: " << entity_document.get_name() << std::endl;
+                return;
+            }
+        }
+
         rapidjson::Value copied_variant(variant_doc, entity_doc.GetAllocator());
         entity_variants.PushBack(copied_variant, entity_doc.GetAllocator());
-        const auto& type = variant_doc["type"].GetString();
+
         notify_engine_entity_variant_added(entity_id, type);
     }
 }
@@ -535,4 +545,47 @@ void notify_engine_entity_variant_added(const uint64_t entity_id, const std::str
     std::cout << buffer.GetString() << std::endl;
 }
 
+void Hierarchy::subscribe_events() {
+    std::filesystem::path backupDir = "../temp_backup";
+    if (!std::filesystem::exists(backupDir)) {
+        std::filesystem::create_directory(backupDir);
+    }
 
+    EngineEventBus::get().subscribe<EnterPlayModeState>(EngineEvent::EnterPlayMode,
+        [this, backupDir](auto _) -> void {
+        std::cout << "enterplaymode" << std::endl;
+            for (const auto& entry : std::filesystem::directory_iterator(backupDir)) {
+                std::filesystem::remove(entry.path());
+            }
+
+            m_entity_backup_names.clear();
+
+            for (const auto& entity : m_entities) {
+                std::string name = entity.get_name();
+                m_entity_backup_names.push_back(name);
+
+                std::filesystem::path backupPath = backupDir / (name + ".entity.bak");
+                entity.save_to_file(backupPath);
+            }
+        });
+
+    EngineEventBus::get().subscribe<bool>(EngineEvent::ExitPlayMode,
+        [this, backupDir](bool _) -> void {
+            m_entities.clear();
+
+            for (const auto& name : m_entity_backup_names) {
+                std::filesystem::path backupPath = backupDir / (name + ".entity.bak");
+
+                if (!std::filesystem::exists(backupPath)) continue;
+
+                auto& newEntity = m_entities.emplace_back(EntityDocument(name));
+
+                newEntity.load_from_file(backupPath);
+            }
+
+            //for (auto& entity : m_entities) {
+            //    entity.save_to_file();
+            //}
+
+        });
+}

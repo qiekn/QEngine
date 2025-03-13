@@ -1,10 +1,9 @@
 * [INPROGRESS] add runtime to editor sync
+* [INPROGRESS] implement playmode
 
 * tmp files for storing scene file when going into play mode
 * make entity list and variant list coherent because modified/removed variants may cause issue 
-* stop variants being duplicated on editor side
 * embed engine window
-* implement pause
 
 // variant list is watching variant folder for any changes. in cause of a change to variant entity list should be notified
 
@@ -15,14 +14,13 @@
 * Implement adding elements to array
 * investigate enums
 
-
 * implement other entity operations: new entity, add variant to entity, remove variant from entity, 
-
-* implement playmode
 * implement a way to refer other entities (using ids)
 
 -----------------------------------------
 
+* [DONE] stop variants being duplicated on editor side
+* [DONE] implement pause
 * [DONE] Find a way to real time edit entities from the editor
 * [DONE] implement stop engine
 * [DONE] value should be string

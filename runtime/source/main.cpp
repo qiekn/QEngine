@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
             Zeytin::get().play_update_variants();
 
 #ifdef EDITOR_MODE
-            //Zeytin::get().sync_editor(); // NOTE: implement
+            //Zeytin::get().sync_editor(); 
 #endif
 
 #ifdef EDITOR_MODE

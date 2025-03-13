@@ -17,6 +17,10 @@ public:
     void on_play_update() override;
 
 private:
+    void basic_move();
+
+    VariantRef<Position> position;
+    
     Texture texture; 
 };
 

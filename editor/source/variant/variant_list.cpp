@@ -19,9 +19,9 @@ void VariantList::load_variants() {
         }
 
         std::filesystem::path file_path = entry.path();
-        std::string file_name = file_path.stem().string();
+        std::string name = file_path.stem().string();
 
-        m_variants.emplace_back<VariantDocument>(std::move(file_name));
+        m_variants.emplace_back<VariantDocument>(std::move(name));
     }
 
     // NOTE: this could run parelel
@@ -30,10 +30,21 @@ void VariantList::load_variants() {
         variant.load_from_file();
     }
 }
+
 void VariantList::load_variant(const std::filesystem::path& path) {
     std::string name = path.stem().string();
-    auto& rv = m_variants.emplace_back<VariantDocument>(std::move(name));
-    rv.load_from_file();
+
+    auto it = std::find_if(m_variants.begin(), m_variants.end(),
+                          [&name](const auto& variant) {
+                              return variant.get_name() == name;
+                          });
+
+    if (it != m_variants.end()) {
+        it->load_from_file();
+    } else {
+        auto& rv = m_variants.emplace_back(VariantDocument(std::move(name)));
+        rv.load_from_file();
+    }
 }
 
 void VariantList::start_watching() {

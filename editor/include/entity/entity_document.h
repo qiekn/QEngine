@@ -15,6 +15,8 @@ public:
     inline rapidjson::Document& get_document() { return m_document; }
     inline const rapidjson::Document& get_document() const { return m_document; }
 
+    inline void set_document(rapidjson::Document new_doc) { m_document = std::move(new_doc); }
+
     inline const std::string& get_name() const { return m_name ; }
 
     inline void mark_as_dead() { m_dead = true; }
@@ -23,6 +25,9 @@ public:
     void delete_entity_file(); // ENTITY_FOLDER + name
     void load_from_file(); // ENTITY_FOLDER + name
     void save_to_file() const; // ENTITY_FOLDER + name
+
+    void save_to_file(const std::filesystem::path& path) const;
+    void load_from_file(const std::filesystem::path& path); 
 
 private:
     std::string m_name;

@@ -1,6 +1,7 @@
 #include "game/debug/debug.h"
 #include "game/game.h"
 #include "game/position.h"
+#include "game/speed.h"
 #include "game/sprite.h"
 #include "game/velocity.h"
 
@@ -19,6 +20,11 @@ RTTR_REGISTRATION
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("path_to_sprite", &Sprite::path_to_sprite);
+
+    rttr::registration::class_<Speed>("Speed")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("value", &Speed::value);
 
     rttr::registration::class_<Game>("Game")
         .constructor<>()(rttr::policy::ctor::as_object)

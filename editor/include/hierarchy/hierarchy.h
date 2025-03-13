@@ -9,16 +9,17 @@
 class Hierarchy final {
 public: 
     inline Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantDocument>& variants) 
-        : m_entities(entities), m_variants(variants) {}
+        : m_entities(entities), m_variants(variants) {
+            subscribe_events();
+        }
 
     void update();
-
-    bool ignore_file_events = false; // NOTE: temp solution to recursive save/read new data issue
-
 
 private:
     std::vector<EntityDocument>& m_entities;
     std::vector<VariantDocument>& m_variants;
+
+    std::vector<std::string> m_entity_backup_names;
 
     void render_create_entity();
     void render_entity(EntityDocument& entity);
@@ -26,4 +27,6 @@ private:
     void render_object(rapidjson::Document& document, rapidjson::Value& object, const uint64_t entity_id, const std::string& variant_type, const std::string& parent_path = "");
     void add_variant_to_entity(EntityDocument& entity_document, VariantDocument& variant_document);
     void save_all_entities();
+
+    void subscribe_events();
 };

@@ -5,10 +5,10 @@
 #include "core/zeytin.h"
 
 #define VARIANT(ClassName) public: ClassName() = default; ClassName(VariantCreateInfo info) : VariantBase(info) {} RTTR_ENABLE(VariantBase); private:
-
 #define PROPERTY() 
 
-#define REGISTER RTTR_ENABLE(VariantBase)
+template<typename T>
+using VariantRef = std::optional<std::reference_wrapper<T>>;
 
 struct VariantCreateInfo {
     entity_id entity_id;
@@ -29,13 +29,13 @@ struct VariantBase {
     const uint64_t get_id() const { return entity_id; }
 
     template<typename T>
-    void entity_get_variant(rttr::variant& out_variant) {
-        return Zeytin::get().try_get_variant<T>(entity_id, out_variant);
+    VariantRef<T> get_variant() {
+        return Zeytin::get().try_get_variant<T>(entity_id);
     }
 
     template<typename T>
-    void entity_get_variant(entity_id id, rttr::variant& out_variant) {
-        Zeytin::get().try_get_variant<T>(id, out_variant);
+    VariantRef<T> entity_get_variant(entity_id id) {
+        return Zeytin::get().try_get_variant<T>(id);
     }
 
     entity_id entity_id;

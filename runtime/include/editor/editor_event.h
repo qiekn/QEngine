@@ -13,6 +13,7 @@ enum class EditorEvent {
     PausePlayMode,
     UnPausePlayMode,
     ExitPlayMode,
+    SyncEditor,
 };
 
 class EditorEventBus {
