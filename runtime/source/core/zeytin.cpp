@@ -1,7 +1,10 @@
 #include <cassert>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
+#include "rapidjson/document.h" // IWYU pragma: keep
+#include "rapidjson/writer.h" // IWYU pragma: keep
 
 
 #include "core/zeytin.h"
@@ -42,7 +45,6 @@ void update_property(rttr::variant& obj, const std::vector<std::string>& path_pa
 
     std::cerr << "Property " << current_path << " not found in path" << std::endl;
 }
-
 
 
 void Zeytin::init() {
@@ -211,8 +213,6 @@ std::string Zeytin::serialize_entity(const entity_id id, const std::filesystem::
 }
 
 entity_id Zeytin::deserialize_entity(const std::string& str) {
-    std::cout << "Deserializng entity: " << str << std::endl;
-
     entity_id id;
     std::vector<rttr::variant> variants;
 
@@ -259,31 +259,39 @@ entity_id Zeytin::new_entity_id() {
 }
 
 #ifdef EDITOR_MODE
-void Zeytin::enter_play_mode(bool is_paused) { // NOTE: not a deep copy
-    m_storage_backup.clear();
-    for(const auto& [id, variants] : m_storage) {
-        std::vector<rttr::variant> variants_copy;
-        variants_copy.reserve(variants.size());
 
-        for(const auto& variant : variants) {
-            variants_copy.push_back(variant);
-        }
+void Zeytin::enter_play_mode(bool is_paused) {
+    std::string scene = serialize_scene();
 
-        m_storage_backup[id] = std::move(variants_copy);
-    }
+    std::filesystem::create_directory("temp");
+    std::ofstream scene_file("temp/backup.scene");
+    scene_file << scene;
+    scene_file.close();
 
     m_is_pause_play_mode = is_paused;
     m_is_play_mode = true;
 }
 
 void Zeytin::exit_play_mode() {
+    m_storage.clear();
     m_started = false;
     m_is_play_mode = false;
 
-    m_storage = m_storage_backup; 
+    if (std::filesystem::exists("temp/backup.scene")) {
+        std::ifstream scene_file("temp/backup.scene");
+        std::string scene((std::istreambuf_iterator<char>(scene_file)),
+                         std::istreambuf_iterator<char>());
+        scene_file.close();
+        deserialize_scene(scene);
+        std::filesystem::remove_all("temp");
+    }
+    else {
+        std::cerr << "Cannot exit playmode because scene backup is not found" << std::endl;
+        exit(1);
+    }
 }
 
-void Zeytin::sync_editor() {
+void Zeytin::sync_editor_play_mode() {
     if(!m_is_play_mode || m_is_pause_play_mode) return;
     std::string scene = serialize_scene();
     EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
@@ -303,13 +311,6 @@ void Zeytin::update_variants() {
 }
 
 void Zeytin::play_update_variants() {
-
-#ifdef EDITOR_MODE
-    if(!m_is_play_mode || m_is_pause_play_mode) {
-        return;
-    }
-#endif
-
     for(auto& pair : m_storage) {   
         for(auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
@@ -335,6 +336,7 @@ void Zeytin::play_start_variants() {
     }
 }
 
+#ifdef EDITOR_MODE
 std::string Zeytin::serialize_scene() {
     rapidjson::Document document;
     document.SetObject();
@@ -365,3 +367,34 @@ std::string Zeytin::serialize_scene() {
     return std::string(buffer.GetString(), buffer.GetSize());
 }
 
+void Zeytin::deserialize_scene(const std::string& scene) {
+    m_storage.clear();
+
+    rapidjson::Document scene_data;
+    rapidjson::ParseResult parse_result = scene_data.Parse(scene.c_str());
+
+    if (parse_result.IsError()) {
+        std::cerr << "Error parsing scene: " << " at offset " << parse_result.Offset() << std::endl;
+        exit(1);
+    }
+
+    if (!scene_data.IsObject() || !scene_data.HasMember("type") ||
+        !scene_data["type"].IsString() || strcmp(scene_data["type"].GetString(), "scene") != 0 ||
+        !scene_data.HasMember("entities") || !scene_data["entities"].IsArray()) {
+        std::cerr << "Failed to deserialize scene: invalid scene format" << std::endl;
+        exit(1);
+    }
+
+    const rapidjson::Value& entities = scene_data["entities"];
+
+    for (rapidjson::SizeType i = 0; i < entities.Size(); i++) {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        entities[i].Accept(writer);
+        std::string entity_str = buffer.GetString();
+
+        deserialize_entity(entity_str);
+    }
+}
+
+#endif

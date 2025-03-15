@@ -542,7 +542,6 @@ void notify_engine_entity_variant_added(const uint64_t entity_id, const std::str
 
     EngineEventBus::get().publish<const std::string&>(EngineEvent::EntityModifiedEditor, buffer.GetString());
 
-    std::cout << buffer.GetString() << std::endl;
 }
 
 void Hierarchy::subscribe_events() {
@@ -553,7 +552,6 @@ void Hierarchy::subscribe_events() {
 
     EngineEventBus::get().subscribe<EnterPlayModeState>(EngineEvent::EnterPlayMode,
         [this, backupDir](auto _) -> void {
-        std::cout << "enterplaymode" << std::endl;
             for (const auto& entry : std::filesystem::directory_iterator(backupDir)) {
                 std::filesystem::remove(entry.path());
             }
@@ -581,11 +579,10 @@ void Hierarchy::subscribe_events() {
                 auto& newEntity = m_entities.emplace_back(EntityDocument(name));
 
                 newEntity.load_from_file(backupPath);
+
+                for (const auto& entry : std::filesystem::directory_iterator(backupDir)) {
+                    std::filesystem::remove(entry.path());
+                }
             }
-
-            //for (auto& entity : m_entities) {
-            //    entity.save_to_file();
-            //}
-
         });
 }

@@ -1,7 +1,7 @@
 #include "entity/entity_document.h"
 
-#include <fstream>
 #include <iostream>
+#include <fstream>
 
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
@@ -56,7 +56,6 @@ void EntityDocument::load_from_file() {
 }
 
 void EntityDocument::save_to_file(const std::filesystem::path& path) const {
-    std::cout << "Save to file is called" << std::endl;
 
     std::filesystem::create_directories(path.parent_path());
     
@@ -81,7 +80,6 @@ void EntityDocument::save_to_file(const std::filesystem::path& path) const {
         std::cerr << "Failed to write to file: " << path << std::endl;
     }
 
-    std::cout << buffer.GetString();
     
     out_file.close();
 }

@@ -11,7 +11,7 @@ class Position : public VariantBase {
     VARIANT(Position)
 
 public:
-    int x = 0; PROPERTY()
-    int y = 0; PROPERTY()
+    float x = 0; PROPERTY()
+    float y = 0; PROPERTY()
 };
 

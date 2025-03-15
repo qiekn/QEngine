@@ -58,10 +58,6 @@ int main(int argc, char* argv[]) {
 
     while (!WindowShouldClose()) {
 
-#ifdef EDITOR_MODE
-        editor_comm.heartbeet();
-        editor_comm.raise_events();
-#endif
 
         Vector2 mousePosition = GetMousePosition();
 
@@ -74,27 +70,31 @@ int main(int argc, char* argv[]) {
             ClearBackground(RAYWHITE);
 
             Zeytin::get().update_variants(); 
-            Zeytin::get().play_start_variants();
-            Zeytin::get().play_update_variants();
 
 #ifdef EDITOR_MODE
-            //Zeytin::get().sync_editor(); 
-#endif
+            editor_comm.heartbeet();
+            editor_comm.raise_events();
 
-#ifdef EDITOR_MODE
+
+            Zeytin::get().sync_editor_play_mode(); 
+
             DrawText("1920x1080", 20, 20, 40, BLACK);
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
+
             if(Zeytin::get().is_play_mode()) {
                 if(Zeytin::get().is_paused_play_mode()) {
                     DrawText("PAUSED", 1610, 20, 70, GRAY);
                 }
                 else {
+                    Zeytin::get().play_start_variants();
+                    Zeytin::get().play_update_variants();
                     DrawText("PLAY MODE", 1490, 20, 70, BLUE);
                 }
             }
-            else {
-                DrawText("DESIGN", 1610, 20, 70, BLACK);
-            }
+
+#else
+                    Zeytin::get().play_start_variants();
+                    Zeytin::get().play_update_variants();
 #endif
 
         EndTextureMode();

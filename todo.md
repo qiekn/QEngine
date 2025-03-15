@@ -1,24 +1,20 @@
-* [INPROGRESS] add runtime to editor sync
-* [INPROGRESS] implement playmode
-
-* tmp files for storing scene file when going into play mode
+* fix runtime restore play mode
 * make entity list and variant list coherent because modified/removed variants may cause issue 
-* embed engine window
-
-// variant list is watching variant folder for any changes. in cause of a change to variant entity list should be notified
-
+* variant list is watching variant folder for any changes. in cause of a change to variant entity list should be notified
 * add remove variant from entity to runtime
 
-* make sure an entity can have 1 instance of a variant type
+* implement a way to refer other entities (using ids)
+
 * support double type
 * Implement adding elements to array
 * investigate enums
-
-* implement other entity operations: new entity, add variant to entity, remove variant from entity, 
-* implement a way to refer other entities (using ids)
-
+* embed engine window
 -----------------------------------------
 
+* [DONE] tmp files for storing scene file when going into play mode
+* [DONE] make sure an entity can have 1 instance of a variant type in editor
+* [DONE] add runtime to editor sync
+* [DONE] implement playmode
 * [DONE] stop variants being duplicated on editor side
 * [DONE] implement pause
 * [DONE] Find a way to real time edit entities from the editor

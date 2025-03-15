@@ -24,13 +24,13 @@ public:
 
 #ifdef EDITOR_MODE
     void generate_variants();
+    std::string serialize_scene();
+    void deserialize_scene(const std::string& scene);
 #endif 
               
     std::string serialize_entity(const entity_id id);
     std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
 
-    std::string serialize_scene();
-    
     entity_id deserialize_entity(const std::filesystem::path& path);
     entity_id deserialize_entity(const std::string& entity);
 
@@ -79,7 +79,7 @@ public:
     void exit_play_mode();
     void pause_play_mode();
 
-    void sync_editor();
+    void sync_editor_play_mode();
 #endif
 
 private:
@@ -95,7 +95,6 @@ private:
 
     bool m_is_play_mode;
     bool m_is_pause_play_mode;
-    std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage_backup; // used for backing up entities on entering play mode
 #endif
 };
 

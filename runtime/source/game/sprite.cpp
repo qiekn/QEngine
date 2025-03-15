@@ -2,13 +2,14 @@
 #include "game/speed.h"
 
 void Sprite::on_init() {
-    position = get_variant<Position>();
     this->texture = LoadTexture(path_to_sprite.c_str()); 
 }
 
 void Sprite::on_update() {
-    const float x = position->get().x;
-    const float y = position->get().y;
+    VariantRef<Position> pos = get_variant<Position>();
+
+    const float x = pos->get().x;
+    const float y = pos->get().y;
 
     float scale = 0.25;
     float width = texture.width * scale;
@@ -25,19 +26,20 @@ void Sprite::on_update() {
 }
 
 void Sprite::on_play_update() {
+    VariantRef<Position> pos = get_variant<Position>();
     auto speed = get_variant<Speed>();
     const float value = speed->get().value;
 
     if (IsKeyDown(KEY_RIGHT)) {
-        position->get().x += value;
+        pos->get().x += value;
     }
     if (IsKeyDown(KEY_LEFT)) {
-        position->get().x -= value;
+        pos->get().x -= value;
     }
     if (IsKeyDown(KEY_DOWN)) {
-        position->get().y += value;
+        pos->get().y += value;
     }
     if (IsKeyDown(KEY_UP)) {
-        position->get().y -= value;
+        pos->get().y -= value;
     }
 }
