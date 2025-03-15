@@ -92,10 +92,25 @@ void EditorCommunication::send_started_message() {
     send_message(buffer.GetString());
 }
 
+void EditorCommunication::send_shutdown_message() {
+    rapidjson::Document msg;
+    msg.SetObject();
+
+    msg.AddMember("type", "engine_shutdown", msg.GetAllocator());
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    msg.Accept(writer);
+
+    send_message(buffer.GetString());
+}
+
 void EditorCommunication::shutdown() {
     if (!m_initialized)
         return;
     
+    send_shutdown_message();
+
     m_running = false;
     
     if (m_receive_thread.joinable()) {
@@ -148,7 +163,6 @@ void EditorCommunication::raise_events() {
             EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityVariantRemoved, doc);
         }
         else if (type == "entity_removed") {
-            std::cout << "entity remove request from editor" << std::endl;
             EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityRemoved, doc);
         }
         else if (type == "enter_play_mode") {

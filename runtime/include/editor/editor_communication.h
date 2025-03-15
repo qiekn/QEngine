@@ -21,6 +21,7 @@ private:
     void receive_messages();
     void start_connection_attempts();
     void send_started_message();
+    void send_shutdown_message();
     
     bool m_running;
     bool m_initialized;
