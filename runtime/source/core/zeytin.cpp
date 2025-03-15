@@ -2,200 +2,80 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <sstream>
 
-#include "rapidjson/document.h" // IWYU pragma: keep
-#include "rapidjson/prettywriter.h" // IWYU pragma: keep
-
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h" 
+#include "rapidjson/writer.h"
 
 #include "core/zeytin.h"
 #include "core/json/json.h"
 #include "core/guid/guid.h"
-
 #include "core/variant/variant_base.h"
 #include "editor/editor_event.h"
 
-template<typename T>
-void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, size_t path_index, const T& value) {
-    if (path_index >= path_parts.size()) {
-        return; 
-    }
-
-    const std::string& current_path = path_parts[path_index];
-
-    if (path_index == path_parts.size() - 1) {
-        // we re at the leaf property so set the value directly
-        for (auto& property : obj.get_type().get_properties()) {
-            if (property.get_name() == current_path) {
-                std::cout << "Variant type: " << obj.get_type().get_name() << " | " << "Property type: " << property.get_type().get_name() << " | " << "Property name: " << property.get_name() << std::endl;
-
-                property.set_value(obj, value);
-                return;
-            }
-        }
-    } else {
-        // we need to navigate to a nested object
-        for (auto& property : obj.get_type().get_properties()) {
-            if (property.get_name() == current_path) {
-                rttr::variant nested_obj = property.get_value(obj);
-                update_property(nested_obj, path_parts, path_index + 1, value);
-                return;
-            }
-        }
-    }
-
-    std::cerr << "Property " << current_path << " not found in path" << std::endl;
-}
-
-void Zeytin::deserialize_entities() {
-    std::cout << "Parsing entities from path: " << std::filesystem::absolute("../shared/entities") << std::endl;
-
-    try {
-        int file_count = 0;
-        int entity_count = 0;
-
-        for(const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator("../shared/entities")) {
-            file_count++;
-            std::cout << "Found file: " << entry.path().filename() << std::endl;
-
-            if(!entry.is_regular_file() || entry.path().extension() != ".entity") {
-                std::cout << "  Skipping (not a .entity file)" << std::endl;
-                continue;
-            }
-
-            std::filesystem::path file_path = entry.path();
-            std::string file_name = file_path.stem().string();
-            std::cout << "  Parsing entity: " << file_name << std::endl;
-
-            deserialize_entity(file_path);
-            entity_count++;
+namespace {
+    template<typename T>
+    void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, 
+                         size_t path_index, const T& value) {
+        if (path_index >= path_parts.size()) {
+            return; 
         }
 
-        std::cout << "Parsed " << entity_count << " entities out of " << file_count << std::endl;
-    } catch(const std::filesystem::filesystem_error& e) {
-        std::cerr << "Filesystem error: " << e.what() << std::endl;
-    }
-}
+        const std::string& current_path = path_parts[path_index];
 
-#ifdef EDITOR_MODE
+        if (path_index == path_parts.size() - 1) {
+            for (auto& property : obj.get_type().get_properties()) {
+                if (property.get_name() == current_path) {
+                    std::cout << "Variant type: " << obj.get_type().get_name() 
+                              << " | Property type: " << property.get_type().get_name() 
+                              << " | Property name: " << property.get_name() << std::endl;
 
-void Zeytin::subscribe_editor_events() {
-    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityPropertyChanged, [this](const rapidjson::Document& doc) -> void {
-        assert(!doc.HasParseError());
-        assert(doc.HasMember("entity_id"));
-        assert(doc.HasMember("variant_type"));
-        assert(doc.HasMember("key_type"));
-        assert(doc.HasMember("key_path"));
-        assert(doc.HasMember("value"));
-
-        uint64_t entity_id = doc["entity_id"].GetUint64();
-        const std::string& variant_type = doc["variant_type"].GetString();
-        const std::string& key_type = doc["key_type"].GetString();
-        const std::string& key_path = doc["key_path"].GetString();
-        const std::string& value_str = doc["value"].GetString();
-
-        if (m_storage.find(entity_id) == m_storage.end()) {
-            std::cerr << "Entity " << entity_id << " not found" << std::endl;
-            return;
-        }
-
-        for (auto& variant : m_storage[entity_id]) {
-            if (variant.get_type().get_name() == variant_type) {
-                std::vector<std::string> path_parts;
-                std::string current_part;
-                std::istringstream path_stream(key_path);
-
-                while (std::getline(path_stream, current_part, '.')) {
-                    path_parts.push_back(current_part);
-                }
-
-                if (path_parts.empty()) {
-                    std::cerr << "Invalid key path: " << key_path << std::endl;
+                    property.set_value(obj, value);
                     return;
                 }
-
-                if (key_type == "int") {
-                    int value = std::stoi(value_str);
-                    update_property(variant, path_parts, 0, value);
+            }
+        } else {
+            for (auto& property : obj.get_type().get_properties()) {
+                if (property.get_name() == current_path) {
+                    rttr::variant nested_obj = property.get_value(obj);
+                    update_property(nested_obj, path_parts, path_index + 1, value);
+                    return;
                 }
-                else if (key_type == "float") {
-                    float value = std::stof(value_str);
-                    update_property(variant, path_parts, 0, value);
-                }
-                else if (key_type == "bool") {
-                    bool value = (value_str == "true" || value_str == "1");
-                    update_property(variant, path_parts, 0, value);
-                }
-                else if (key_type == "string") {
-                    update_property(variant, path_parts, 0, value_str);
-                }
-
-                break; 
             }
         }
-    });
 
-    EditorEventBus::get().subscribe<const rapidjson::Document&>(EditorEvent::EntityVariantAdded, [this](const rapidjson::Document& msg) {
-        assert(!msg.HasParseError());
-        assert(msg.HasMember("entity_id"));
-        assert(msg.HasMember("variant_type"));
+        std::cerr << "Property " << current_path << " not found in path" << std::endl;
+    }
 
-        entity_id entity_id = msg["entity_id"].GetUint64();
-        auto& variants = m_storage[entity_id];
+    std::vector<std::string> split_path(const std::string& path) {
+        std::vector<std::string> path_parts;
+        std::string current_part;
+        std::istringstream path_stream(path);
 
-        VariantCreateInfo info;
-        info.entity_id = entity_id;
-        std::vector<rttr::argument> args;
-        args.push_back(info);
-
-        rttr::type rttr_type = rttr::type::get_by_name(msg["variant_type"].GetString());
-        rttr::variant obj = rttr_type.create(args);
-
-        variants.push_back(std::move(obj));
-    });
-
-    EditorEventBus::get().subscribe<bool>(EditorEvent::EnterPlayMode, [this](bool is_paused) {
-            enter_play_mode(is_paused);
-    });
-
-    EditorEventBus::get().subscribe<bool>(EditorEvent::ExitPlayMode, [this](bool is_paused) {
-            exit_play_mode();
-    });
-
-    EditorEventBus::get().subscribe<bool>(EditorEvent::PausePlayMode, [this](bool _) {
-            m_is_pause_play_mode = true;
-    });
-
-    EditorEventBus::get().subscribe<bool>(EditorEvent::UnPausePlayMode, [this](bool _) {
-            m_is_pause_play_mode = false;
-    });
-}
-
-
-void Zeytin::generate_variants() {
-    for(const auto& type : rttr::type::get_types()) {
-        const auto& name = type.get_name().to_string();
-
-        if(!type.is_derived_from<VariantBase>() || type.get_name() == "VariantBase" || type.is_pointer() || type.is_wrapper()) {
-            continue;
+        while (std::getline(path_stream, current_part, '.')) {
+            path_parts.push_back(current_part);
         }
-        
-        try {
-            generate_variant(type);
-            std::cout << "Created variant for: " << name << ".variant" << std::endl;
-        } catch(const std::exception& e) {
-            std::cerr << "Error creating variant for " << name << ": " << e.what() << std::endl;
-        }
-    }    
+
+        return path_parts;
+    }
 }
 
-void Zeytin::generate_variant(const rttr::type& type) {
-    zeytin::json::create_dummy(type);
+entity_id Zeytin::new_entity_id() {
+    return generateUniqueID();
 }
-
-#endif
 
 void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
     m_storage[entity].push_back(std::move(variant));
+}
+
+void Zeytin::remove_variant(entity_id id, const rttr::type& type) {
+    for(auto& variant : get_variants(id)) {
+        if(variant.get_type() == type) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            base.is_dead = true;
+        }
+    }
 }
 
 std::string Zeytin::serialize_entity(const entity_id id) {
@@ -216,13 +96,13 @@ entity_id Zeytin::deserialize_entity(const std::string& str) {
     entity_variants.clear();
     entity_variants.reserve(variants.size());
 
-    for(auto& var : variants) {
+    for (auto& var : variants) {
         try {
             VariantBase& base = var.get_value<VariantBase&>();
             base.on_init();
             entity_variants.push_back(std::move(var));
         }
-        catch(const std::exception& e) {
+        catch (const std::exception& e) {
             std::cerr << "Exception caught: " << e.what() << std::endl;
         }
     }        
@@ -239,94 +119,12 @@ entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
     entity_variants.clear();
     entity_variants.reserve(variants.size());
 
-    for(auto& var : variants) {
+    for (auto& var : variants) {
         VariantBase& base = var.get_value<VariantBase&>();
         base.on_init();
         entity_variants.push_back(std::move(var));
     }
     return id;
-}
-
-
-entity_id Zeytin::new_entity_id() {
-    return generateUniqueID();
-}
-
-#ifdef EDITOR_MODE
-
-void Zeytin::enter_play_mode(bool is_paused) {
-    std::string scene = serialize_scene();
-
-    std::filesystem::create_directory("temp");
-    std::ofstream scene_file("temp/backup.scene");
-    scene_file << scene;
-    scene_file.close();
-
-    m_is_pause_play_mode = is_paused;
-    m_is_play_mode = true;
-}
-
-void Zeytin::exit_play_mode() {
-    m_storage.clear();
-    m_started = false;
-    m_is_play_mode = false;
-
-    if (std::filesystem::exists("temp/backup.scene")) {
-        std::ifstream scene_file("temp/backup.scene");
-        std::string scene((std::istreambuf_iterator<char>(scene_file)),
-                         std::istreambuf_iterator<char>());
-        scene_file.close();
-        deserialize_scene(scene);
-        std::filesystem::remove_all("temp");
-    }
-    else {
-        std::cerr << "Cannot exit playmode because scene backup is not found" << std::endl;
-        exit(1);
-    }
-}
-
-void Zeytin::sync_editor() {
-    std::string scene = serialize_scene();
-    EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
-}
-
-#endif
-
-void Zeytin::update_variants() {
-    for(auto& pair : m_storage) {   
-        for(auto& variant : pair.second) {
-            VariantBase& base = variant.get_value<VariantBase&>();
-            if(!base.is_dead) {
-                base.on_update();
-            }
-        }
-    }
-}
-
-void Zeytin::play_update_variants() {
-    for(auto& pair : m_storage) {   
-        for(auto& variant : pair.second) {
-            VariantBase& base = variant.get_value<VariantBase&>();
-            if(!base.is_dead) {
-                base.on_play_update();
-            }
-        }
-    }
-}
-
-void Zeytin::play_start_variants() {
-    if(m_started) { return; }
-
-    m_started = true;
-
-    for(auto& pair : m_storage) {   
-        for(auto& variant : pair.second) {
-            VariantBase& base = variant.get_value<VariantBase&>();
-            if(!base.is_dead) {
-                base.on_play_start();
-            }
-        }
-    }
 }
 
 std::string Zeytin::serialize_scene() {
@@ -366,7 +164,7 @@ void Zeytin::deserialize_scene(const std::string& scene) {
     rapidjson::ParseResult parse_result = scene_data.Parse(scene.c_str());
 
     if (parse_result.IsError()) {
-        std::cerr << "Error parsing scene: " << " at offset " << parse_result.Offset() << std::endl;
+        std::cerr << "Error parsing scene at offset " << parse_result.Offset() << std::endl;
         exit(1);
     }
 
@@ -388,3 +186,309 @@ void Zeytin::deserialize_scene(const std::string& scene) {
         deserialize_entity(entity_str);
     }
 }
+
+void Zeytin::deserialize_entities() {
+    std::cout << "Parsing entities from path: " << std::filesystem::absolute("../shared/entities") << std::endl;
+
+    try {
+        int file_count = 0;
+        int entity_count = 0;
+
+        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator("../shared/entities")) {
+            file_count++;
+            std::cout << "Found file: " << entry.path().filename() << std::endl;
+
+            if (!entry.is_regular_file() || entry.path().extension() != ".entity") {
+                std::cout << "  Skipping (not a .entity file)" << std::endl;
+                continue;
+            }
+
+            std::filesystem::path file_path = entry.path();
+            std::string file_name = file_path.stem().string();
+            std::cout << "  Parsing entity: " << file_name << std::endl;
+
+            deserialize_entity(file_path);
+            entity_count++;
+        }
+
+        std::cout << "Parsed " << entity_count << " entities out of " << file_count << " files" << std::endl;
+    } 
+    catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << std::endl;
+    }
+}
+
+void Zeytin::post_init_variants() {
+    if(m_post_inited) return;
+    m_post_inited = true;
+
+    std::cout << "post initing, entity count: " << m_storage.size() << std::endl;
+
+    for (auto& pair : m_storage) {   
+        for (auto& variant : pair.second) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if (!base.is_dead) {
+                base.on_post_init();
+            }
+        }
+    }
+}
+
+void Zeytin::update_variants() {
+    for (auto& pair : m_storage) {   
+        for (auto& variant : pair.second) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if (!base.is_dead) {
+                base.on_update();
+            }
+        }
+    }
+}
+
+void Zeytin::play_update_variants() {
+    for (auto& pair : m_storage) {   
+        for (auto& variant : pair.second) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if (!base.is_dead) {
+                base.on_play_update();
+            }
+        }
+    }
+}
+
+void Zeytin::play_start_variants() {
+    if (m_started) { 
+        return; 
+    }
+
+    m_started = true;
+
+    for (auto& pair : m_storage) {   
+        for (auto& variant : pair.second) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if (!base.is_dead) {
+                base.on_play_start();
+            }
+        }
+    }
+}
+
+#ifdef EDITOR_MODE
+
+void Zeytin::subscribe_editor_events() {
+    EditorEventBus::get().subscribe<const std::string&>(
+        EditorEvent::Scene, 
+        [this](const auto& scene) {
+        std::cout << "serializing scene received from editor" << std::endl;
+            deserialize_scene(scene);
+            m_is_scene_ready = true;
+        }
+    );
+
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(
+        EditorEvent::EntityPropertyChanged, 
+        [this](const rapidjson::Document& doc) {
+            handle_entity_property_changed(doc);
+        }
+    );
+
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(
+        EditorEvent::EntityVariantAdded, 
+        [this](const rapidjson::Document& msg) {
+            handle_entity_variant_added(msg);
+        }
+    );
+
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(
+        EditorEvent::EntityVariantRemoved, 
+        [this](const rapidjson::Document& msg) {
+            handle_entity_variant_removed(msg);
+        }
+    );
+
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(
+        EditorEvent::EntityRemoved, 
+        [this](const rapidjson::Document& msg) {
+            handle_entity_removed(msg);
+        }
+    );
+
+    EditorEventBus::get().subscribe<bool>(
+        EditorEvent::EnterPlayMode, 
+        [this](bool is_paused) {
+            enter_play_mode(is_paused);
+        }
+    );
+
+    EditorEventBus::get().subscribe<bool>(
+        EditorEvent::ExitPlayMode, 
+        [this](bool) {
+            exit_play_mode();
+        }
+    );
+
+    EditorEventBus::get().subscribe<bool>(
+        EditorEvent::PausePlayMode, 
+        [this](bool) {
+            m_is_pause_play_mode = true;
+        }
+    );
+
+    EditorEventBus::get().subscribe<bool>(
+        EditorEvent::UnPausePlayMode, 
+        [this](bool) {
+            m_is_pause_play_mode = false;
+        }
+    );
+}
+
+void Zeytin::handle_entity_property_changed(const rapidjson::Document& doc) {
+    assert(!doc.HasParseError());
+    assert(doc.HasMember("entity_id"));
+    assert(doc.HasMember("variant_type"));
+    assert(doc.HasMember("key_type"));
+    assert(doc.HasMember("key_path"));
+    assert(doc.HasMember("value"));
+
+    uint64_t entity_id = doc["entity_id"].GetUint64();
+    const std::string& variant_type = doc["variant_type"].GetString();
+    const std::string& key_type = doc["key_type"].GetString();
+    const std::string& key_path = doc["key_path"].GetString();
+    const std::string& value_str = doc["value"].GetString();
+
+    if (m_storage.find(entity_id) == m_storage.end()) {
+        std::cerr << "Entity " << entity_id << " not found" << std::endl;
+        return;
+    }
+
+    for (auto& variant : m_storage[entity_id]) {
+        if (variant.get_type().get_name() == variant_type) {
+            std::vector<std::string> path_parts = split_path(key_path);
+
+            if (path_parts.empty()) {
+                std::cerr << "Invalid key path: " << key_path << std::endl;
+                return;
+            }
+
+            if (key_type == "int") {
+                update_property(variant, path_parts, 0, std::stoi(value_str));
+            }
+            else if (key_type == "float") {
+                update_property(variant, path_parts, 0, std::stof(value_str));
+            }
+            else if (key_type == "bool") {
+                update_property(variant, path_parts, 0, (value_str == "true" || value_str == "1"));
+            }
+            else if (key_type == "string") {
+                update_property(variant, path_parts, 0, value_str);
+            }
+
+            break; 
+        }
+    }
+}
+
+void Zeytin::handle_entity_variant_added(const rapidjson::Document& msg) {
+    assert(!msg.HasParseError());
+    assert(msg.HasMember("entity_id"));
+    assert(msg.HasMember("variant_type"));
+
+    entity_id entity_id = msg["entity_id"].GetUint64();
+    auto& variants = m_storage[entity_id];
+
+    VariantCreateInfo info;
+    info.entity_id = entity_id;
+    std::vector<rttr::argument> args;
+    args.push_back(info);
+
+    rttr::type rttr_type = rttr::type::get_by_name(msg["variant_type"].GetString());
+    rttr::variant obj = rttr_type.create(args);
+
+    variants.push_back(std::move(obj));
+}
+
+void Zeytin::handle_entity_variant_removed(const rapidjson::Document& msg) {
+    assert(!msg.HasParseError());
+    assert(msg.HasMember("entity_id"));
+    assert(msg.HasMember("variant_type"));
+
+    entity_id entity_id = msg["entity_id"].GetUint64();
+    auto& variants = m_storage[entity_id];
+    rttr::type rttr_type = rttr::type::get_by_name(msg["variant_type"].GetString());
+
+    remove_variant(entity_id, rttr_type);
+}
+
+void Zeytin::handle_entity_removed(const rapidjson::Document& msg) {
+    assert(!msg.HasParseError());
+    assert(msg.HasMember("entity_id"));
+
+    entity_id entity_id = msg["entity_id"].GetUint64();
+
+    remove_entity(entity_id);
+}
+
+
+void Zeytin::enter_play_mode(bool is_paused) {
+    std::string scene = serialize_scene();
+
+    std::filesystem::create_directory("temp");
+    std::ofstream scene_file("temp/backup.scene");
+    scene_file << scene;
+    scene_file.close();
+
+    m_is_pause_play_mode = is_paused;
+    m_is_play_mode = true;
+}
+
+void Zeytin::exit_play_mode() {
+    m_storage.clear();
+    m_post_inited = false;
+    m_started = false;
+    m_is_play_mode = false;
+
+    if (std::filesystem::exists("temp/backup.scene")) {
+        std::ifstream scene_file("temp/backup.scene");
+        std::string scene((std::istreambuf_iterator<char>(scene_file)),
+                         std::istreambuf_iterator<char>());
+        scene_file.close();
+        deserialize_scene(scene);
+        std::filesystem::remove_all("temp");
+    }
+    else {
+        std::cerr << "Cannot exit playmode because scene backup is not found" << std::endl;
+        exit(1);
+    }
+}
+
+void Zeytin::sync_editor() {
+    std::string scene = serialize_scene();
+    EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
+}
+
+void Zeytin::generate_variants() {
+    for (const auto& type : rttr::type::get_types()) {
+        const auto& name = type.get_name().to_string();
+
+        if (!type.is_derived_from<VariantBase>() || 
+            type.get_name() == "VariantBase" || 
+            type.is_pointer() || 
+            type.is_wrapper()) {
+            continue;
+        }
+        
+        try {
+            generate_variant(type);
+            std::cout << "Created variant for: " << name << ".variant" << std::endl;
+        } 
+        catch (const std::exception& e) {
+            std::cerr << "Error creating variant for " << name << ": " << e.what() << std::endl;
+        }
+    }    
+}
+
+void Zeytin::generate_variant(const rttr::type& type) {
+    zeytin::json::create_dummy(type);
+}
+
+#endif 

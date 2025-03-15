@@ -16,6 +16,10 @@ EditorCommunication::EditorCommunication()
     , m_publisher(m_context, zmq::socket_type::pub)
     , m_subscriber(m_context, zmq::socket_type::sub) {
 
+
+    initialize();
+    start_connection_attempts();
+
     EditorEventBus::get().subscribe<std::string>(EditorEvent::SyncEditor, [this](std::string json) {
             send_message(json);
     });
@@ -29,18 +33,19 @@ EditorCommunication::~EditorCommunication() {
 bool EditorCommunication::initialize() {
     if (m_initialized)
         return true;
-    
+
     try {
         m_subscriber.connect("tcp://localhost:5555");
         m_publisher.connect("tcp://localhost:5556");
-        
+
         m_subscriber.set(zmq::sockopt::subscribe, "");
-        
+
         m_running = true;
         m_receive_thread = std::thread(&EditorCommunication::receive_messages, this);
-        
+
         m_initialized = true;
         std::cout << "EditorCommunication initialized successfully" << std::endl;
+
         return true;
     }
     catch (const zmq::error_t& e) {
@@ -48,7 +53,38 @@ bool EditorCommunication::initialize() {
         return false;
     }
 
+}
 
+void EditorCommunication::start_connection_attempts() {
+    std::thread([this]() {
+        std::atomic<bool> connection_confirmed{false};
+        
+        EditorEventBus::get().subscribe<bool>(EditorEvent::EngineStartConfirmed, 
+            [&connection_confirmed](bool) {
+                connection_confirmed = true;
+            });
+        
+        while (m_running && !connection_confirmed) {
+            send_started_message();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+        
+        std::cout << "Connection to editor confirmed!" << std::endl;
+    }).detach();
+}
+
+void EditorCommunication::send_started_message() {
+    rapidjson::Document msg;
+    msg.SetObject();
+    
+    msg.AddMember("type", "engine_started", msg.GetAllocator());
+    
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    msg.Accept(writer);
+    
+    std::cout << "Sending started message to editor..." << std::endl;
+    send_message(buffer.GetString());
 }
 
 void EditorCommunication::shutdown() {
@@ -84,20 +120,6 @@ bool EditorCommunication::send_message(const std::string& message) {
     }
 }
 
-void EditorCommunication::heartbeat() {
-    rapidjson::Document msg;
-    msg.SetObject();
-    msg.AddMember("type", "heartbeat", msg.GetAllocator());
-
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    msg.Accept(writer);;
-
-    if (!send_message(buffer.GetString())) {
-        std::cerr << "Failed to send engine started notification" << std::endl;
-    }
-}
-
 void EditorCommunication::receive_messages() {
     while (m_running) {
         try {
@@ -129,7 +151,6 @@ void EditorCommunication::receive_messages() {
 }
 
 void EditorCommunication::raise_events() {
-
     while(!m_message_queue.empty()) {
         const auto& msg = m_message_queue.front();
 
@@ -148,20 +169,31 @@ void EditorCommunication::raise_events() {
         else if (type == "entity_variant_added") {
             EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityVariantAdded, doc);
         }
+        else if (type == "entity_variant_removed") {
+            EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityVariantRemoved, doc);
+        }
+        else if (type == "entity_removed") {
+            std::cout << "entity remove request from editor" << std::endl;
+            EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityRemoved, doc);
+        }
         else if (type == "enter_play_mode") {
             bool is_paused = doc["is_paused"].GetBool();
             EditorEventBus::get().publish<bool>(EditorEvent::EnterPlayMode, is_paused);
-            std::cout << "Engine enter play mode >> is_paused: " << is_paused << std::endl;
         }
         else if (type == "exit_play_mode") {
             EditorEventBus::get().publish<bool>(EditorEvent::ExitPlayMode, false);
-            std::cout << "Engine exit play mode" << std::endl;
         }
         else if(type == "pause_play_mode") {
             EditorEventBus::get().publish<bool>(EditorEvent::PausePlayMode, true);
         }
         else if(type == "unpause_play_mode") {
             EditorEventBus::get().publish<bool>(EditorEvent::UnPausePlayMode, true);
+        }
+        else if(type == "engine_start_confirmed") {
+            EditorEventBus::get().publish<bool>(EditorEvent::EngineStartConfirmed, true);
+        }
+        else if(type == "scene") {
+            EditorEventBus::get().publish<const std::string&>(EditorEvent::Scene, msg);
         }
         else {
             std::cout << "ENGINE: unknown message type received from editor" << std::endl;
@@ -171,7 +203,7 @@ void EditorCommunication::raise_events() {
     }
 }
 
-#endif
+#endif // EDITOR_MODE
 
 
 

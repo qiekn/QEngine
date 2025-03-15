@@ -8,6 +8,13 @@
 
 int main(int argc, char* argv[]) {
 
+#if EDITOR_MODE
+    EditorCommunication editor_comm;
+
+    Zeytin::get().generate_variants();
+    Zeytin::get().subscribe_editor_events();
+#endif
+
 #ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_TOPMOST);
@@ -42,17 +49,17 @@ int main(int argc, char* argv[]) {
 
     SetTargetFPS(60);
 
+#ifndef EDITOR_MODE
     Zeytin::get().deserialize_entities();
-
-#if EDITOR_MODE
-    EditorCommunication editor_comm;
-    editor_comm.initialize();
-
-    Zeytin::get().generate_variants();
-    Zeytin::get().subscribe_editor_events();
 #endif
 
     while (!WindowShouldClose()) {
+
+#ifdef EDITOR_MODE
+            editor_comm.raise_events();
+            if(!Zeytin::get().is_scene_ready()) continue; 
+#endif
+
         Vector2 mousePosition = GetMousePosition();
 
         Vector2 virtualMousePosition = {
@@ -63,12 +70,11 @@ int main(int argc, char* argv[]) {
         BeginTextureMode(target);
             ClearBackground(RAYWHITE);
 
-            Zeytin::get().update_variants(); 
 
 #ifdef EDITOR_MODE
-            editor_comm.heartbeat();
-            editor_comm.raise_events();
-            Zeytin::get().sync_editor(); 
+
+            Zeytin::get().post_init_variants();
+            Zeytin::get().update_variants(); 
 
             DrawText("1920x1080", 20, 20, 40, BLACK);
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
@@ -81,10 +87,12 @@ int main(int argc, char* argv[]) {
                     Zeytin::get().play_start_variants();
                     Zeytin::get().play_update_variants();
                     DrawText("PLAY MODE", 1490, 20, 70, BLUE);
+                    Zeytin::get().sync_editor(); 
                 }
             }
-//
 #else
+                    Zeytin::get().post_init_variants();
+                    Zeytin::get().update_variants(); 
                     Zeytin::get().play_start_variants();
                     Zeytin::get().play_update_variants();
 #endif

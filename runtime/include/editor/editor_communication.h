@@ -21,10 +21,11 @@ public:
     bool initialize();
     void shutdown();
     bool send_message(const std::string& message);
-    void heartbeat();
     void raise_events();
 
 private:
+    void start_connection_attempts();
+    void send_started_message();
     void receive_messages();
     
     std::atomic<bool> m_running;

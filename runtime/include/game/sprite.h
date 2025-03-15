@@ -4,16 +4,16 @@
 #include "core/variant/variant_base.h"
 
 #include "game/position.h"
-
+#include "game/speed.h"
 
 class Sprite : public VariantBase { 
     VARIANT(Sprite);
 
 public:
     std::string path_to_sprite; PROPERTY();
-    std::string extension; PROPERTY();
 
     void on_init() override;
+    void on_post_init() override;
     void on_update() override;
     void on_play_update() override;
 
@@ -21,7 +21,9 @@ private:
     Texture texture; 
     void basic_move();
 
-    VariantRef<Position> position;
-    
+    VariantRef<Position> pos;
+    VariantRef<Speed> speed;
+
+    bool m_texture_loaded = false;
 };
 

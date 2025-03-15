@@ -6,6 +6,9 @@
 #include <shared_mutex>
 
 enum class EditorEvent {
+    EngineStartConfirmed,
+    Scene,
+    EntityRemoved,
     EntityPropertyChanged,
     EntityVariantAdded,
     EntityVariantRemoved,

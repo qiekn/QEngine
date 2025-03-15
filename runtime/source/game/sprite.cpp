@@ -2,11 +2,23 @@
 #include "game/speed.h"
 
 void Sprite::on_init() {
+
+    if(path_to_sprite.empty()) {
+        std::cout << "Texture is not loaded" << std::endl;
+        return;
+    }
+
     this->texture = LoadTexture(path_to_sprite.c_str()); 
+    m_texture_loaded = true;
+}
+
+void Sprite::on_post_init() {
+    pos = get_variant<Position>();
+    speed = get_variant<Speed>();
 }
 
 void Sprite::on_update() {
-    VariantRef<Position> pos = get_variant<Position>();
+    if(!m_texture_loaded) return;
 
     const float x = pos->get().x;
     const float y = pos->get().y;
@@ -26,8 +38,8 @@ void Sprite::on_update() {
 }
 
 void Sprite::on_play_update() {
-    VariantRef<Position> pos = get_variant<Position>();
-    auto speed = get_variant<Speed>();
+    if(!pos.has_value() || !speed.has_value()) return;
+
     const float value = speed->get().value;
 
     if (IsKeyDown(KEY_RIGHT)) {

@@ -18,8 +18,7 @@ RTTR_REGISTRATION
     rttr::registration::class_<Sprite>("Sprite")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("path_to_sprite", &Sprite::path_to_sprite)
-        .property("extension", &Sprite::extension);
+        .property("path_to_sprite", &Sprite::path_to_sprite);
 
     rttr::registration::class_<Speed>("Speed")
         .constructor<>()(rttr::policy::ctor::as_object)

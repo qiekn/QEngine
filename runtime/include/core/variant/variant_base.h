@@ -21,6 +21,7 @@ struct VariantBase {
     VariantBase(VariantCreateInfo info) : entity_id(info.entity_id) {}
 
     virtual void on_init() {}
+    virtual void on_post_init() {}
     virtual void on_update() {}
     virtual void on_play_start() {}
     virtual void on_play_update() {}
