@@ -2,31 +2,54 @@
 
 #include "entity/entity_document.h"
 #include "variant/variant_document.h"
-
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 class Hierarchy final {
 public: 
-    inline Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantDocument>& variants) 
-        : m_entities(entities), m_variants(variants) {
-            subscribe_events();
-        }
-
+    Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantDocument>& variants);
     void update();
 
 private:
-    std::vector<EntityDocument>& m_entities;
-    std::vector<VariantDocument>& m_variants;
-
-    std::vector<std::string> m_entity_backup_names;
-
+    void render_save_controls();
     void render_create_entity();
+    void create_new_entity(const char* name);
     void render_entity(EntityDocument& entity);
-    void render_variant(rapidjson::Document& document, rapidjson::Value& variant, int index, const uint64_t entity_id); // index is required for unique id
-    void render_object(rapidjson::Document& document, rapidjson::Value& object, const uint64_t entity_id, const std::string& variant_type, const std::string& parent_path = "");
+    void handle_entity_context_menu(EntityDocument& entity_document, uint64_t entity_id);
+    void render_variant(rapidjson::Document& document, rapidjson::Value& variant, 
+                       int index, uint64_t entity_id);
+    void render_object(rapidjson::Document& document, rapidjson::Value& object, 
+                      uint64_t entity_id, const std::string& variant_type, 
+                      const std::string& parent_path = "");
+    
+    void render_int_field(rapidjson::Document& document, rapidjson::Value& value,
+                         uint64_t entity_id, const std::string& variant_type,
+                         const std::string& key, const std::string& current_path,
+                         const std::string& uniqueId, std::map<std::string, bool>& editingField);
+    
+    void render_float_field(rapidjson::Document& document, rapidjson::Value& value,
+                           uint64_t entity_id, const std::string& variant_type,
+                           const std::string& key, const std::string& current_path,
+                           const std::string& uniqueId, std::map<std::string, bool>& editingField);
+    
+    void render_bool_field(rapidjson::Value& value, uint64_t entity_id,
+                          const std::string& variant_type, const std::string& key,
+                          const std::string& current_path);
+    
+    void render_string_field(rapidjson::Document& document, rapidjson::Value& value,
+                            uint64_t entity_id, const std::string& variant_type,
+                            const std::string& key, const std::string& current_path,
+                            const std::string& uniqueId, std::map<std::string, bool>& editingField);
+    
+    void render_array_field(rapidjson::Document& document, rapidjson::Value& value,
+                           uint64_t entity_id, const std::string& variant_type,
+                           const std::string& key, const std::string& current_path,
+                           std::map<std::string, bool>& editingField);
+    
     void add_variant_to_entity(EntityDocument& entity_document, VariantDocument& variant_document);
     void save_all_entities();
-
     void subscribe_events();
+
+    std::vector<EntityDocument>& m_entities;
+    std::vector<VariantDocument>& m_variants;
 };

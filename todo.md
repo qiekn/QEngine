@@ -1,16 +1,17 @@
-* fix runtime restore play mode
+* add dependency check
+* do some cleanup
+* implement .scene
+* implement on change callback for properties
 * make entity list and variant list coherent because modified/removed variants may cause issue 
-* variant list is watching variant folder for any changes. in cause of a change to variant entity list should be notified
 * add remove variant from entity to runtime
-
 * implement a way to refer other entities (using ids)
-
 * support double type
 * Implement adding elements to array
 * investigate enums
 * embed engine window
 -----------------------------------------
 
+* [DONE] fix runtime restore play mode
 * [DONE] tmp files for storing scene file when going into play mode
 * [DONE] make sure an entity can have 1 instance of a variant type in editor
 * [DONE] add runtime to editor sync

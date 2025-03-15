@@ -1,6 +1,7 @@
 {
     "type": "Sprite",
     "value": {
-        "path_to_sprite": ""
+        "path_to_sprite": "",
+        "extension": ""
     }
 }

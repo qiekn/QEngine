@@ -21,7 +21,7 @@ public:
     bool initialize();
     void shutdown();
     bool send_message(const std::string& message);
-    void heartbeet();
+    void heartbeat();
     void raise_events();
 
 private:

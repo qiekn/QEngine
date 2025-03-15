@@ -1,4 +1,3 @@
-#include "game/debug/debug.h"
 #include "game/game.h"
 #include "game/position.h"
 #include "game/speed.h"
@@ -19,7 +18,8 @@ RTTR_REGISTRATION
     rttr::registration::class_<Sprite>("Sprite")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("path_to_sprite", &Sprite::path_to_sprite);
+        .property("path_to_sprite", &Sprite::path_to_sprite)
+        .property("extension", &Sprite::extension);
 
     rttr::registration::class_<Speed>("Speed")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -41,9 +41,5 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Position::x)
         .property("y", &Position::y);
-
-    rttr::registration::class_<Debug>("Debug")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 
 }

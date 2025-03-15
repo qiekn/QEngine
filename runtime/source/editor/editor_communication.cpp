@@ -84,10 +84,10 @@ bool EditorCommunication::send_message(const std::string& message) {
     }
 }
 
-void EditorCommunication::heartbeet() {
+void EditorCommunication::heartbeat() {
     rapidjson::Document msg;
     msg.SetObject();
-    msg.AddMember("type", "heartbeet", msg.GetAllocator());
+    msg.AddMember("type", "heartbeat", msg.GetAllocator());
 
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

@@ -8,71 +8,56 @@
 #include "rapidjson/writer.h"
 
 #include "engine/engine_event.h"
-#include "engine/engine_event_enter_play_mode.state.h"
 
 EngineCommunication::EngineCommunication()
     : m_running(false)
     , m_initialized(false)
     , m_context(1)
     , m_publisher(m_context, zmq::socket_type::pub)
-    , m_subscriber(m_context, zmq::socket_type::sub) {
-
-        EngineEventBus::get().subscribe<const std::string&>(EngineEvent::EntityModifiedEditor, [this](const std::string& msg) {
-                send_message(msg);
-        });
-
-        EngineEventBus::get().subscribe<EnterPlayModeState>(EngineEvent::EnterPlayMode, [this](EnterPlayModeState state) {
-                rapidjson::Document msg;
-                msg.SetObject();
-                msg.AddMember("type", "enter_play_mode", msg.GetAllocator());
-                msg.AddMember("is_paused", state.is_paused, msg.GetAllocator());
-
-                rapidjson::StringBuffer buffer;
-                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-                msg.Accept(writer);
-
-                send_message(buffer.GetString());
-        });
-
-        EngineEventBus::get().subscribe<bool>(EngineEvent::ExitPlayMode, [this](bool _) {
-                rapidjson::Document msg;
-                msg.SetObject();
-                msg.AddMember("type", "exit_play_mode", msg.GetAllocator());
-
-                rapidjson::StringBuffer buffer;
-                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-                msg.Accept(writer);
-
-                send_message(buffer.GetString());
-        });
-
-        EngineEventBus::get().subscribe<bool>(EngineEvent::PausePlayMode, [this](bool _) {
-                rapidjson::Document msg;
-                msg.SetObject();
-                msg.AddMember("type", "pause_play_mode", msg.GetAllocator());
-
-                rapidjson::StringBuffer buffer;
-                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-                msg.Accept(writer);
-
-                send_message(buffer.GetString());
-        });
-
-        EngineEventBus::get().subscribe<bool>(EngineEvent::UnPausePlayMode, [this](bool _) {
-                rapidjson::Document msg;
-                msg.SetObject();
-                msg.AddMember("type", "unpause_play_mode", msg.GetAllocator());
-
-                rapidjson::StringBuffer buffer;
-                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-                msg.Accept(writer);
-
-                send_message(buffer.GetString());
-        });
+    , m_subscriber(m_context, zmq::socket_type::sub) 
+{
+    register_event_handlers();
 }
 
 EngineCommunication::~EngineCommunication() {
     shutdown();
+}
+
+void EngineCommunication::register_event_handlers() {
+    EngineEventBus::get().subscribe<const std::string&>(
+        EngineEvent::EntityModifiedEditor, 
+        [this](const std::string& msg) {
+            send_message(msg);
+        }
+    );
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::EnterPlayMode, 
+        [this](bool paused) {
+            send_simple_message("enter_play_mode", "is_paused", paused);
+        }
+    );
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::ExitPlayMode, 
+        [this](bool) {
+            send_simple_message("exit_play_mode");
+        }
+    );
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::PausePlayMode, 
+        [this](bool) {
+            send_simple_message("pause_play_mode");
+        }
+    );
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::UnPausePlayMode, 
+        [this](bool) {
+            send_simple_message("unpause_play_mode");
+        }
+    );
 }
 
 bool EngineCommunication::initialize() {
@@ -85,7 +70,7 @@ bool EngineCommunication::initialize() {
         m_subscriber.set(zmq::sockopt::subscribe, "");
         
         m_running = true;
-        m_receive_thread = std::thread(&EngineCommunication::recieve_messages, this);
+        m_receive_thread = std::thread(&EngineCommunication::receive_messages, this);
         
         m_initialized = true;
         return true;
@@ -128,11 +113,33 @@ bool EngineCommunication::send_message(const std::string& json) {
     }
 }
 
+bool EngineCommunication::send_simple_message(const std::string& type,
+                                             const std::string& key,
+                                             bool value) {
+    rapidjson::Document msg;
+    msg.SetObject();
+
+    rapidjson::Value typeValue(type.c_str(), msg.GetAllocator());
+    msg.AddMember("type", typeValue, msg.GetAllocator());
+
+    if (!key.empty()) {
+        rapidjson::Value keyValue(key.c_str(), msg.GetAllocator());
+        rapidjson::Value boolValue(value);
+        msg.AddMember(keyValue, boolValue, msg.GetAllocator());
+    }
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    msg.Accept(writer);
+
+    return send_message(buffer.GetString());
+}
+
 bool EngineCommunication::is_engine_connected() const {
     return m_initialized;
 }
 
-void EngineCommunication::recieve_messages() {
+void EngineCommunication::receive_messages() {
     while (m_running) {
         try {
             zmq::pollitem_t items[] = {
@@ -148,10 +155,8 @@ void EngineCommunication::recieve_messages() {
                 if (result.has_value()) {
                     std::string message_str(static_cast<char*>(message.data()), message.size());
                     
-                    {
-                        std::lock_guard<std::mutex> lock(m_queue_mutex);
-                        m_message_queue.push(message_str);
-                    }
+                    std::lock_guard<std::mutex> lock(m_queue_mutex);
+                    m_message_queue.push(message_str);
                 }
             }
         }
@@ -163,40 +168,38 @@ void EngineCommunication::recieve_messages() {
 }
 
 void EngineCommunication::raise_events() {
-    rapidjson::Document doc;
-
-    while(!m_message_queue.empty()) {
-        const std::string& msg = m_message_queue.front();
+    std::queue<std::string> messages;
+    
+    {
+        std::lock_guard<std::mutex> lock(m_queue_mutex);
+        messages.swap(m_message_queue);
+    }
+    
+    while (!messages.empty()) {
+        const std::string& msg = messages.front();
+        
+        rapidjson::Document doc;
         doc.Parse(msg.c_str());
-
-        assert(doc.HasMember("type"));
-
+        
+        if (doc.HasParseError() || !doc.HasMember("type")) {
+            std::cerr << "Invalid message format received" << std::endl;
+            messages.pop();
+            continue;
+        }
+        
         const std::string& type = doc["type"].GetString();
-
-        if(type == "heartbeet") {
-            EngineEventBus::get().publish<bool>(EngineEvent::EngineHeartbeet, true);
+        
+        if (type == "heartbeat") {
+            EngineEventBus::get().publish<bool>(EngineEvent::EngineHeartbeat, true);
             EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
         }
-        else if(type == "scene") {
+        else if (type == "scene") {
             EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);
         }
         else {
-            std::cout << "Editor: Unknown message received from engine" << std::endl;
+            std::cout << "Editor: Unknown message received from engine: " << type << std::endl;
         }
-
-        m_message_queue.pop();
+        
+        messages.pop();
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-

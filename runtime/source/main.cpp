@@ -11,29 +11,22 @@ int main(int argc, char* argv[]) {
 #ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_TOPMOST);
-    Zeytin::get().generate_variants();
-
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--kill-after-generate") == 0) {
-            exit(0);
-        }
-    }
 
     const int windowWidth = 800;
     const int windowHeight = 600;
 
-    InitWindow(windowWidth, windowHeight, "Game - ZeytinEngine");
+    InitWindow(windowWidth, windowHeight, "ZeytinEngine"); 
+    SetWindowPosition(1051, 393);
 #else
     const int windowWidth = 1920;
     const int windowHeight = 1080;
-    InitWindow(windowWidth, windowHeight, "Jam Game");
+    InitWindow(windowWidth, windowHeight, "Game");
 
 #endif
 
     const int virtualWidth = 1920;
     const int virtualHeight = 1080;
 
-    SetWindowPosition(1051, 393);
     SetExitKey(0);
 
     RenderTexture2D target = LoadRenderTexture(virtualWidth, virtualHeight);
@@ -49,16 +42,17 @@ int main(int argc, char* argv[]) {
 
     SetTargetFPS(60);
 
-#ifdef EDITOR_MODE
+    Zeytin::get().deserialize_entities();
+
+#if EDITOR_MODE
     EditorCommunication editor_comm;
     editor_comm.initialize();
+
+    Zeytin::get().generate_variants();
+    Zeytin::get().subscribe_editor_events();
 #endif
 
-    Zeytin::get().init();
-
     while (!WindowShouldClose()) {
-
-
         Vector2 mousePosition = GetMousePosition();
 
         Vector2 virtualMousePosition = {
@@ -72,11 +66,9 @@ int main(int argc, char* argv[]) {
             Zeytin::get().update_variants(); 
 
 #ifdef EDITOR_MODE
-            editor_comm.heartbeet();
+            editor_comm.heartbeat();
             editor_comm.raise_events();
-
-
-            Zeytin::get().sync_editor_play_mode(); 
+            Zeytin::get().sync_editor(); 
 
             DrawText("1920x1080", 20, 20, 40, BLACK);
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
@@ -91,7 +83,7 @@ int main(int argc, char* argv[]) {
                     DrawText("PLAY MODE", 1490, 20, 70, BLUE);
                 }
             }
-
+//
 #else
                     Zeytin::get().play_start_variants();
                     Zeytin::get().play_update_variants();

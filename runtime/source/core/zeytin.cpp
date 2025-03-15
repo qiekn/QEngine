@@ -4,7 +4,7 @@
 #include <filesystem>
 
 #include "rapidjson/document.h" // IWYU pragma: keep
-#include "rapidjson/writer.h" // IWYU pragma: keep
+#include "rapidjson/prettywriter.h" // IWYU pragma: keep
 
 
 #include "core/zeytin.h"
@@ -46,8 +46,7 @@ void update_property(rttr::variant& obj, const std::vector<std::string>& path_pa
     std::cerr << "Property " << current_path << " not found in path" << std::endl;
 }
 
-
-void Zeytin::init() {
+void Zeytin::deserialize_entities() {
     std::cout << "Parsing entities from path: " << std::filesystem::absolute("../shared/entities") << std::endl;
 
     try {
@@ -75,11 +74,6 @@ void Zeytin::init() {
     } catch(const std::filesystem::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
     }
-
-#ifdef EDITOR_MODE
-    subscribe_editor_events();
-#endif
-
 }
 
 #ifdef EDITOR_MODE
@@ -181,7 +175,7 @@ void Zeytin::generate_variants() {
     for(const auto& type : rttr::type::get_types()) {
         const auto& name = type.get_name().to_string();
 
-        if(!type.is_derived_from<VariantBase>() || type.get_name() == "VariantBase") {
+        if(!type.is_derived_from<VariantBase>() || type.get_name() == "VariantBase" || type.is_pointer() || type.is_wrapper()) {
             continue;
         }
         
@@ -291,8 +285,7 @@ void Zeytin::exit_play_mode() {
     }
 }
 
-void Zeytin::sync_editor_play_mode() {
-    if(!m_is_play_mode || m_is_pause_play_mode) return;
+void Zeytin::sync_editor() {
     std::string scene = serialize_scene();
     EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
 }
@@ -336,7 +329,6 @@ void Zeytin::play_start_variants() {
     }
 }
 
-#ifdef EDITOR_MODE
 std::string Zeytin::serialize_scene() {
     rapidjson::Document document;
     document.SetObject();
@@ -396,5 +388,3 @@ void Zeytin::deserialize_scene(const std::string& scene) {
         deserialize_entity(entity_str);
     }
 }
-
-#endif

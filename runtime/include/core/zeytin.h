@@ -20,19 +20,20 @@ public:
         return instance;
     }
 
-    void init();
 
 #ifdef EDITOR_MODE
     void generate_variants();
-    std::string serialize_scene();
-    void deserialize_scene(const std::string& scene);
 #endif 
               
     std::string serialize_entity(const entity_id id);
     std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
+    std::string serialize_scene();
 
+
+    void deserialize_entities();
     entity_id deserialize_entity(const std::filesystem::path& path);
     entity_id deserialize_entity(const std::string& entity);
+    void deserialize_scene(const std::string& scene);
 
 
     entity_id new_entity_id();
@@ -79,7 +80,8 @@ public:
     void exit_play_mode();
     void pause_play_mode();
 
-    void sync_editor_play_mode();
+    void sync_editor();
+    void subscribe_editor_events();
 #endif
 
 private:
@@ -91,7 +93,6 @@ private:
 
 #ifdef EDITOR_MODE
     void generate_variant(const rttr::type& type);
-    void subscribe_editor_events();
 
     bool m_is_play_mode;
     bool m_is_pause_play_mode;

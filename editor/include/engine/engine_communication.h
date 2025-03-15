@@ -1,13 +1,10 @@
 #pragma once
 
-#include <functional>
-#include <atomic>
-#include <string>
 #include <thread>
-#include <queue>
 #include <mutex>
-
-#include "zmq/zmq.hpp"
+#include <queue>
+#include <string>
+#include <zmq.hpp>
 
 class EngineCommunication {
 public:
@@ -21,17 +18,18 @@ public:
     void raise_events();
 
 private:
+    void register_event_handlers();
+    void receive_messages();
+    bool send_simple_message(const std::string& type, const std::string& key = "", bool value = false);
 
-    void recieve_messages();
+    bool m_running;
+    bool m_initialized;
 
-    std::atomic<bool> m_running = false;
-    bool m_initialized = false;
-    
     zmq::context_t m_context;
-    zmq::socket_t m_publisher;  
+    zmq::socket_t m_publisher;
     zmq::socket_t m_subscriber;
-    
+
     std::thread m_receive_thread;
-    std::queue<std::string> m_message_queue;
     std::mutex m_queue_mutex;
+    std::queue<std::string> m_message_queue;
 };
