@@ -16,6 +16,7 @@ EngineCommunication::EngineCommunication()
     , m_publisher(m_context, zmq::socket_type::pub)
     , m_subscriber(m_context, zmq::socket_type::sub) 
 {
+    initialize();
     register_event_handlers();
 }
 
@@ -76,6 +77,7 @@ bool EngineCommunication::initialize() {
         
         m_running = true;
         m_receive_thread = std::thread(&EngineCommunication::receive_messages, this);
+        m_event_thread = std::thread(&EngineCommunication::event_processing_loop, this);
         
         m_initialized = true;
         return true;
@@ -94,6 +96,10 @@ void EngineCommunication::shutdown() {
     
     if (m_receive_thread.joinable()) {
         m_receive_thread.join();
+    }
+
+    if (m_event_thread.joinable()) {
+        m_event_thread.join();
     }
     
     m_initialized = false;
@@ -172,28 +178,36 @@ void EngineCommunication::receive_messages() {
     }
 }
 
+void EngineCommunication::event_processing_loop() {
+    while (m_running) {
+        raise_events();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
 void EngineCommunication::raise_events() {
     std::queue<std::string> messages;
-    
+
     {
         std::lock_guard<std::mutex> lock(m_queue_mutex);
         messages.swap(m_message_queue);
     }
-    
+
     while (!messages.empty()) {
         const std::string& msg = messages.front();
-        
+
         rapidjson::Document doc;
         doc.Parse(msg.c_str());
-        
+
         if (doc.HasParseError() || !doc.HasMember("type")) {
             std::cerr << "Invalid message format received" << std::endl;
             messages.pop();
             continue;
         }
-        
+
         const std::string& type = doc["type"].GetString();
-        
+
         if (type == "scene") {
             EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);
         }
@@ -204,7 +218,7 @@ void EngineCommunication::raise_events() {
         else {
             std::cout << "Editor: Unknown message received from engine: " << type << std::endl;
         }
-        
+
         messages.pop();
     }
 }

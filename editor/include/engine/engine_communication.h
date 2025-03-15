@@ -20,6 +20,7 @@ public:
 private:
     void register_event_handlers();
     void receive_messages();
+    void event_processing_loop();
     bool send_simple_message(const std::string& type, const std::string& key = "", bool value = false);
 
     bool m_running;
@@ -30,6 +31,7 @@ private:
     zmq::socket_t m_subscriber;
 
     std::thread m_receive_thread;
+    std::thread m_event_thread;
     std::mutex m_queue_mutex;
     std::queue<std::string> m_message_queue;
 };

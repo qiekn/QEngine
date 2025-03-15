@@ -27,13 +27,16 @@ void EntityList::register_event_handlers() {
     EngineEventBus::get().subscribe<const rapidjson::Document&>(
         EngineEvent::SyncEditor,
         [this](const rapidjson::Document& document) {
-            sync_entities_from_document(document);
+            if(m_should_sync_runtime) {
+                sync_entities_from_document(document);
+            }
         }
     );
     
     EngineEventBus::get().subscribe<bool>(
         EngineEvent::EnterPlayMode,
         [this](auto) {
+            m_should_sync_runtime = true;
             backup_entities();
         }
     );
@@ -41,6 +44,7 @@ void EntityList::register_event_handlers() {
     EngineEventBus::get().subscribe<bool>(
         EngineEvent::ExitPlayMode,
         [this](bool) {
+            m_should_sync_runtime = false;
             load_entities(BACKUP_DIR);
         }
     );

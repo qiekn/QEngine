@@ -19,7 +19,6 @@ int main(int argc, char* argv[])
 
     EngineControls engine_controls;
     EngineCommunication engine_communication;
-    engine_communication.initialize();
 
     int screenWidth = 1280;
     int screenHeight = 800;
@@ -46,7 +45,6 @@ int main(int argc, char* argv[])
 
         rlImGuiBegin();
 
-        engine_communication.raise_events();
         engine_controls.render_main_menu_controls();
         hierarchy.update();
 

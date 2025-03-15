@@ -21,5 +21,6 @@ private:
     void save_entities();
 
 
+    bool m_should_sync_runtime = false;
     std::vector<EntityDocument> m_entities;
 };
