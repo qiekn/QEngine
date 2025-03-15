@@ -94,17 +94,11 @@ entity_id Zeytin::deserialize_entity(const std::string& str) {
 
     auto& entity_variants = get_variants(id);
     entity_variants.clear();
-    entity_variants.reserve(variants.size());
 
     for (auto& var : variants) {
-        try {
-            VariantBase& base = var.get_value<VariantBase&>();
-            base.on_init();
-            entity_variants.push_back(std::move(var));
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Exception caught: " << e.what() << std::endl;
-        }
+        VariantBase& base = var.get_value<VariantBase&>();
+        base.on_init();
+        entity_variants.push_back(std::move(var));
     }        
     return id;
 }
@@ -117,7 +111,6 @@ entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
 
     auto& entity_variants = get_variants(id);
     entity_variants.clear();
-    entity_variants.reserve(variants.size());
 
     for (auto& var : variants) {
         VariantBase& base = var.get_value<VariantBase&>();
@@ -188,30 +181,24 @@ void Zeytin::deserialize_scene(const std::string& scene) {
 }
 
 void Zeytin::deserialize_entities() {
-    std::cout << "Parsing entities from path: " << std::filesystem::absolute("../shared/entities") << std::endl;
-
     try {
         int file_count = 0;
         int entity_count = 0;
 
         for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator("../shared/entities")) {
             file_count++;
-            std::cout << "Found file: " << entry.path().filename() << std::endl;
 
             if (!entry.is_regular_file() || entry.path().extension() != ".entity") {
-                std::cout << "  Skipping (not a .entity file)" << std::endl;
                 continue;
             }
 
             std::filesystem::path file_path = entry.path();
             std::string file_name = file_path.stem().string();
-            std::cout << "  Parsing entity: " << file_name << std::endl;
 
             deserialize_entity(file_path);
             entity_count++;
         }
 
-        std::cout << "Parsed " << entity_count << " entities out of " << file_count << " files" << std::endl;
     } 
     catch (const std::filesystem::filesystem_error& e) {
         std::cerr << "Filesystem error: " << e.what() << std::endl;
@@ -221,8 +208,6 @@ void Zeytin::deserialize_entities() {
 void Zeytin::post_init_variants() {
     if(m_post_inited) return;
     m_post_inited = true;
-
-    std::cout << "post initing, entity count: " << m_storage.size() << std::endl;
 
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
@@ -257,10 +242,7 @@ void Zeytin::play_update_variants() {
 }
 
 void Zeytin::play_start_variants() {
-    if (m_started) { 
-        return; 
-    }
-
+    if (m_started) { return; }
     m_started = true;
 
     for (auto& pair : m_storage) {   
@@ -279,7 +261,6 @@ void Zeytin::subscribe_editor_events() {
     EditorEventBus::get().subscribe<const std::string&>(
         EditorEvent::Scene, 
         [this](const auto& scene) {
-        std::cout << "serializing scene received from editor" << std::endl;
             deserialize_scene(scene);
             m_is_scene_ready = true;
         }

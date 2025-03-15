@@ -21,6 +21,15 @@ EngineControls::EngineControls()
             }
         }
     );
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::EngineStopped,
+        [this](auto _) {
+            m_is_running = false;
+            m_is_engine_starting = false;
+            m_is_play_mode = false;
+        }
+    );
 }
 
 void EngineControls::render_main_menu_controls() {
@@ -81,7 +90,6 @@ void EngineControls::render_engine_controls() {
 
 void EngineControls::render_play_controls() {
     if (m_is_running) {
-        // Play button
         ImGui::PushStyleColor(ImGuiCol_Button, m_is_play_mode ? ImVec4(0.0f, 0.5f, 0.0f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, m_is_play_mode ? ImVec4(0.0f, 0.7f, 0.0f, 1.0f) : ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, m_is_play_mode ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f) : ImVec4(0.4f, 0.4f, 0.4f, 1.0f));

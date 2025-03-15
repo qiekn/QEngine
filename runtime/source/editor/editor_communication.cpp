@@ -3,6 +3,7 @@
 #include "editor/editor_communication.h"
 #include <iostream>
 #include <chrono>
+#include <atomic>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -16,14 +17,12 @@ EditorCommunication::EditorCommunication()
     , m_publisher(m_context, zmq::socket_type::pub)
     , m_subscriber(m_context, zmq::socket_type::sub) {
 
-
     initialize();
     start_connection_attempts();
 
     EditorEventBus::get().subscribe<std::string>(EditorEvent::SyncEditor, [this](std::string json) {
             send_message(json);
     });
-
 }
 
 EditorCommunication::~EditorCommunication() {
@@ -52,38 +51,44 @@ bool EditorCommunication::initialize() {
         std::cerr << "ZeroMQ error: " << e.what() << std::endl;
         return false;
     }
-
 }
 
 void EditorCommunication::start_connection_attempts() {
     std::thread([this]() {
         std::atomic<bool> connection_confirmed{false};
-        
-        EditorEventBus::get().subscribe<bool>(EditorEvent::EngineStartConfirmed, 
+
+        EditorEventBus::get().subscribe<bool>(EditorEvent::EngineStartConfirmed,
             [&connection_confirmed](bool) {
                 connection_confirmed = true;
             });
-        
-        while (m_running && !connection_confirmed) {
+
+        int attempts = 0;
+        const int max_attempts = 30;
+
+        while (m_running && !connection_confirmed && attempts < max_attempts) {
             send_started_message();
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            attempts++;
         }
-        
-        std::cout << "Connection to editor confirmed!" << std::endl;
+
+        if (connection_confirmed) {
+            std::cout << "Connection to editor confirmed!" << std::endl;
+        } else if (attempts >= max_attempts) {
+            std::cout << "Failed to connect to editor after " << max_attempts << " attempts" << std::endl;
+        }
     }).detach();
 }
 
 void EditorCommunication::send_started_message() {
     rapidjson::Document msg;
     msg.SetObject();
-    
+
     msg.AddMember("type", "engine_started", msg.GetAllocator());
-    
+
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     msg.Accept(writer);
-    
-    std::cout << "Sending started message to editor..." << std::endl;
+
     send_message(buffer.GetString());
 }
 
@@ -98,7 +103,6 @@ void EditorCommunication::shutdown() {
     }
     
     m_initialized = false;
-    std::cout << "EditorCommunication shut down" << std::endl;
 }
 
 bool EditorCommunication::send_message(const std::string& message) {
@@ -120,50 +124,21 @@ bool EditorCommunication::send_message(const std::string& message) {
     }
 }
 
-void EditorCommunication::receive_messages() {
-    while (m_running) {
-        try {
-            zmq::pollitem_t items[] = {
-                { static_cast<void*>(m_subscriber), 0, ZMQ_POLLIN, 0 }
-            };
-            
-            zmq::poll(items, 1, std::chrono::milliseconds(100));
-            
-            if (items[0].revents & ZMQ_POLLIN) {
-                zmq::message_t message;
-                auto result = m_subscriber.recv(message, zmq::recv_flags::none);
-                
-                if (result.has_value()) {
-                    std::string message_str(static_cast<char*>(message.data()), message.size());
-
-                    {
-                        std::lock_guard<std::mutex> lock(m_queue_mutex);
-                        m_message_queue.push(message_str);
-                    }
-                }
-            }
-        }
-        catch (const zmq::error_t& e) {
-            std::cerr << "Error receiving message: " << e.what() << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-    }
-}
-
 void EditorCommunication::raise_events() {
-    while(!m_message_queue.empty()) {
+    while (!m_message_queue.empty()) {
         const auto& msg = m_message_queue.front();
-
         rapidjson::Document doc;
         doc.Parse(msg.c_str());
-
-        assert(!doc.HasParseError());
-        assert(doc.HasMember("type"));
-        assert(doc["type"].IsString());
-
+        
+        if (doc.HasParseError() || !doc.HasMember("type")) {
+            std::cerr << "Invalid message format received" << std::endl;
+            m_message_queue.pop();
+            continue;
+        }
+        
         const std::string& type = doc["type"].GetString();
-
-        if(type == "entity_property_changed") {
+        
+        if (type == "entity_property_changed") {
             EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::EntityPropertyChanged, doc);
         }
         else if (type == "entity_variant_added") {
@@ -183,29 +158,54 @@ void EditorCommunication::raise_events() {
         else if (type == "exit_play_mode") {
             EditorEventBus::get().publish<bool>(EditorEvent::ExitPlayMode, false);
         }
-        else if(type == "pause_play_mode") {
+        else if (type == "pause_play_mode") {
             EditorEventBus::get().publish<bool>(EditorEvent::PausePlayMode, true);
         }
-        else if(type == "unpause_play_mode") {
+        else if (type == "unpause_play_mode") {
             EditorEventBus::get().publish<bool>(EditorEvent::UnPausePlayMode, true);
         }
-        else if(type == "engine_start_confirmed") {
+        else if (type == "engine_start_confirmed") {
             EditorEventBus::get().publish<bool>(EditorEvent::EngineStartConfirmed, true);
         }
-        else if(type == "scene") {
+        else if (type == "scene") {
             EditorEventBus::get().publish<const std::string&>(EditorEvent::Scene, msg);
         }
         else {
             std::cout << "ENGINE: unknown message type received from editor" << std::endl;
         }
-
+        
         m_message_queue.pop();
     }
 }
 
-#endif // EDITOR_MODE
+void EditorCommunication::receive_messages() {
+    while (m_running) {
+        try {
+            zmq::pollitem_t items[] = {
+                { static_cast<void*>(m_subscriber), 0, ZMQ_POLLIN, 0 }
+            };
+            
+            zmq::poll(items, 1, std::chrono::milliseconds(100));
+            
+            if (items[0].revents & ZMQ_POLLIN) {
+                zmq::message_t message;
+                auto result = m_subscriber.recv(message, zmq::recv_flags::none);
+                
+                if (result.has_value()) {
+                    std::string message_str(static_cast<char*>(message.data()), message.size());
+                    
+                    {
+                        std::lock_guard<std::mutex> lock(m_queue_mutex);
+                        m_message_queue.push(message_str);
+                    }
+                }
+            }
+        }
+        catch (const zmq::error_t& e) {
+            std::cerr << "Error receiving message: " << e.what() << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+}
 
-
-
-
-
+#endif

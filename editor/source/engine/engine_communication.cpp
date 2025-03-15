@@ -215,6 +215,9 @@ void EngineCommunication::raise_events() {
             send_simple_message("engine_start_confirmed");
             EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
         }
+        else if (type == "engine_shutdown") {
+            EngineEventBus::get().publish<bool>(EngineEvent::EngineStopped, true);
+        }
         else {
             std::cout << "Editor: Unknown message received from engine: " << type << std::endl;
         }
