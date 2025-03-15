@@ -20,6 +20,7 @@ namespace {
 
     void notify_engine_entity_variant_added(uint64_t entity_id, const std::string& variant_type);
     void notify_engine_entity_variant_removed(uint64_t entity_id, const std::string& variant_type);
+    void notify_entity_removed(uint64_t entity_id);
 }
 
 Hierarchy::Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantDocument>& variants)
@@ -165,7 +166,6 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
     const char* name = entity_document.get_name().c_str();
     ImGui::PushID(name);
 
-    // Entity header
     ImVec2 header_min = ImGui::GetCursorScreenPos();
     float header_height = ImGui::GetFrameHeight();
     bool is_open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen);
@@ -174,14 +174,12 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
         header_min.y + header_height
     );
 
-    // Right-click context menu
     if (ImGui::IsMouseHoveringRect(header_min, header_max) && ImGui::IsMouseClicked(1)) {
         ImGui::OpenPopup("entity_context_menu");
     }
 
     handle_entity_context_menu(entity_document, entity_id);
 
-    // Render variants
     if (is_open && document.HasMember("variants") && document["variants"].IsArray()) {
         rapidjson::Value& variants = document["variants"];
         for (rapidjson::SizeType i = 0; i < variants.Size(); ++i) {
@@ -195,7 +193,6 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
                 variant_pos_min.y + ImGui::GetFrameHeightWithSpacing()
             );
 
-            // Variant context menu
             char popup_name[32];
             snprintf(popup_name, sizeof(popup_name), "variant_context_menu_%d", i);
 
@@ -206,6 +203,7 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
             if (ImGui::BeginPopup(popup_name)) {
                 if (ImGui::MenuItem("Remove Variant")) {
                     variants.Erase(variants.Begin() + i);
+                    //notify_engine_entity_variant_removed(entity_id, variants[i]["type"].GetString());
                 }
                 ImGui::EndPopup();
             }
@@ -249,6 +247,7 @@ void Hierarchy::handle_entity_context_menu(EntityDocument& entity_document, uint
 
         if (ImGui::MenuItem("Delete Entity")) {
             entity_document.mark_as_dead();
+            notify_entity_removed(entity_id);
         }
         ImGui::EndPopup();
     }
@@ -444,7 +443,6 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
 
     rapidjson::Value& entity_variants = entity_doc["variants"];
 
-    // Handle entity variant case
     if (variant_doc.HasMember("variants") && variant_doc["variants"].IsArray()) {
         for (auto& variant : variant_doc["variants"].GetArray()) {
             rapidjson::Value copied_variant(variant, entity_doc.GetAllocator());
@@ -454,10 +452,8 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
         }
     }
     else {
-        // Handle regular variant case
         const std::string& type = variant_doc["type"].GetString();
 
-        // Check if variant already exists
         for(const auto& variant : entity_document.get_document()["variants"].GetArray()) {
             if(variant["type"].GetString() == type) {
                 std::cout << type << " is already added to entity: " << entity_document.get_name() << std::endl;
@@ -471,9 +467,7 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
     }
 }
 
-void Hierarchy::subscribe_events() {
-    // Event subscription implementation (currently empty)
-}
+void Hierarchy::subscribe_events() {}
 
 namespace {
     void notify_engine_entity_property_changed(uint64_t entity_id,
@@ -523,6 +517,33 @@ namespace {
     }
 
     void notify_engine_entity_variant_removed(uint64_t entity_id, const std::string& type) {
-        // Implementation would go here if needed
+        rapidjson::Document msg;
+        msg.SetObject();
+
+        rapidjson::Value variant_type(type.c_str(), msg.GetAllocator());
+
+        msg.AddMember("type", "entity_variant_removed", msg.GetAllocator());
+        msg.AddMember("entity_id", entity_id, msg.GetAllocator());
+        msg.AddMember("variant_type", variant_type, msg.GetAllocator());
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        msg.Accept(writer);
+
+        EngineEventBus::get().publish<const std::string&>(EngineEvent::EntityModifiedEditor, buffer.GetString());
+    }
+
+    void notify_entity_removed(uint64_t entity_id) {
+        rapidjson::Document msg;
+        msg.SetObject();
+
+        msg.AddMember("type", "entity_removed", msg.GetAllocator());
+        msg.AddMember("entity_id", entity_id, msg.GetAllocator());
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        msg.Accept(writer);
+
+        EngineEventBus::get().publish<const std::string&>(EngineEvent::EntityModifiedEditor, buffer.GetString());
     }
 }

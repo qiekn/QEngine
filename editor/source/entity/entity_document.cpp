@@ -33,6 +33,17 @@ void EntityDocument::save_to_file() const {
     out_file.close();
 }
 
+std::string EntityDocument::as_string() const {
+    rapidjson::StringBuffer buffer;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+
+    if (!m_document.Accept(writer)) {
+        std::cerr << "Failed to serialize JSON document" << std::endl;
+        exit(1);
+    }
+    return buffer.GetString();
+}
+
 void EntityDocument::load_from_file() {
     std::filesystem::create_directories(ENTITY_FOLDER);
     std::filesystem::path path = std::filesystem::path(ENTITY_FOLDER) / (m_name + ".entity");

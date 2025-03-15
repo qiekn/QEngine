@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
     EntityList entity_list{};
     VariantList variant_list{};
 
+    std::cout << entity_list.as_string() << std::endl;
+
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
 
     while (!WindowShouldClose())

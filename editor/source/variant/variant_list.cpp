@@ -24,7 +24,6 @@ void VariantList::load_variants() {
         m_variants.emplace_back<VariantDocument>(std::move(name));
     }
 
-    // NOTE: this could run parelel
     for(auto& variant : m_variants) {
 
         variant.load_from_file();

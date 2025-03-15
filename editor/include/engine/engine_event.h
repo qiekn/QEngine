@@ -7,10 +7,9 @@
 
 enum class EngineEvent {
     EngineStarted,
+    EngineSendScene,
     EngineStopped,
-    EngineHeartbeat,
     EntityModifiedEditor,
-    EntityModifiedEngine, // NOTE: implement
     EnterPlayMode,
     PausePlayMode,
     UnPausePlayMode,

@@ -29,6 +29,8 @@ public:
     void save_to_file(const std::filesystem::path& path) const;
     void load_from_file(const std::filesystem::path& path); 
 
+    std::string as_string() const;
+
 private:
     std::string m_name;
     rapidjson::Document m_document;

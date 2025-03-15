@@ -24,6 +24,11 @@ EngineCommunication::~EngineCommunication() {
 }
 
 void EngineCommunication::register_event_handlers() {
+    EngineEventBus::get().subscribe<const std::string&>(EngineEvent::EngineSendScene,
+            [this](const auto& msg) {
+                send_message(msg);
+    });
+
     EngineEventBus::get().subscribe<const std::string&>(
         EngineEvent::EntityModifiedEditor, 
         [this](const std::string& msg) {
@@ -189,12 +194,12 @@ void EngineCommunication::raise_events() {
         
         const std::string& type = doc["type"].GetString();
         
-        if (type == "heartbeat") {
-            EngineEventBus::get().publish<bool>(EngineEvent::EngineHeartbeat, true);
-            EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
-        }
-        else if (type == "scene") {
+        if (type == "scene") {
             EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);
+        }
+        else if (type == "engine_started") {
+            send_simple_message("engine_start_confirmed");
+            EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
         }
         else {
             std::cout << "Editor: Unknown message received from engine: " << type << std::endl;

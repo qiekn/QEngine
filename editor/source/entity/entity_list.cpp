@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include "rapidjson/document.h"
+#include "rapidjson/writer.h"
 
 #include "engine/engine_event.h"
 
@@ -15,6 +16,14 @@ EntityList::EntityList() {
 }
 
 void EntityList::register_event_handlers() {
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::EngineStarted,
+        [this](auto _) {
+            std::string scene = as_string();
+            EngineEventBus::get().publish<const std::string&>(EngineEvent::EngineSendScene, scene);
+        }
+    );
+
     EngineEventBus::get().subscribe<const rapidjson::Document&>(
         EngineEvent::SyncEditor,
         [this](const rapidjson::Document& document) {
@@ -37,6 +46,42 @@ void EntityList::register_event_handlers() {
     );
 }
 
+std::string EntityList::as_string() const {
+    rapidjson::Document document;
+    document.SetObject();
+    auto& allocator = document.GetAllocator();
+
+    document.AddMember("type", "scene", allocator);
+    
+    rapidjson::Value entities_array(rapidjson::kArrayType);
+    
+    for (const auto& entity : m_entities) {
+        if (entity.is_dead()) {
+            continue;
+        }
+        
+        std::string entity_str = entity.as_string();
+        
+        rapidjson::Document entity_doc;
+        entity_doc.Parse(entity_str.c_str());
+        
+        if (!entity_doc.HasParseError()) {
+            rapidjson::Value entity_value;
+            entity_value.CopyFrom(entity_doc, allocator);
+            entities_array.PushBack(entity_value, allocator);
+        }
+    }
+    
+    document.AddMember("entities", entities_array, allocator);
+    
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    document.Accept(writer);
+    
+    return std::string(buffer.GetString(), buffer.GetSize());
+}
+
+
 void EntityList::sync_entities_from_document(const rapidjson::Document& document) {
     if (!document.HasMember("entities") || !document["entities"].IsArray()) {
         return;
@@ -48,16 +93,16 @@ void EntityList::sync_entities_from_document(const rapidjson::Document& document
             continue;
         }
         
-        uint64_t entityId = entity["entity_id"].GetUint64();
+        uint64_t entity_id = entity["entity_id"].GetUint64();
         bool found = false;
         
-        for (auto& entityDoc : m_entities) {
-            const auto& existingDoc = entityDoc.get_document();
-            if (existingDoc.HasMember("entity_id") &&
-                existingDoc["entity_id"].GetUint64() == entityId) {
-                rapidjson::Document newDoc;
-                newDoc.CopyFrom(entity, newDoc.GetAllocator());
-                entityDoc.set_document(std::move(newDoc));
+        for (auto& entity_doc : m_entities) {
+            const auto& existing_doc = entity_doc.get_document();
+            if (existing_doc.HasMember("entity_id") &&
+                existing_doc["entity_id"].GetUint64() == entity_id) {
+                rapidjson::Document new_doc;
+                new_doc.CopyFrom(entity, new_doc.GetAllocator());
+                entity_doc.set_document(std::move(new_doc));
                 found = true;
                 break;
             }
@@ -99,7 +144,7 @@ void EntityList::load_entities(const std::filesystem::path& path) {
         std::string file_name = file_path.stem().string();
         
         auto& entity = m_entities.emplace_back(EntityDocument(std::move(file_name)));
-        entity.load_from_file();
+        entity.load_from_file(file_path);
     }
 }
 
