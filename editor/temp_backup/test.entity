@@ -9,16 +9,15 @@
             }
         },
         {
-            "type": "Speed",
+            "type": "Sprite",
             "value": {
-                "value": 31.0
+                "path_to_sprite": "resources/mario_head.png"
             }
         },
         {
-            "type": "Velocity",
+            "type": "Speed",
             "value": {
-                "x": 0,
-                "y": 0
+                "value": 31.0
             }
         }
     ]

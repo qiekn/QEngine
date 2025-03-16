@@ -1,7 +1,6 @@
 * add dependency check
 * implement .scene
 * make entity list and variant list coherent because modified/removed variants may cause issue 
-* add remove variant from entity to runtime
 * implement a way to refer other entities (using ids)
 * support double type
 * Implement adding elements to array
@@ -9,6 +8,7 @@
 * embed engine window
 -----------------------------------------
 
+* [DONE] add remove variant from entity to runtime
 * [DONE] implement on change callback for properties
 * [DONE] make editor set the runtime scene on start
 * [DONE] do some cleanup
