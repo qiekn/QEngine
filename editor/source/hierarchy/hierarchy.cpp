@@ -82,43 +82,58 @@ void Hierarchy::render_create_entity() {
     constexpr size_t MAX_ENTITY_NAME_LENGTH = 128;
     static char newEntityName[MAX_ENTITY_NAME_LENGTH] = "";
     static bool showNewEntityPopup = false;
-    
+
     if (ImGui::Button("+ Create New Entity", ImVec2(150, 20))) {
         memset(newEntityName, 0, sizeof(newEntityName));
         showNewEntityPopup = true;
     }
-    
+
     ImGui::Spacing();
-    
+
     if (showNewEntityPopup) {
         ImGui::OpenPopup("New Entity");
     }
-    
+
     if (ImGui::BeginPopupModal("New Entity", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Enter a name for the new entity:");
-        ImGui::InputTextWithHint("##EntityName", "Entity name", newEntityName, sizeof(newEntityName));
+
+        bool enterPressed = ImGui::InputTextWithHint(
+            "##EntityName",
+            "Entity name",
+            newEntityName,
+            sizeof(newEntityName),
+            ImGuiInputTextFlags_EnterReturnsTrue
+        );
+
         ImGui::Spacing();
-        
+
         bool isValidName = strlen(newEntityName) > 0;
-        
-        if (!isValidName) {
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-            ImGui::Button("Create", ImVec2(100, 30));
-            ImGui::PopStyleVar();
-        } else if (ImGui::Button("Create", ImVec2(100, 30))) {
+
+        if (enterPressed && isValidName) {
             create_new_entity(newEntityName);
             ImGui::CloseCurrentPopup();
             showNewEntityPopup = false;
             memset(newEntityName, 0, sizeof(newEntityName));
+        } else {
+            if (!isValidName) {
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+                ImGui::Button("Create", ImVec2(100, 30));
+                ImGui::PopStyleVar();
+            } else if (ImGui::Button("Create", ImVec2(100, 30))) {
+                create_new_entity(newEntityName);
+                ImGui::CloseCurrentPopup();
+                showNewEntityPopup = false;
+                memset(newEntityName, 0, sizeof(newEntityName));
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel", ImVec2(100, 30))) {
+                ImGui::CloseCurrentPopup();
+                showNewEntityPopup = false;
+            }
         }
-        
-        ImGui::SameLine();
-        
-        if (ImGui::Button("Cancel", ImVec2(100, 30))) {
-            ImGui::CloseCurrentPopup();
-            showNewEntityPopup = false;
-        }
-        
+
         ImGui::EndPopup();
     }
 }
@@ -202,8 +217,9 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
 
             if (ImGui::BeginPopup(popup_name)) {
                 if (ImGui::MenuItem("Remove Variant")) {
+                    std::string type = variants[i].GetObject()["type"].GetString();
+                    notify_engine_entity_variant_removed(entity_id, type);
                     variants.Erase(variants.Begin() + i);
-                    //notify_engine_entity_variant_removed(entity_id, variants[i]["type"].GetString());
                 }
                 ImGui::EndPopup();
             }

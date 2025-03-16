@@ -54,9 +54,8 @@ public:
         get_variants(id).clear();
     }
     
-    inline std::vector<rttr::variant>& get_variants(const entity_id& entity) {
-        return m_storage[entity];
-    }
+    void clean_dead_variants();
+    std::vector<rttr::variant>& get_variants(const entity_id& entity);
 
     std::string serialize_entity(const entity_id id);
     std::string serialize_entity(const entity_id id, const std::filesystem::path& path);

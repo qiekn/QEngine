@@ -1,0 +1,25 @@
+{
+    "entity_id": 13615974801969137110,
+    "variants": [
+        {
+            "type": "Position",
+            "value": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "type": "Speed",
+            "value": {
+                "value": 31.0
+            }
+        },
+        {
+            "type": "Velocity",
+            "value": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    ]
+}

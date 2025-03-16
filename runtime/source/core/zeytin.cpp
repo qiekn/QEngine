@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem>
 #include <sstream>
+#include <algorithm>
 
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h" 
@@ -11,8 +12,8 @@
 #include "core/zeytin.h"
 #include "core/json/json.h"
 #include "core/guid/guid.h"
-#include "core/variant/variant_base.h"
 #include "editor/editor_event.h"
+#include "core/variant/variant_base.h"
 
 namespace {
     template<typename T>
@@ -71,6 +72,10 @@ entity_id Zeytin::new_entity_id() {
     return generateUniqueID();
 }
 
+std::vector<rttr::variant>& Zeytin::get_variants(const entity_id& entity) {
+    return m_storage[entity];
+}
+
 void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
     m_storage[entity].push_back(std::move(variant));
 }
@@ -81,6 +86,20 @@ void Zeytin::remove_variant(entity_id id, const rttr::type& type) {
             VariantBase& base = variant.get_value<VariantBase&>();
             base.is_dead = true;
         }
+    }
+}
+
+void Zeytin::clean_dead_variants() {
+    for(auto& [entity_id, variants] : m_storage) {
+        variants.erase(
+            std::remove_if(variants.begin(), variants.end(),
+                [](rttr::variant& variant) {
+                    VariantBase& var_base = variant.get_value<VariantBase&>();
+                    return var_base.is_dead;
+                }
+            ),
+            variants.end()
+        );
     }
 }
 
@@ -303,6 +322,7 @@ void Zeytin::subscribe_editor_events() {
     EditorEventBus::get().subscribe<bool>(
         EditorEvent::EnterPlayMode, 
         [this](bool is_paused) {
+            clean_dead_variants();
             enter_play_mode(is_paused);
         }
     );

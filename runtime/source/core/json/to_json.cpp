@@ -11,6 +11,8 @@
 
 #include "core/entity.h"
 
+#include "core/variant/variant_base.h"
+
 using namespace rapidjson;
 using namespace rttr;
 
