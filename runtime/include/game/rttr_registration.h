@@ -26,8 +26,7 @@ RTTR_REGISTRATION
     rttr::registration::class_<Speed>("Speed")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("value", &Speed::value)
-        .property("unit_speed", &Speed::unit_speed);
+        .property("value", &Speed::value);
 
     rttr::registration::class_<Scale>("Scale")
         .constructor<>()(rttr::policy::ctor::as_object)

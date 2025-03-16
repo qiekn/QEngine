@@ -61,6 +61,14 @@ int main(int argc, char* argv[]) {
             Zeytin::get().update_variants(); 
             DrawText("1920x1080", 20, 20, 40, BLACK);
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
+
+
+            // NOTE: temp solution, to notify editor with updated variants
+            if(!Zeytin::get().m_synced_once) {
+                Zeytin::get().sync_editor(); 
+                Zeytin::get().m_synced_once = true;
+            }
+
             if(Zeytin::get().is_play_mode()) {
                 if(Zeytin::get().is_paused_play_mode()) {
                     DrawText("PAUSED", 1610, 20, 70, GRAY);

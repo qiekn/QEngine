@@ -7,6 +7,5 @@ class Speed : public VariantBase {
 
 public:
     float value; PROPERTY();
-    std::string unit_speed; PROPERTY();
 };
 

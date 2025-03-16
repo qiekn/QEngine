@@ -28,8 +28,7 @@
         {
             "type": "Speed",
             "value": {
-                "value": 10,
-                "unit": ""
+                "value": 0.0
             }
         }
     ]

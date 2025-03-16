@@ -35,8 +35,15 @@ void EntityList::register_event_handlers() {
     EngineEventBus::get().subscribe<const rapidjson::Document&>(
         EngineEvent::SyncEditor,
         [this](const rapidjson::Document& document) {
-            if(m_should_sync_runtime) {
+            if(should_sync_runtime()) {
                 sync_entities_from_document(document);
+                if(!m_is_synced_once) {
+                    m_is_synced_once = true;
+                    std::cout << "Initial sync with runtime" << std::endl;
+                }
+
+            } else {
+                std::cout << "EDITOR: Sync recevied but ignored" << std::endl;
             }
         }
     );
@@ -44,7 +51,7 @@ void EntityList::register_event_handlers() {
     EngineEventBus::get().subscribe<bool>(
         EngineEvent::EnterPlayMode,
         [this](auto) {
-            m_should_sync_runtime = true;
+            m_is_play_mode = true;
             backup_entities();
         }
     );
@@ -52,7 +59,7 @@ void EntityList::register_event_handlers() {
     EngineEventBus::get().subscribe<bool>(
         EngineEvent::ExitPlayMode,
         [this](bool) {
-            m_should_sync_runtime = false;
+            m_is_play_mode = false;
             load_entities(BACKUP_DIR);
         }
     );

@@ -21,6 +21,11 @@ private:
     void save_entities();
 
 
-    bool m_should_sync_runtime = false;
+    inline bool should_sync_runtime() { return !m_is_synced_once || m_is_play_mode; }
+
+
+    bool m_is_play_mode = false;
+    bool m_is_synced_once = false;
+
     std::vector<EntityDocument> m_entities;
 };
