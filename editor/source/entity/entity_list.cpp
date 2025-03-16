@@ -126,6 +126,8 @@ void EntityList::backup_entities() {
     }
     
     for (const auto& entity : m_entities) {
+        if(entity.is_dead()) continue;
+
         std::string name = entity.get_name();
         std::filesystem::path backupPath = backupDir / (name + ".entity");
         entity.save_to_file(backupPath);

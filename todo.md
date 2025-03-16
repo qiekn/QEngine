@@ -1,7 +1,5 @@
-* make editor set the runtime scene on start
 * add dependency check
 * implement .scene
-* implement on change callback for properties
 * make entity list and variant list coherent because modified/removed variants may cause issue 
 * add remove variant from entity to runtime
 * implement a way to refer other entities (using ids)
@@ -11,6 +9,8 @@
 * embed engine window
 -----------------------------------------
 
+* [DONE] implement on change callback for properties
+* [DONE] make editor set the runtime scene on start
 * [DONE] do some cleanup
 * [DONE] fix runtime restore play mode
 * [DONE] tmp files for storing scene file when going into play mode

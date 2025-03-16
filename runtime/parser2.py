@@ -25,11 +25,19 @@ def parse_header(file_path):
         return None
     
     properties = []
-    property_matches = re.finditer(r'(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)(?:\s*=\s*[^;]*)?;\s*PROPERTY\(\)', content) 
+    property_pattern = r'(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)(?:\s*=\s*[^;]*)?;\s*PROPERTY\(\)(?:\s+SET_CALLBACK\((\w+)\))?'
+    
+    property_matches = re.finditer(property_pattern, content)
     for match in property_matches:
         prop_type = match.group(1).strip()
         prop_name = match.group(2).strip()
-        properties.append((prop_type, prop_name))
+        has_callback = match.group(3) is not None
+        callback_name = match.group(3) if has_callback else None
+        
+        if callback_name and callback_name != prop_name:
+            print(f"Warning: Callback name '{callback_name}' doesn't match property name '{prop_name}' in {file_path}")
+        
+        properties.append((prop_type, prop_name, has_callback))
     
     base_class = class_match.group(3) if class_match.group(3) else "VariantBase"
     
@@ -56,8 +64,20 @@ def generate_rttr_registration(classes_info):
         registration_code += '        .constructor<>()(rttr::policy::ctor::as_object)\n'
         registration_code += '        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)'
         
-        for _, prop_name in class_info['properties']:
+        for prop_type, prop_name, has_callback in class_info['properties']:
             registration_code += f'\n        .property("{prop_name}", &{class_info["class_name"]}::{prop_name})'
+            
+            if has_callback:
+                callback_method = f"on_{prop_name}_set"
+                registration_code += f'(rttr::metadata("SET_CALLBACK", "{callback_method}"))'
+        
+        has_callbacks = any(has_callback for _, _, has_callback in class_info['properties'])
+        if has_callbacks:
+            registration_code += '\n'
+            for prop_type, prop_name, has_callback in class_info['properties']:
+                if has_callback:
+                    callback_method = f"on_{prop_name}_set"
+                    registration_code += f'\n        .method("{callback_method}", &{class_info["class_name"]}::{callback_method})'
         
         registration_code += ';\n\n'
     
@@ -99,4 +119,3 @@ if __name__ == "__main__":
     import sys
     headers_dir = sys.argv[1] if len(sys.argv) > 1 else "."
     main(headers_dir)
-

@@ -18,7 +18,9 @@ RTTR_REGISTRATION
     rttr::registration::class_<Sprite>("Sprite")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("path_to_sprite", &Sprite::path_to_sprite);
+        .property("path_to_sprite", &Sprite::path_to_sprite)(rttr::metadata("SET_CALLBACK", "on_path_to_sprite_set"))
+
+        .method("on_path_to_sprite_set", &Sprite::on_path_to_sprite_set);
 
     rttr::registration::class_<Speed>("Speed")
         .constructor<>()(rttr::policy::ctor::as_object)
