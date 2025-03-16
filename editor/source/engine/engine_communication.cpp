@@ -88,6 +88,68 @@ bool EngineCommunication::initialize() {
     }
 }
 
+void EngineCommunication::event_processing_loop() {
+    while (m_running) {
+        raise_events();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
+void EngineCommunication::raise_events() {
+    std::queue<std::string> messages;
+
+    {
+        std::lock_guard<std::mutex> lock(m_queue_mutex);
+        messages.swap(m_message_queue);
+    }
+
+    while (!messages.empty()) {
+        const std::string& msg = messages.front();
+
+        rapidjson::Document doc;
+        doc.Parse(msg.c_str());
+
+        if (doc.HasParseError()) {
+            std::cerr << "Failed to parse message: " << msg.substr(0, 100)
+                      << (msg.length() > 100 ? "..." : "") << std::endl;
+            std::cerr << "Parse error code: " << doc.GetParseError()
+                      << " at offset " << doc.GetErrorOffset() << std::endl;
+            messages.pop();
+            continue;
+        }
+
+        if (!doc.IsObject()) {
+            std::cerr << "Message is not a valid JSON object" << std::endl;
+            messages.pop();
+            continue;
+        }
+
+        if (!doc.HasMember("type") || !doc["type"].IsString()) {
+            std::cerr << "Message missing 'type' field or not a string" << std::endl;
+            messages.pop();
+            continue;
+        }
+
+        const std::string type = doc["type"].GetString();
+
+        if (type == "scene") {
+            EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);
+        }
+        else if (type == "engine_started") {
+            send_simple_message("engine_start_confirmed");
+            EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
+        }
+        else if (type == "engine_shutdown") {
+            EngineEventBus::get().publish<bool>(EngineEvent::EngineStopped, true);
+        }
+        else {
+            std::cout << "Editor: Unknown message received from engine: " << type << std::endl;
+        }
+
+        messages.pop();
+    }
+}
+
 void EngineCommunication::shutdown() {
     if (!m_initialized)
         return;
@@ -110,18 +172,22 @@ bool EngineCommunication::send_message(const std::string& json) {
         std::cerr << "EngineCommunication not initialized" << std::endl;
         return false;
     }
-    
-    try {
-        zmq::message_t message(json.size());
-        memcpy(message.data(), json.data(), json.size());
-        
-        auto result = m_publisher.send(message, zmq::send_flags::none);
-        return result.has_value();
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Failed to send message: " << e.what() << std::endl;
+
+    if (json.empty()) {
+        std::cerr << "Attempted to send empty JSON message" << std::endl;
         return false;
     }
+
+    zmq::message_t message(json.size());
+    if (message.size() != json.size()) {
+        std::cerr << "Failed to allocate message of size " << json.size() << std::endl;
+        return false;
+    }
+
+    memcpy(message.data(), json.data(), json.size());
+
+    auto result = m_publisher.send(message, zmq::send_flags::none);
+    return result.has_value();
 }
 
 bool EngineCommunication::send_simple_message(const std::string& type,
@@ -129,9 +195,16 @@ bool EngineCommunication::send_simple_message(const std::string& type,
                                              bool value) {
     rapidjson::Document msg;
     msg.SetObject();
+    auto& allocator = msg.GetAllocator();
 
-    rapidjson::Value typeValue(type.c_str(), msg.GetAllocator());
-    msg.AddMember("type", typeValue, msg.GetAllocator());
+    if(!type.empty()) {
+        rapidjson::Value type_value(type.c_str(), allocator);
+        msg.AddMember("type", type_value, allocator);
+    }
+    else {
+        std::cerr << "Empty type is not allowed for send_simple_message" << std::endl;
+        return false;
+    }
 
     if (!key.empty()) {
         rapidjson::Value keyValue(key.c_str(), msg.GetAllocator());
@@ -152,76 +225,32 @@ bool EngineCommunication::is_engine_connected() const {
 
 void EngineCommunication::receive_messages() {
     while (m_running) {
-        try {
-            zmq::pollitem_t items[] = {
-                { static_cast<void*>(m_subscriber), 0, ZMQ_POLLIN, 0 }
-            };
-            
-            zmq::poll(items, 1, std::chrono::milliseconds(100));
-            
-            if (items[0].revents & ZMQ_POLLIN) {
-                zmq::message_t message;
-                auto result = m_subscriber.recv(message, zmq::recv_flags::none);
-                
-                if (result.has_value()) {
+        zmq::pollitem_t items[] = {
+            { static_cast<void*>(m_subscriber), 0, ZMQ_POLLIN, 0 }
+        };
+
+        zmq::poll(items, 1, std::chrono::milliseconds(100));
+
+        if (items[0].revents & ZMQ_POLLIN) {
+            zmq::message_t message;
+            auto result = m_subscriber.recv(message, zmq::recv_flags::none);
+
+            if (result.has_value() && message.size() > 0) {
+                if (message.data() != nullptr) {
                     std::string message_str(static_cast<char*>(message.data()), message.size());
-                    
-                    std::lock_guard<std::mutex> lock(m_queue_mutex);
-                    m_message_queue.push(message_str);
+
+                    if (!message_str.empty()) {
+                        std::lock_guard<std::mutex> lock(m_queue_mutex);
+                        m_message_queue.push(message_str);
+                    } else {
+                        std::cerr << "Received empty message" << std::endl;
+                    }
+                } else {
+                    std::cerr << "Received message with null data" << std::endl;
                 }
             }
         }
-        catch (const zmq::error_t& e) {
-            std::cerr << "Error receiving message: " << e.what() << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-    }
-}
-
-void EngineCommunication::event_processing_loop() {
-    while (m_running) {
-        raise_events();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-}
-
-void EngineCommunication::raise_events() {
-    std::queue<std::string> messages;
-
-    {
-        std::lock_guard<std::mutex> lock(m_queue_mutex);
-        messages.swap(m_message_queue);
-    }
-
-    while (!messages.empty()) {
-        const std::string& msg = messages.front();
-
-        rapidjson::Document doc;
-        doc.Parse(msg.c_str());
-
-        if (doc.HasParseError() || !doc.HasMember("type")) {
-            std::cerr << "Invalid message format received" << std::endl;
-            messages.pop();
-            continue;
-        }
-
-        const std::string& type = doc["type"].GetString();
-
-        if (type == "scene") {
-            EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);
-        }
-        else if (type == "engine_started") {
-            send_simple_message("engine_start_confirmed");
-            EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
-        }
-        else if (type == "engine_shutdown") {
-            EngineEventBus::get().publish<bool>(EngineEvent::EngineStopped, true);
-        }
-        else {
-            std::cout << "Editor: Unknown message received from engine: " << type << std::endl;
-        }
-
-        messages.pop();
     }
 }

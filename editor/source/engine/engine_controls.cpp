@@ -18,7 +18,8 @@ EngineControls::EngineControls()
             if (success) {
                 m_is_running = true;
                 m_is_engine_starting = false;
-            }
+                std::cout << "Engine started successfully." << std::endl;
+            } 
         }
     );
 
@@ -28,6 +29,8 @@ EngineControls::EngineControls()
             m_is_running = false;
             m_is_engine_starting = false;
             m_is_play_mode = false;
+            m_is_paused = false;
+            std::cout << "Engine stopped" << std::endl;
         }
     );
 }
@@ -160,8 +163,6 @@ void EngineControls::start_engine() {
         }
     }).detach();
 }
-
-
 
 void EngineControls::kill_engine() {
     m_is_play_mode = false;

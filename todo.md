@@ -1,3 +1,6 @@
+* add proper logging
+* add proper error handling 
+
 * add dependency check
 * implement .scene
 * make entity list and variant list coherent because modified/removed variants may cause issue 

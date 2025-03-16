@@ -139,6 +139,17 @@ void Hierarchy::render_create_entity() {
 }
 
 void Hierarchy::create_new_entity(const char* name) {
+    if(name == nullptr) {
+        std::cerr << "Error: Cannot create entity with null name" << std::endl;
+        return;
+    }
+
+    if(strlen(name) == 0) {
+        std::cerr << "Error: Cannot create entity with empty name" << std::endl;
+        return;
+    }
+
+
     std::string safeName = name;
     safeName.erase(std::remove_if(safeName.begin(), safeName.end(), 
         [](char c) { return c == '/' || c == '\\' || c == ':' || c == '*' || 
@@ -147,6 +158,7 @@ void Hierarchy::create_new_entity(const char* name) {
 
     for (auto& entity : m_entities) {
         if (!entity.is_dead() && entity.get_name() == safeName) {
+            std::cerr << "Error Entity with name " << safeName << " already exists" << std::endl;
             return;
         }
     }
@@ -163,7 +175,7 @@ void Hierarchy::create_new_entity(const char* name) {
     newDoc.AddMember("entity_id", uuid, allocator);
     rapidjson::Value variantsArray(rapidjson::kArrayType);
     newDoc.AddMember("variants", variantsArray, allocator);
-    
+
     EntityDocument entity(std::move(newDoc), safeName);
     m_entities.push_back(std::move(entity));
 }

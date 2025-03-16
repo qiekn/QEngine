@@ -1,6 +1,8 @@
 #include "entity/entity_list.h"
 
 #include <filesystem>
+#include <iostream>
+
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
@@ -8,6 +10,7 @@
 
 namespace {
     constexpr const char* BACKUP_DIR = "temp_backup";
+    constexpr const char* ENTITY_EXTENSION = ".entity";
 }
 
 EntityList::EntityList() {
@@ -20,7 +23,12 @@ void EntityList::register_event_handlers() {
         EngineEvent::EngineStarted,
         [this](auto _) {
             std::string scene = as_string();
-            EngineEventBus::get().publish<const std::string&>(EngineEvent::EngineSendScene, scene);
+            if(!scene.empty()) {
+                EngineEventBus::get().publish<const std::string&>(EngineEvent::EngineSendScene, scene);
+            }
+            else {
+                std::cout << "Empty scene will not be sent to the runtime" << std::endl;
+            }
         }
     );
 
@@ -65,35 +73,59 @@ std::string EntityList::as_string() const {
         }
         
         std::string entity_str = entity.as_string();
+
+        if(entity_str.empty()) {
+            std::cerr << "Failed to get entity as string: " << entity.get_name() << std::endl;
+            continue;
+        }
         
         rapidjson::Document entity_doc;
-        entity_doc.Parse(entity_str.c_str());
-        
-        if (!entity_doc.HasParseError()) {
-            rapidjson::Value entity_value;
-            entity_value.CopyFrom(entity_doc, allocator);
-            entities_array.PushBack(entity_value, allocator);
+        rapidjson::ParseResult parse_result = entity_doc.Parse(entity_str.c_str());
+
+        if (parse_result.IsError()) {
+            std::cerr << "JSON parse error: " << parse_result.Code()
+                      << " (offset: " << parse_result.Offset() << ")" << std::endl;
+            continue;
         }
+        
+        rapidjson::Value entity_value;
+        entity_value.CopyFrom(entity_doc, allocator);
+        entities_array.PushBack(entity_value, allocator);
     }
     
     document.AddMember("entities", entities_array, allocator);
     
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    document.Accept(writer);
+
+    if (!document.Accept(writer)) {
+        std::cerr << "Failed to write document to string buffer" << std::endl;
+        return "";
+    }
     
     return std::string(buffer.GetString(), buffer.GetSize());
 }
 
-
 void EntityList::sync_entities_from_document(const rapidjson::Document& document) {
-    if (!document.HasMember("entities") || !document["entities"].IsArray()) {
+    if (!document.HasMember("entities")) {
+        std::cerr << "Received sync message does not have 'entities' member" << std::endl;
+        return;
+    }
+    
+    if (!document["entities"].IsArray()) {
+        std::cerr << "Received sync message 'entities' is not an array" << std::endl;
         return;
     }
     
     const auto& entities = document["entities"].GetArray();
     for (const auto& entity : entities) {
-        if (!entity.HasMember("entity_id") || !entity.HasMember("variants")) {
+        if (!entity.HasMember("entity_id")) {
+            std::cerr << "Entity missing required 'entity_id' field" << std::endl;
+            continue;
+        }
+        
+        if (!entity.HasMember("variants")) {
+            std::cerr << "Entity missing required 'variants' field" << std::endl;
             continue;
         }
         
@@ -111,55 +143,105 @@ void EntityList::sync_entities_from_document(const rapidjson::Document& document
                 break;
             }
         }
+        
+        if (!found) {
+            std::cerr << "Entity with ID " << entity_id << " not found in entity list" << std::endl;
+        }
     }
 }
 
 void EntityList::backup_entities() {
     std::filesystem::path backupDir = BACKUP_DIR;
-    
+
+    std::error_code ec;
     if (!std::filesystem::exists(backupDir)) {
-        std::filesystem::create_directory(backupDir);
+        if (!std::filesystem::create_directory(backupDir, ec)) {
+            std::cerr << "Failed to create backup directory: " << ec.message() << std::endl;
+            return;
+        }
     }
-    
-    for (const auto& entry : std::filesystem::directory_iterator(backupDir)) {
-        std::filesystem::remove(entry.path());
+
+    for (const auto& entry : std::filesystem::directory_iterator(backupDir, ec)) {
+        if (ec) {
+            std::cerr << "Error iterating backup directory: " << ec.message() << std::endl;
+            return;
+        }
+
+        if (!std::filesystem::remove(entry.path(), ec)) {
+            std::cerr << "Failed to remove old backup file: " << entry.path() << ", error: " << ec.message() << std::endl;
+        }
     }
-    
+
     for (const auto& entity : m_entities) {
         if(entity.is_dead()) continue;
 
         std::string name = entity.get_name();
-        std::filesystem::path backupPath = backupDir / (name + ".entity");
+
+        if(name.empty()) {
+            std::cerr << "Attempt to process unnamed entity" << std::endl;
+            continue;
+        }
+
+        std::filesystem::path backupPath = backupDir / (name + ENTITY_EXTENSION);
+
         entity.save_to_file(backupPath);
     }
 }
 
 void EntityList::load_entities(const std::filesystem::path& path) {
     m_entities.clear();
-    
-    if (!std::filesystem::exists(path)) {
+
+    std::error_code ec;
+    if (!std::filesystem::exists(path, ec)) {
+        if (ec) {
+            std::cerr << "Error checking if path exists: " << path << ", error: " << ec.message() << std::endl;
+            return;
+        }
+
+        std::cerr << "Path does not exist: " << path << std::endl;
         return;
     }
-    
-    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path)) {
-        if (!entry.is_regular_file() || entry.path().extension() != ".entity") {
+
+    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(path, ec)) {
+        if (ec) {
+            std::cerr << "Error iterating directory: " << path << ", error: " << ec.message() << std::endl;
+            return;
+        }
+
+        if (!entry.is_regular_file(ec) || entry.path().extension() != ENTITY_EXTENSION) {
+            if (ec) {
+                std::cerr << "Error checking if path is regular file: " << entry.path() << ", error: " << ec.message() << std::endl;
+            }
             continue;
         }
-        
+
         std::filesystem::path file_path = entry.path();
         std::string file_name = file_path.stem().string();
-        
+
         auto& entity = m_entities.emplace_back(EntityDocument(std::move(file_name)));
         entity.load_from_file(file_path);
     }
 }
 
 void EntityList::load_entity_from_file(const std::filesystem::path& path) {
-    if (!std::filesystem::exists(path) || !std::filesystem::is_regular_file(path)) {
+    std::error_code ec;
+    if (!std::filesystem::exists(path, ec) || !std::filesystem::is_regular_file(path, ec)) {
+        if (ec) {
+            std::cerr << "Error checking path: " << path << ", error: " << ec.message() << std::endl;
+        } else {
+            std::cerr << "Path does not exist or is not a regular file: " << path << std::endl;
+        }
         return;
     }
-    
+
     std::string file_name = path.stem().string();
+
+    if(file_name.empty()) {
+        std::cout << "Error: Loading unnamed entity is not allowed" << std::endl;
+        return;
+    }
+
     auto& entity = m_entities.emplace_back(EntityDocument(std::move(file_name)));
-    entity.load_from_file();
+
+    entity.load_from_file(path);
 }
