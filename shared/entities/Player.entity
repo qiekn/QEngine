@@ -1,6 +1,17 @@
 {
-    "entity_id": 13615974801969137110,
+    "entity_id": 8974132248845796088,
     "variants": [
+        {
+            "type": "Player",
+            "value": {}
+        },
+        {
+            "type": "Scale",
+            "value": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
         {
             "type": "Position",
             "value": {
@@ -17,7 +28,8 @@
         {
             "type": "Speed",
             "value": {
-                "value": 31.0
+                "value": 10,
+                "unit": ""
             }
         }
     ]

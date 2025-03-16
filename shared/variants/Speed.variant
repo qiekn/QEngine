@@ -1,6 +1,7 @@
 {
     "type": "Speed",
     "value": {
-        "value": 0.0
+        "value": 0.0,
+        "unit_speed": ""
     }
 }

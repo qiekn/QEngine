@@ -30,6 +30,7 @@ EngineControls::EngineControls()
             m_is_engine_starting = false;
             m_is_play_mode = false;
             m_is_paused = false;
+            exit_play_mode();
             std::cout << "Engine stopped" << std::endl;
         }
     );
@@ -150,17 +151,17 @@ void EngineControls::start_engine() {
         int result = std::system("cd ../runtime && ./build.sh && ./run.sh");
         #endif
 
-        std::this_thread::sleep_for(std::chrono::seconds(20));
-        if (!m_is_running) {
-            m_is_engine_starting = false;
-            std::cout << "Engine failed to start or timed out" << std::endl;
-        }
+        //std::this_thread::sleep_for(std::chrono::seconds(20));
+        //if (!m_is_running) {
+        //    m_is_engine_starting = false;
+        //    std::cout << "Engine failed to start or timed out" << std::endl;
+        //}
 
-        if (m_is_running) {
-            std::cout << "Engine process exited with code " << result << std::endl;
-            m_is_running = false;
-            m_is_engine_starting = false;
-        }
+        //if (m_is_running) {
+        //    std::cout << "Engine process exited with code " << result << std::endl;
+        //    m_is_running = false;
+        //    m_is_engine_starting = false;
+        //}
     }).detach();
 }
 

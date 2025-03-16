@@ -1,5 +1,6 @@
-#include "game/game.h"
+#include "game/player.h"
 #include "game/position.h"
+#include "game/scale.h"
 #include "game/speed.h"
 #include "game/sprite.h"
 #include "game/velocity.h"
@@ -25,9 +26,16 @@ RTTR_REGISTRATION
     rttr::registration::class_<Speed>("Speed")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("value", &Speed::value);
+        .property("value", &Speed::value)
+        .property("unit_speed", &Speed::unit_speed);
 
-    rttr::registration::class_<Game>("Game")
+    rttr::registration::class_<Scale>("Scale")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("x", &Scale::x)
+        .property("y", &Scale::y);
+
+    rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 

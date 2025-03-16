@@ -10,8 +10,6 @@ void Sprite::on_init() {
     }
 }
 
-void Sprite::on_post_init() {}
-
 void Sprite::on_update() {
     if(!m_texture_loaded) return;
 
@@ -32,26 +30,6 @@ void Sprite::on_update() {
         0.0f,  
         WHITE   
     );
-}
-
-void Sprite::on_play_update() {
-    auto& pos = get_variant_or_default<Position>();
-    auto& speed = get_variant_or_default<Speed>();
-
-    const float value = speed.value;
-
-    if (IsKeyDown(KEY_RIGHT)) {
-        pos.x += value;
-    }
-    if (IsKeyDown(KEY_LEFT)) {
-        pos.x -= value;
-    }
-    if (IsKeyDown(KEY_DOWN)) {
-        pos.y += value;
-    }
-    if (IsKeyDown(KEY_UP)) {
-        pos.y -= value;
-    }
 }
 
 void Sprite::on_path_to_sprite_set() {
