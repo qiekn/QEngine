@@ -1,6 +1,3 @@
-* add proper logging
-* add proper error handling 
-
 * add dependency check
 * implement .scene
 * make entity list and variant list coherent because modified/removed variants may cause issue 
@@ -11,6 +8,8 @@
 * embed engine window
 -----------------------------------------
 
+* [DONE] add proper error handling 
+* [DONE] add proper logging
 * [DONE] add remove variant from entity to runtime
 * [DONE] implement on change callback for properties
 * [DONE] make editor set the runtime scene on start
