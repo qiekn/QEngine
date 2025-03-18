@@ -21,9 +21,9 @@ public:
 private:
     void draw_resize_handle(ImVec2 start, ImVec2 end, bool is_horizontal, bool is_hovered);
 
-    float m_hierarchy_width = 300.0f;
-    float m_console_height = 300.0f;
-    float m_asset_browser_width = 300.0f;
+    float m_hierarchy_width = 600.0f;
+    float m_console_height = 500.0f;
+    float m_asset_browser_width = 1000.0f;
 
     std::function<void()> m_hierarchy_render_func;
     std::function<void()> m_content_render_func;

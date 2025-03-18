@@ -9,9 +9,48 @@ FileW::FileW(const std::string& path_to_watch, std::chrono::duration<int, std::m
     }
 }
 
-
 FileW::~FileW() {
     stop();
+}
+
+FileW::FileW(FileW&& other) noexcept
+    : m_path_to_watch(std::move(other.m_path_to_watch)),
+      m_polling_interval(other.m_polling_interval),
+      m_paths(std::move(other.m_paths)),
+      m_callbacks(std::move(other.m_callbacks)),
+      m_general_callbacks(std::move(other.m_general_callbacks)),
+      m_running(other.m_running),
+      m_watch_thread() 
+{
+    if (other.m_running) {
+        other.m_running = false; 
+        if (other.m_watch_thread.joinable()) {
+            other.m_watch_thread.join(); 
+        }
+        start(); 
+    }
+}
+
+FileW& FileW::operator=(FileW&& other) noexcept {
+    if (this != &other) {
+        stop();
+        
+        m_path_to_watch = std::move(other.m_path_to_watch);
+        m_polling_interval = other.m_polling_interval;
+        m_paths = std::move(other.m_paths);
+        m_callbacks = std::move(other.m_callbacks);
+        m_general_callbacks = std::move(other.m_general_callbacks);
+        
+        bool was_running = other.m_running;
+        if (was_running) {
+            other.m_running = false;
+            if (other.m_watch_thread.joinable()) {
+                other.m_watch_thread.join();
+            }
+            start(); 
+        }
+    }
+    return *this;
 }
 
 void FileW::add_callback(const std::vector<std::string>& extensions, Callback callback) {

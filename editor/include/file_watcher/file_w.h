@@ -16,8 +16,15 @@ public:
     using Callback = std::function<void(const fs::path&, const std::string&)>;
 
     FileW(const std::string& path_to_watch, 
-                std::chrono::duration<int, std::milli> polling_interval = std::chrono::milliseconds(1000));
+          std::chrono::duration<int, std::milli> polling_interval = std::chrono::milliseconds(1000));
+    
     ~FileW();
+    
+    FileW(const FileW&) = delete;
+    FileW& operator=(const FileW&) = delete;
+    
+    FileW(FileW&& other) noexcept;
+    FileW& operator=(FileW&& other) noexcept;
 
     void add_callback(const std::vector<std::string>& extensions, Callback callback);
     void add_callback(Callback callback);
@@ -25,7 +32,6 @@ public:
     void stop();
 
     std::string m_path_to_watch;
-
     std::chrono::duration<int, std::milli> m_polling_interval;
     std::unordered_map<std::string, fs::file_time_type> m_paths;
     std::map<std::string, std::vector<Callback>> m_callbacks;
