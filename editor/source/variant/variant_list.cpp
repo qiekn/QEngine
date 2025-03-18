@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <iostream>
 
-#include "file_watcher/file_watcher.h"
+#include "file_watcher/file_w.h"
 
 VariantList::VariantList() : m_variant_watcher("../shared/variants/", std::chrono::milliseconds(500)) {
     load_variants();
@@ -47,7 +47,7 @@ void VariantList::load_variant(const std::filesystem::path& path) {
 }
 
 void VariantList::start_watching() {
-    m_variant_watcher.addCallback({ ".variant"}, [this](const fs::path& path, const std::string& status) {
+    m_variant_watcher.add_callback({ ".variant"}, [this](const fs::path& path, const std::string& status) {
         std::cout << path << " is " << status << std::endl;
         if(status == "modified" || status == "created") {
             load_variant(path);

@@ -9,11 +9,11 @@ LogStream::~LogStream() {
 }
 
 void Logger::log(LogLevel level, const std::string& message) {
-    if (level < m_minLogLevel) {
+    if (level < m_min_log_level) {
         return;
     }
     
-    std::string formattedMessage = levelToString(level) + " " + message;
+    std::string formattedMessage = level_to_string(level) + " " + message;
     
     switch (level) {
         case LogLevel::ERROR:

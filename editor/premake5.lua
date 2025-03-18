@@ -32,6 +32,7 @@ workspace "ZeytinEditor"
         "-w",              
         "-std=c++17",     
         "-stdlib=libstdc++", 
+        "-ferror-limit=0",
     }
 
     filter "action:gmake"

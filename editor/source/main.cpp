@@ -39,15 +39,15 @@ int main(int argc, char* argv[])
 
     WindowManager windowManager;
     
-    windowManager.setHierarchyRenderFunc([&hierarchy]() {
+    windowManager.set_hierarchy_render_func([&hierarchy]() {
         hierarchy.update();
     });
     
-    windowManager.setContentRenderFunc([]() {
+    windowManager.set_content_render_func([]() {
         ImGui::Text("Embeded scene");
     });
     
-    windowManager.setConsoleRenderFunc([](float y_position, float width, float height) {
+    windowManager.set_console_render_func([](float y_position, float width, float height) {
         ConsoleWindow::get().render(y_position, width, height);
     });
 

@@ -3,7 +3,7 @@
 ConsoleWindow::ConsoleWindow() {
 }
 
-ImVec4 ConsoleWindow::getLogLevelColor(LogLevel level) const {
+ImVec4 ConsoleWindow::get_log_level_color(LogLevel level) const {
     switch (level) {
         case LogLevel::TRACE:   return ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
         case LogLevel::INFO:    return ImVec4(0.5f, 0.8f, 1.0f, 1.0f);
@@ -26,7 +26,7 @@ void ConsoleWindow::render(float y_position, float width, float height) {
         }
 
         ImGui::SameLine();
-        ImGui::Checkbox("Auto-scroll", &m_autoScroll);
+        ImGui::Checkbox("Auto-scroll", &m_auto_scroll);
 
         ImGui::SameLine();
 
@@ -46,23 +46,23 @@ void ConsoleWindow::render(float y_position, float width, float height) {
         ImGui::Text("Show:");
 
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Text, getLogLevelColor(LogLevel::TRACE));
-        ImGui::Checkbox("Trace", &m_showTrace);
+        ImGui::PushStyleColor(ImGuiCol_Text, get_log_level_color(LogLevel::TRACE));
+        ImGui::Checkbox("Trace", &m_show_trace);
         ImGui::PopStyleColor();
 
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Text, getLogLevelColor(LogLevel::INFO));
-        ImGui::Checkbox("Info", &m_showInfo);
+        ImGui::PushStyleColor(ImGuiCol_Text, get_log_level_color(LogLevel::INFO));
+        ImGui::Checkbox("Info", &m_show_info);
         ImGui::PopStyleColor();
 
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Text, getLogLevelColor(LogLevel::WARNING));
-        ImGui::Checkbox("Warning", &m_showWarning);
+        ImGui::PushStyleColor(ImGuiCol_Text, get_log_level_color(LogLevel::WARNING));
+        ImGui::Checkbox("Warning", &m_show_warning);
         ImGui::PopStyleColor();
 
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Text, getLogLevelColor(LogLevel::ERROR));
-        ImGui::Checkbox("Error", &m_showError);
+        ImGui::PushStyleColor(ImGuiCol_Text, get_log_level_color(LogLevel::ERROR));
+        ImGui::Checkbox("Error", &m_show_error);
         ImGui::PopStyleColor();
 
         ImGui::Separator();
@@ -70,43 +70,43 @@ void ConsoleWindow::render(float y_position, float width, float height) {
         const float footer_height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height), false, ImGuiWindowFlags_HorizontalScrollbar);
 
-        const auto& logs = Logger::get().getLogMessages();
+        const auto& logs = Logger::get().get_log_messages();
 
         for (const auto& log : logs) {
             LogLevel level = log.first;
 
-            if ((level == LogLevel::TRACE && !m_showTrace) ||
-                (level == LogLevel::INFO && !m_showInfo) ||
-                (level == LogLevel::WARNING && !m_showWarning) ||
-                (level == LogLevel::ERROR && !m_showError)) {
+            if ((level == LogLevel::TRACE && !m_show_trace) ||
+                (level == LogLevel::INFO && !m_show_info) ||
+                (level == LogLevel::WARNING && !m_show_warning) ||
+                (level == LogLevel::ERROR && !m_show_error)) {
                 continue;
             }
 
-            ImGui::PushStyleColor(ImGuiCol_Text, getLogLevelColor(level));
+            ImGui::PushStyleColor(ImGuiCol_Text, get_log_level_color(level));
             ImGui::TextUnformatted(log.second.c_str());
             ImGui::PopStyleColor();
         }
 
-        if (m_autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
+        if (m_auto_scroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
             ImGui::SetScrollHereY(1.0f);
         }
 
         ImGui::EndChild();
 
         ImGui::Separator();
-        bool reclaimFocus = false;
+        bool reclaim_focus = false;
 
-        if (ImGui::InputText("Command", m_commandBuffer, IM_ARRAYSIZE(m_commandBuffer),
+        if (ImGui::InputText("Command", m_command_buffer, IM_ARRAYSIZE(m_command_buffer),
                             ImGuiInputTextFlags_EnterReturnsTrue)) {
-            if (m_commandBuffer[0] != '\0') {
-                log_info() << "Command: " << m_commandBuffer;
-                m_commandBuffer[0] = '\0';
-                reclaimFocus = true;
+            if (m_command_buffer[0] != '\0') {
+                log_info() << "Command: " << m_command_buffer;
+                m_command_buffer[0] = '\0';
+                reclaim_focus = true;
             }
         }
 
         ImGui::SetItemDefaultFocus();
-        if (reclaimFocus) {
+        if (reclaim_focus) {
             ImGui::SetKeyboardFocusHere(-1);
         }
 

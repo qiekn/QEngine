@@ -10,27 +10,27 @@ public:
 
     void render();
 
-    void setHierarchyRenderFunc(std::function<void()> func) { m_hierarchyRenderFunc = func; }
-    void setContentRenderFunc(std::function<void()> func) { m_contentRenderFunc = func; }
-    void setConsoleRenderFunc(std::function<void(float, float, float)> func) { m_consoleRenderFunc = func; }
+    void set_hierarchy_render_func(std::function<void()> func) { m_hierarchy_render_func = func; }
+    void set_content_render_func(std::function<void()> func) { m_content_render_func = func; }
+    void set_console_render_func(std::function<void(float, float, float)> func) { m_console_render_func = func; }
 
-    float getHierarchyWidth() const { return m_hierarchyWidth; }
-    float getConsoleHeight() const { return m_consoleHeight; }
+    float get_hierarchy_width() const { return m_hierarchy_width; }
+    float get_console_height() const { return m_console_height; }
 
 private:
-    void drawResizeHandle(ImVec2 start, ImVec2 end, bool isHorizontal, bool isHovered);
+    void draw_resize_handle(ImVec2 start, ImVec2 end, bool is_horizontal, bool is_hovered);
 
-    float m_hierarchyWidth = 300.0f;
-    float m_hierarchyMinWidth = 200.0f;
-    float m_hierarchyMaxWidth = 500.0f;
-    bool m_isResizingHierarchy = false;
+    float m_hierarchy_width = 300.0f;
+    float m_hierarchy_min_width = 200.0f;
+    float m_hierarchy_max_width = 500.0f;
+    bool m_is_resizing_hierarchy = false;
 
-    float m_consoleHeight = 300.0f;
-    float m_consoleMinHeight = 300.0f;
-    float m_consoleMaxHeight = 500.0f;
-    bool m_isResizingConsole = false;
+    float m_console_height = 300.0f;
+    float m_console_min_height = 300.0f;
+    float m_console_max_height = 500.0f;
+    bool m_is_resizing_console = false;
 
-    std::function<void()> m_hierarchyRenderFunc;
-    std::function<void()> m_contentRenderFunc;
-    std::function<void(float, float, float)> m_consoleRenderFunc;
+    std::function<void()> m_hierarchy_render_func;
+    std::function<void()> m_content_render_func;
+    std::function<void(float, float, float)> m_console_render_func;
 };

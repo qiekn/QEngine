@@ -53,11 +53,11 @@ public:
     
     void log(LogLevel level, const std::string& message);
     
-    const std::vector<std::pair<LogLevel, std::string>>& getLogMessages() const {
+    const std::vector<std::pair<LogLevel, std::string>>& get_log_messages() const {
         return m_logs;
     }
     
-    void registerCallback(std::function<void(LogLevel, const std::string&)> callback) {
+    void register_callback(std::function<void(LogLevel, const std::string&)> callback) {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_callbacks.push_back(callback);
     }
@@ -67,15 +67,15 @@ public:
         m_logs.clear();
     }
     
-    void setMinLogLevel(LogLevel level) {
-        m_minLogLevel = level;
+    void set_min_log_level(LogLevel level) {
+        m_min_log_level = level;
     }
     
-    LogLevel getMinLogLevel() const {
-        return m_minLogLevel;
+    LogLevel get_min_log_level() const {
+        return m_min_log_level;
     }
     
-    static std::string levelToString(LogLevel level) {
+    static std::string level_to_string(LogLevel level) {
         switch (level) {
             case LogLevel::TRACE: return "[TRACE]";  
             case LogLevel::INFO: return "[INFO]";
@@ -86,7 +86,7 @@ public:
     }
 
 private:
-    Logger() : m_minLogLevel(LogLevel::TRACE) {}  
+    Logger() : m_min_log_level(LogLevel::TRACE) {}  
     ~Logger() = default;
     
     Logger(const Logger&) = delete;
@@ -95,7 +95,7 @@ private:
     std::vector<std::pair<LogLevel, std::string>> m_logs;
     std::vector<std::function<void(LogLevel, const std::string&)>> m_callbacks;
     std::mutex m_mutex;
-    LogLevel m_minLogLevel;
+    LogLevel m_min_log_level;
 };
 
 #define log_trace() Logger::get().trace()  
