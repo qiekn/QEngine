@@ -3,7 +3,9 @@
     "variants": [
         {
             "type": "Player",
-            "value": {}
+            "value": {
+                "name": ""
+            }
         },
         {
             "type": "Scale",
@@ -28,7 +30,7 @@
         {
             "type": "Speed",
             "value": {
-                "value": 0.0
+                "value": 10.0
             }
         }
     ]

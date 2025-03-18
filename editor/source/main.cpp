@@ -1,5 +1,3 @@
-#include <iostream> // IWYU pragma: keep
-
 #include "raylib.h"
 #include "imgui.h"
 #include "rlImGui.h"
@@ -12,6 +10,9 @@
 
 #include "engine/engine_controls.h"
 #include "engine/engine_communication.h"
+#include "logger/logger.h"
+#include "console/console.h"
+#include "window/window_manager.h"
 
 int main(int argc, char* argv[])
 {
@@ -34,9 +35,21 @@ int main(int argc, char* argv[])
     EntityList entity_list{};
     VariantList variant_list{};
 
-    std::cout << entity_list.as_string() << std::endl;
-
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
+
+    WindowManager windowManager;
+    
+    windowManager.setHierarchyRenderFunc([&hierarchy]() {
+        hierarchy.update();
+    });
+    
+    windowManager.setContentRenderFunc([]() {
+        ImGui::Text("Embeded scene");
+    });
+    
+    windowManager.setConsoleRenderFunc([](float y_position, float width, float height) {
+        ConsoleWindow::get().render(y_position, width, height);
+    });
 
     while (!WindowShouldClose())
     {
@@ -46,9 +59,7 @@ int main(int argc, char* argv[])
         rlImGuiBegin();
 
         engine_controls.render_main_menu_controls();
-        hierarchy.update();
-
-        ImGui::End();
+        windowManager.render();
 
         rlImGuiEnd();
         EndDrawing();

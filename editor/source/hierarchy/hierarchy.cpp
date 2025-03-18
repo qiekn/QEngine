@@ -30,15 +30,16 @@ Hierarchy::Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantD
 }
 
 void Hierarchy::update() {
-    if (ImGui::Begin("Entity List")) {
-        render_create_entity();
-        render_save_controls();
-        ImGui::Separator();
+    ImGui::Text("HIERARCHY");
+    ImGui::Separator();
 
-        for (auto& entity : m_entities) {
-            if (!entity.is_dead()) {
-                render_entity(entity);
-            }
+    render_create_entity();
+    render_save_controls();
+    ImGui::Separator();
+
+    for (auto& entity : m_entities) {
+        if (!entity.is_dead()) {
+            render_entity(entity);
         }
     }
 }

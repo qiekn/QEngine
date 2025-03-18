@@ -63,6 +63,14 @@ void EntityList::register_event_handlers() {
             load_entities(BACKUP_DIR);
         }
     );
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::EngineStopped,
+        [this](bool) {
+            m_is_play_mode = false;
+            m_is_synced_once = false;
+        }
+    );
 }
 
 std::string EntityList::as_string() const {

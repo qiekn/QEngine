@@ -1,4 +1,6 @@
 {
     "type": "Player",
-    "value": {}
+    "value": {
+        "name": ""
+    }
 }

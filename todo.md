@@ -1,6 +1,10 @@
+* register raylib types
+* implement world camera system
+* improve ui, add docking maybe
+* think about animation
+* investigate shaders
 * add dependency check
 * implement .scene
-* make entity list and variant list coherent because modified/removed variants may cause issue 
 * implement a way to refer other entities (using ids)
 * support double type
 * Implement adding elements to array
@@ -8,6 +12,7 @@
 * embed engine window
 -----------------------------------------
 
+* [DONE] make entity list and variant list coherent because modified/removed variants may cause issue 
 * [DONE] add proper error handling 
 * [DONE] add proper logging
 * [DONE] add remove variant from entity to runtime

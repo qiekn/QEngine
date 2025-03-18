@@ -36,7 +36,8 @@ RTTR_REGISTRATION
 
     rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("name", &Player::name);
 
     rttr::registration::class_<Velocity>("Velocity")
         .constructor<>()(rttr::policy::ctor::as_object)

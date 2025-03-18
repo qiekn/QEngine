@@ -7,6 +7,9 @@ class Player : public VariantBase {
 
     void on_play_update() override;
 
+public:
+    std::string name; PROPERTY();
+
 private:
     void move();
 };

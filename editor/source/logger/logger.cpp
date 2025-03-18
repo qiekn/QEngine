@@ -1,0 +1,41 @@
+#include "logger/logger.h"
+
+LogStream::LogStream(Logger& logger, LogLevel level) 
+    : m_logger(logger), m_level(level) {
+}
+
+LogStream::~LogStream() {
+    m_logger.log(m_level, m_stream.str());
+}
+
+void Logger::log(LogLevel level, const std::string& message) {
+    if (level < m_minLogLevel) {
+        return;
+    }
+    
+    std::string formattedMessage = levelToString(level) + " " + message;
+    
+    switch (level) {
+        case LogLevel::ERROR:
+            std::cerr << formattedMessage << std::endl;
+            break;
+        default:
+            std::cout << formattedMessage << std::endl;
+            break;
+    }
+    
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        
+        m_logs.emplace_back(level, formattedMessage);
+        
+        constexpr size_t MAX_LOGS = 10000;
+        if (m_logs.size() > MAX_LOGS) {
+            m_logs.erase(m_logs.begin(), m_logs.begin() + (m_logs.size() - MAX_LOGS));
+        }
+        
+        for (const auto& callback : m_callbacks) {
+            callback(level, formattedMessage);
+        }
+    }
+}
