@@ -2,7 +2,8 @@
 
 #include <vector>
 #include "variant_document.h"
-#include "file_watcher/file_watcher.h"
+
+#include "file_watcher/file_w.h"
 
 class VariantList final {
 public:
@@ -17,5 +18,5 @@ private:
 
 
     std::vector<VariantDocument> m_variants;
-    FileWatcher m_variant_watcher;
+    FileW m_variant_watcher;
 };

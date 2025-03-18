@@ -1,6 +1,6 @@
 #include "file_watcher/file_w.h"
 
-FileWatcher::FileWatcher(const std::string& path_to_watch, std::chrono::duration<int, std::milli> polling_interval)
+FileW::FileW(const std::string& path_to_watch, std::chrono::duration<int, std::milli> polling_interval)
     : m_path_to_watch(path_to_watch), m_polling_interval(polling_interval), m_running(false) {
     for(auto& file : fs::recursive_directory_iterator(m_path_to_watch)) {
         if (fs::is_regular_file(file)) {
@@ -10,33 +10,33 @@ FileWatcher::FileWatcher(const std::string& path_to_watch, std::chrono::duration
 }
 
 
-FileWatcher::~FileWatcher() {
+FileW::~FileW() {
     stop();
 }
 
-void FileWatcher::add_callback(const std::vector<std::string>& extensions, Callback callback) {
+void FileW::add_callback(const std::vector<std::string>& extensions, Callback callback) {
     for (const auto& ext : extensions) {
         m_callbacks[ext].push_back(callback);
     }
 }
 
-void FileWatcher::add_callback(Callback callback) {
+void FileW::add_callback(Callback callback) {
     m_general_callbacks.push_back(callback);
 }
 
-void FileWatcher::start() {
+void FileW::start() {
     m_running = true;
-    m_watch_thread = std::thread(&FileWatcher::watch_loop, this);
+    m_watch_thread = std::thread(&FileW::watch_loop, this);
 }
 
-void FileWatcher::stop() {
+void FileW::stop() {
     m_running = false;
     if (m_watch_thread.joinable()) {
         m_watch_thread.join();
     }
 }
 
-void FileWatcher::watch_loop() {
+void FileW::watch_loop() {
     while (m_running) {
         auto it = m_paths.begin();
         while (it != m_paths.end()) {
@@ -67,7 +67,7 @@ void FileWatcher::watch_loop() {
     }
 }
 
-void FileWatcher::notify_callbacks(const std::string& path, const std::string& status) {
+void FileW::notify_callbacks(const std::string& path, const std::string& status) {
     fs::path filepath(path);
     std::string extension = filepath.extension().string();
     

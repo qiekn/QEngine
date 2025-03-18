@@ -10,9 +10,10 @@
 
 #include "engine/engine_controls.h"
 #include "engine/engine_communication.h"
-#include "logger/logger.h"
+
 #include "console/console.h"
 #include "window/window_manager.h"
+#include "asset_browser/asset_browser.h"
 
 int main(int argc, char* argv[])
 {
@@ -49,6 +50,10 @@ int main(int argc, char* argv[])
     
     windowManager.set_console_render_func([](float y_position, float width, float height) {
         ConsoleWindow::get().render(y_position, width, height);
+    });
+
+    windowManager.set_asset_browser_render_func([]() {
+        AssetBrowser::get().render();
     });
 
     while (!WindowShouldClose())

@@ -1,12 +1,12 @@
 #include "engine/engine_communication.h"
 
-#include <iostream>
 #include <chrono>
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#include "logger/logger.h"
 #include "engine/engine_event.h"
 
 EngineCommunication::EngineCommunication()
@@ -83,7 +83,7 @@ bool EngineCommunication::initialize() {
         return true;
     }
     catch (const zmq::error_t& e) {
-        std::cerr << "ZeroMQ error: " << e.what() << std::endl;
+        log_error() << "ZeroMQ error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -110,22 +110,22 @@ void EngineCommunication::raise_events() {
         doc.Parse(msg.c_str());
 
         if (doc.HasParseError()) {
-            std::cerr << "Failed to parse message: " << msg.substr(0, 100)
+            log_error() << "Failed to parse message: " << msg.substr(0, 100)
                       << (msg.length() > 100 ? "..." : "") << std::endl;
-            std::cerr << "Parse error code: " << doc.GetParseError()
+            log_error() << "Parse error code: " << doc.GetParseError()
                       << " at offset " << doc.GetErrorOffset() << std::endl;
             messages.pop();
             continue;
         }
 
         if (!doc.IsObject()) {
-            std::cerr << "Message is not a valid JSON object" << std::endl;
+            log_error() << "Message is not a valid JSON object" << std::endl;
             messages.pop();
             continue;
         }
 
         if (!doc.HasMember("type") || !doc["type"].IsString()) {
-            std::cerr << "Message missing 'type' field or not a string" << std::endl;
+            log_error() << "Message missing 'type' field or not a string" << std::endl;
             messages.pop();
             continue;
         }
@@ -169,18 +169,18 @@ void EngineCommunication::shutdown() {
 
 bool EngineCommunication::send_message(const std::string& json) {
     if (!m_initialized) {
-        std::cerr << "EngineCommunication not initialized" << std::endl;
+        log_error() << "EngineCommunication not initialized" << std::endl;
         return false;
     }
 
     if (json.empty()) {
-        std::cerr << "Attempted to send empty JSON message" << std::endl;
+        log_error() << "Attempted to send empty JSON message" << std::endl;
         return false;
     }
 
     zmq::message_t message(json.size());
     if (message.size() != json.size()) {
-        std::cerr << "Failed to allocate message of size " << json.size() << std::endl;
+        log_error() << "Failed to allocate message of size " << json.size() << std::endl;
         return false;
     }
 
@@ -202,7 +202,7 @@ bool EngineCommunication::send_simple_message(const std::string& type,
         msg.AddMember("type", type_value, allocator);
     }
     else {
-        std::cerr << "Empty type is not allowed for send_simple_message" << std::endl;
+        log_error() << "Empty type is not allowed for send_simple_message" << std::endl;
         return false;
     }
 
@@ -243,10 +243,10 @@ void EngineCommunication::receive_messages() {
                         std::lock_guard<std::mutex> lock(m_queue_mutex);
                         m_message_queue.push(message_str);
                     } else {
-                        std::cerr << "Received empty message" << std::endl;
+                        log_error() << "Received empty message" << std::endl;
                     }
                 } else {
-                    std::cerr << "Received message with null data" << std::endl;
+                    log_error() << "Received message with null data" << std::endl;
                 }
             }
         }

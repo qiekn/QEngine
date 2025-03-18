@@ -1,7 +1,6 @@
 #include "variant/variant_list.h"
 
 #include <filesystem>
-#include <iostream>
 
 #include "file_watcher/file_w.h"
 
@@ -48,7 +47,6 @@ void VariantList::load_variant(const std::filesystem::path& path) {
 
 void VariantList::start_watching() {
     m_variant_watcher.add_callback({ ".variant"}, [this](const fs::path& path, const std::string& status) {
-        std::cout << path << " is " << status << std::endl;
         if(status == "modified" || status == "created") {
             load_variant(path);
         }

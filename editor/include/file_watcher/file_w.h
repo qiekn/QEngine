@@ -11,13 +11,13 @@
 
 namespace fs = std::filesystem;
 
-class FileWatcher {
+class FileW {
 public:
     using Callback = std::function<void(const fs::path&, const std::string&)>;
 
-    FileWatcher(const std::string& path_to_watch, 
+    FileW(const std::string& path_to_watch, 
                 std::chrono::duration<int, std::milli> polling_interval = std::chrono::milliseconds(1000));
-    ~FileWatcher();
+    ~FileW();
 
     void add_callback(const std::vector<std::string>& extensions, Callback callback);
     void add_callback(Callback callback);

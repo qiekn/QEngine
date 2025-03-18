@@ -1,9 +1,10 @@
 #include "engine/engine_controls.h"
-#include <iostream>
 #include <cstdlib>
 #include <thread>
 
 #include "imgui.h"
+
+#include "logger/logger.h"
 #include "engine/engine_event.h"
 
 EngineControls::EngineControls() 
@@ -18,7 +19,7 @@ EngineControls::EngineControls()
             if (success) {
                 m_is_running = true;
                 m_is_engine_starting = false;
-                std::cout << "Engine started successfully." << std::endl;
+                log_info() << "Engine started successfully." << std::endl;
             } 
         }
     );
@@ -31,7 +32,7 @@ EngineControls::EngineControls()
             m_is_play_mode = false;
             m_is_paused = false;
             exit_play_mode();
-            std::cout << "Engine stopped" << std::endl;
+            log_info() << "Engine stopped" << std::endl;
         }
     );
 }
@@ -144,28 +145,20 @@ void EngineControls::render_play_controls() {
 }
 
 void EngineControls::start_engine() {
+    log_info() << "Attempt to start the engine..." << std::endl;
+
     std::thread([this]() {
         #ifdef _WIN32
         int result = std::system("cd ../runtime && build.sh && run.sh");
         #else
         int result = std::system("cd ../runtime && ./build.sh && ./run.sh");
         #endif
-
-        //std::this_thread::sleep_for(std::chrono::seconds(20));
-        //if (!m_is_running) {
-        //    m_is_engine_starting = false;
-        //    std::cout << "Engine failed to start or timed out" << std::endl;
-        //}
-
-        //if (m_is_running) {
-        //    std::cout << "Engine process exited with code " << result << std::endl;
-        //    m_is_running = false;
-        //    m_is_engine_starting = false;
-        //}
     }).detach();
 }
 
 void EngineControls::kill_engine() {
+    log_info() << "Attempt to kill the engine..." << std::endl;
+
     m_is_play_mode = false;
     m_is_running = false;
     m_is_paused = false;
@@ -181,9 +174,12 @@ void EngineControls::kill_engine() {
 }
 
 void EngineControls::enter_play_mode() {
+    log_info() << "Enter play mode" << std::endl;
     EngineEventBus::get().publish<bool>(EngineEvent::EnterPlayMode, m_is_paused);
 }
 
 void EngineControls::exit_play_mode() {
+    log_info() << "Exit play mode" << std::endl;
+    EngineEventBus::get().publish<bool>(EngineEvent::EnterPlayMode, m_is_paused);
     EngineEventBus::get().publish<bool>(EngineEvent::ExitPlayMode, true);
 }

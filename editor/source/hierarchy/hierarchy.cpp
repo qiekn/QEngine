@@ -1,6 +1,5 @@
 #include "hierarchy/hierarchy.h"
 
-#include <iostream>
 #include <random>
 #include <algorithm>
 #include <map>
@@ -9,6 +8,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
+#include "logger/logger.h"
 #include "engine/engine_event.h"
 
 namespace {
@@ -30,9 +30,6 @@ Hierarchy::Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantD
 }
 
 void Hierarchy::update() {
-    ImGui::Text("HIERARCHY");
-    ImGui::Separator();
-
     render_create_entity();
     render_save_controls();
     ImGui::Separator();
@@ -141,12 +138,12 @@ void Hierarchy::render_create_entity() {
 
 void Hierarchy::create_new_entity(const char* name) {
     if(name == nullptr) {
-        std::cerr << "Error: Cannot create entity with null name" << std::endl;
+        log_error() << "Error: Cannot create entity with null name" << std::endl;
         return;
     }
 
     if(strlen(name) == 0) {
-        std::cerr << "Error: Cannot create entity with empty name" << std::endl;
+        log_error() << "Error: Cannot create entity with empty name" << std::endl;
         return;
     }
 
@@ -159,7 +156,7 @@ void Hierarchy::create_new_entity(const char* name) {
 
     for (auto& entity : m_entities) {
         if (!entity.is_dead() && entity.get_name() == safeName) {
-            std::cerr << "Error Entity with name " << safeName << " already exists" << std::endl;
+            log_error() << "Error Entity with name " << safeName << " already exists" << std::endl;
             return;
         }
     }
