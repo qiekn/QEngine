@@ -5,6 +5,10 @@
 #include <set>
 #include <unordered_map>
 #include <functional>
+#include <memory>
+#include <fstream>
+#include "raylib.h"
+#include "file_watcher/file_w.h"
 
 enum class AssetType {
     Unknown,
@@ -37,7 +41,7 @@ public:
     inline const std::string& get_selected_path() const { return m_selected_path; }
 
     static AssetBrowser& get() {
-        static AssetBrowser instance("../");
+        static AssetBrowser instance("../shared");
         return instance;
     }
 
@@ -56,16 +60,32 @@ private:
         std::vector<std::string> subdirectories;
     };
 
+    struct CachedPreview {
+        Texture2D texture;
+        bool loaded = false;
+        bool failed = false;
+    };
+
     AssetBrowser(const std::string& root_directory);
     ~AssetBrowser();
 
     bool build_directory_tree(const std::string& path);
     void render_directory(const std::string& path, std::set<std::string>& expanded_nodes);
     AssetType determine_asset_type(const std::string& extension);
+    Texture2D* get_preview_texture(const std::string& path);
+    void clear_previews();
+    void start_file_watcher();
 
     std::string m_root_directory;
     std::string m_selected_path;
     std::unordered_map<std::string, DirectoryNode> m_cached_tree;
+    std::unordered_map<std::string, CachedPreview> m_preview_cache;
+    
+    bool m_show_previews = true;
+    int m_thumbnail_size = 64;
+    
+    std::unique_ptr<FileW> m_file_watcher;
+    bool m_file_watcher_started;
     
     std::function<void(const AssetItem&)> m_on_asset_selected;
     std::function<void(const AssetItem&)> m_on_asset_activated;
