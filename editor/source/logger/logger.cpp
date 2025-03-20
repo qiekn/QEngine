@@ -1,4 +1,4 @@
-#include "logger/logger.h"
+#include "logger.h"
 
 LogStream::LogStream(Logger& logger, LogLevel level) 
     : m_logger(logger), m_level(level) {
@@ -15,14 +15,14 @@ void Logger::log(LogLevel level, const std::string& message) {
     
     std::string formattedMessage = level_to_string(level) + " " + message;
     
-    switch (level) {
-        case LogLevel::ERROR:
-            std::cerr << formattedMessage << std::endl;
-            break;
-        default:
-            std::cout << formattedMessage << std::endl;
-            break;
-    }
+    //switch (level) {
+    //    case LogLevel::ERROR:
+    //        std::cerr << formattedMessage << std::endl;
+    //        break;
+    //    default:
+    //        std::cout << formattedMessage << std::endl;
+    //        break;
+    //}
     
     {
         std::lock_guard<std::mutex> lock(m_mutex);

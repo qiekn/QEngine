@@ -1,6 +1,7 @@
-* open in vim?
 * embed engine window
 * implement engine logging to editor
+* implement engine stopped event
+* add proper deinitialization to engine
 
 * register raylib types
 * implement world camera system
@@ -12,6 +13,7 @@
 * support double type
 * Implement adding elements to array
 * investigate enums
+* open in vim?
 -----------------------------------------
 
 * [DONE] improve ui, add docking maybe

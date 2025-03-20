@@ -17,6 +17,8 @@ enum class EditorEvent {
     UnPausePlayMode,
     ExitPlayMode,
     SyncEditor,
+    Die,
+    LogToEditor,
 };
 
 class EditorEventBus {

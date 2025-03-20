@@ -4,6 +4,8 @@
 #include "editor/editor_communication.h" // IWYU pragma: keep
 #include "game/rttr_registration.h"
 
+#include "remote_logger/remote_logger.h"
+
 int main(int argc, char* argv[]) {
 
 #if EDITOR_MODE
@@ -15,11 +17,10 @@ int main(int argc, char* argv[]) {
 #ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_TOPMOST |  FLAG_WINDOW_UNDECORATED );
-    const int windowWidth = 800;
-    const int windowHeight = 600;
+    const int windowWidth = 1280;
+    const int windowHeight = 720;
     InitWindow(windowWidth, windowHeight, "ZeytinEngine"); 
     SetWindowPosition(1051, 393);
-    HideCursor();
 #else
     const int windowWidth = 1920;
     const int windowHeight = 1080;
@@ -39,21 +40,22 @@ int main(int argc, char* argv[]) {
     };
     SetTargetFPS(60);
 
+    log_info() << "Engine started." << std::endl;
+
 #ifndef EDITOR_MODE
     Zeytin::get().deserialize_entities();
 #endif
 
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose() 
+            #ifdef EDITOR_MODE
+             &&   !Zeytin::get().should_die()
+            #endif
+          ) {
 
 #ifdef EDITOR_MODE
             editor_comm.raise_events();
             if(!Zeytin::get().is_scene_ready()) continue; 
 #endif
-        Vector2 mousePosition = GetMousePosition();
-        Vector2 virtualMousePosition = {
-            (mousePosition.x - position.x) / scale,
-            (mousePosition.y - position.y) / scale
-        };
 
         BeginTextureMode(target);
             ClearBackground(RAYWHITE);
@@ -61,7 +63,6 @@ int main(int argc, char* argv[]) {
             Zeytin::get().post_init_variants();
             Zeytin::get().update_variants(); 
             DrawText("1920x1080", 20, 20, 40, BLACK);
-            DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
 
             // NOTE: temp solution, to notify editor with updated variants
             if(!Zeytin::get().m_synced_once) {
@@ -100,7 +101,9 @@ int main(int argc, char* argv[]) {
             DrawFPS(windowWidth - 80, windowHeight - 30);
         EndDrawing();
     }
+
     UnloadRenderTexture(target);
     CloseWindow();
+
     return 0;
 }

@@ -4,7 +4,7 @@
 
 #include "imgui.h"
 
-#include "logger/logger.h"
+#include "logger.h"
 #include "engine/engine_event.h"
 
 EngineControls::EngineControls() 
@@ -157,29 +157,21 @@ void EngineControls::start_engine() {
 }
 
 void EngineControls::kill_engine() {
-    log_info() << "Attempt to kill the engine..." << std::endl;
+    log_info() << "Killing the engine..." << std::endl;
 
     m_is_play_mode = false;
     m_is_running = false;
     m_is_paused = false;
     m_is_engine_starting = false;
 
-    std::thread([this]() {
-        #ifdef _WIN32
-        int result = std::system("kill_all_engines.sh");
-        #else
-        int result = std::system("./kill_all_engines.sh");
-        #endif
-    }).detach();
+    EngineEventBus::get().publish<bool>(EngineEvent::KillEngine, true);
 }
 
 void EngineControls::enter_play_mode() {
-    log_info() << "Enter play mode" << std::endl;
     EngineEventBus::get().publish<bool>(EngineEvent::EnterPlayMode, m_is_paused);
 }
 
 void EngineControls::exit_play_mode() {
-    log_info() << "Exit play mode" << std::endl;
     EngineEventBus::get().publish<bool>(EngineEvent::EnterPlayMode, m_is_paused);
     EngineEventBus::get().publish<bool>(EngineEvent::ExitPlayMode, true);
 }

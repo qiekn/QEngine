@@ -6,8 +6,8 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-#include "logger/logger.h"
 #include "engine/engine_event.h"
+#include "logger.h"
 
 EngineCommunication::EngineCommunication()
     : m_running(false)
@@ -62,6 +62,13 @@ void EngineCommunication::register_event_handlers() {
         EngineEvent::UnPausePlayMode, 
         [this](bool) {
             send_simple_message("unpause_play_mode");
+        }
+    );
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::KillEngine, 
+        [this](bool) {
+            send_simple_message("die");
         }
     );
 }
@@ -140,10 +147,33 @@ void EngineCommunication::raise_events() {
             EngineEventBus::get().publish<bool>(EngineEvent::EngineStarted, true);
         }
         else if (type == "engine_shutdown") {
+            log_info() << "Engine shutdown" << std::endl;
             EngineEventBus::get().publish<bool>(EngineEvent::EngineStopped, true);
         }
+        else if(type == "log_message") {
+            if(doc.HasMember("level") && doc.HasMember("message")) {
+                assert(doc["level"].IsString());
+                assert(doc["message"].IsString());
+
+                std::string level = doc["level"].GetString();
+                std::string msg = doc["message"].GetString();
+
+                if(level == "INFO") {
+                    Logger::get().info() << "[ENGINE] " << msg;
+                }
+                else if(level == "TRACE") {
+                    Logger::get().trace() << "[ENGINE] " << msg;
+                }
+                else if(level == "WARNING") {
+                    Logger::get().warning() << "[ENGINE] " << msg;
+                }
+                else if(level == "ERROR") {
+                    Logger::get().error() << "[ENGINE] " << msg;
+                }
+            }
+        }
         else {
-            std::cout << "Editor: Unknown message received from engine: " << type << std::endl;
+            log_warning() << "Unknown message received from engine: " << type << std::endl;
         }
 
         messages.pop();

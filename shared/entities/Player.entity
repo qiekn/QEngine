@@ -3,7 +3,9 @@
     "variants": [
         {
             "type": "Player",
-            "value": {}
+            "value": {
+                "name": ""
+            }
         },
         {
             "type": "Scale",
@@ -15,8 +17,8 @@
         {
             "type": "Position",
             "value": {
-                "x": 0.0,
-                "y": 0.0
+                "x": 800.0,
+                "y": 710.0
             }
         },
         {
@@ -28,8 +30,7 @@
         {
             "type": "Speed",
             "value": {
-                "value": 10,
-                "unit": ""
+                "value": 10.0
             }
         }
     ]

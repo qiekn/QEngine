@@ -1,5 +1,6 @@
 #include "window/window_manager.h"
 #include "raylib.h"
+#include "logger.h"
 
 WindowManager::WindowManager() 
     : m_hierarchy_render_func([]() {}),  
@@ -24,6 +25,7 @@ void WindowManager::render() {
                                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | 
                                        ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize;
     
+
     if (ImGui::Begin("Hierarchy", nullptr, hierarchy_flags)) {
         ImGui::Separator();
         ImGui::Text("Hierarchy");
@@ -66,6 +68,18 @@ void WindowManager::render() {
     ImGui::SetNextWindowSize(ImVec2(window_size.x - m_hierarchy_width - m_asset_browser_width, main_content_height));
     ImGuiWindowFlags content_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | 
                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
+
+    m_content_size = ImVec2(window_size.x - m_hierarchy_width - m_asset_browser_width, main_content_height);
+    m_content_position = ImVec2(m_hierarchy_width + 5, m_content_size.y - 720 + 5);
+
+    //log_info() << m_content_size.x << " | " << m_content_size.y << std::endl;
+    //log_info() << m_content_position.x << " | " << m_content_position.y << std::endl;
+
+    if(IsWindowMinimized()) {
+        log_info() << IsWindowMinimized() << std::endl;
+    }
+
+
     
     //if (ImGui::Begin("Content", nullptr, content_flags)) {
     //    m_content_render_func();

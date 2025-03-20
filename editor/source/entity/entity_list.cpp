@@ -5,7 +5,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
-#include "logger/logger.h"
+#include "logger.h"
 #include "engine/engine_event.h"
 
 namespace {

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <memory>
 #include "imgui.h"
-#include "logger/logger.h"
+#include "logger.h"
 #include "rlImGui.h"
 #include "file_watcher/file_w.h"
 

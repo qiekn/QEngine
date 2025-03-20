@@ -23,6 +23,10 @@ EditorCommunication::EditorCommunication()
     EditorEventBus::get().subscribe<std::string>(EditorEvent::SyncEditor, [this](std::string json) {
             send_message(json);
     });
+
+    EditorEventBus::get().subscribe<const std::string&>(EditorEvent::LogToEditor, [this](const auto& json) {
+            send_message(json);
+    });
 }
 
 EditorCommunication::~EditorCommunication() {
@@ -183,6 +187,9 @@ void EditorCommunication::raise_events() {
         }
         else if (type == "scene") {
             EditorEventBus::get().publish<const std::string&>(EditorEvent::Scene, msg);
+        }
+        else if(type == "die") {
+            EditorEventBus::get().publish<bool>(EditorEvent::Die, true);
         }
         else {
             std::cout << "ENGINE: unknown message type received from editor" << std::endl;

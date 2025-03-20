@@ -89,6 +89,7 @@ public:
     inline bool is_play_mode() const { return m_is_play_mode; }
     inline bool is_paused_play_mode() const { return m_is_pause_play_mode; }
     inline bool is_scene_ready() const { return m_is_scene_ready; }
+    inline bool should_die() const { return m_should_die; }
 
     bool m_synced_once = false;
 #endif
@@ -105,6 +106,7 @@ private:
     bool m_is_scene_ready = false;
     bool m_is_play_mode = false;
     bool m_is_pause_play_mode = false;
+    bool m_should_die = false;
 
 #endif
 };

@@ -347,6 +347,14 @@ void Zeytin::subscribe_editor_events() {
             m_is_pause_play_mode = false;
         }
     );
+
+    EditorEventBus::get().subscribe<bool>(
+        EditorEvent::Die, 
+        [this](bool) {
+            std::cout << "Should die" << std::endl;
+            m_should_die = true;
+        }
+    );
 }
 
 void Zeytin::handle_entity_property_changed(const rapidjson::Document& doc) {

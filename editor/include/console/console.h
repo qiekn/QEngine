@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logger/logger.h"
+#include "logger.h"
 #include "imgui.h"
 
 class ConsoleWindow {

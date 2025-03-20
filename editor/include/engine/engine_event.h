@@ -8,6 +8,7 @@
 enum class EngineEvent {
     EngineStarted,
     EngineSendScene,
+    KillEngine,
     EngineStopped,
     EntityModifiedEditor,
     EnterPlayMode,

@@ -8,7 +8,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
-#include "logger/logger.h"
+#include "logger.h"
 #include "engine/engine_event.h"
 
 namespace {
@@ -54,7 +54,7 @@ namespace {
 
     void open_in_vim(const std::string& filepath) {
     if (filepath.empty()) {
-        std::cerr << "No source file found for variant" << std::endl;
+        log_error() << "No source file found for variant" << std::endl;
         return;
     }
 
@@ -65,9 +65,9 @@ namespace {
     int result = system(terminal_command.c_str());
 
     if (result == 0) {
-        std::cout << "Opened " << filepath << " in Vim" << std::endl;
+        log_info() << "Opened " << filepath << " in Vim" << std::endl;
     } else {
-        std::cerr << "Failed to open " << filepath << " in Vim" << std::endl;
+        log_error() << "Failed to open " << filepath << " in Vim" << std::endl;
     }
 }
     

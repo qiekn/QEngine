@@ -98,7 +98,7 @@ private:
     LogLevel m_min_log_level;
 };
 
-#define log_trace() Logger::get().trace()  
-#define log_info() Logger::get().info()
-#define log_warning() Logger::get().warning()
-#define log_error() Logger::get().error()
+#define log_trace() Logger::get().trace() << "[EDITOR] "
+#define log_info() Logger::get().info() << "[EDITOR] "
+#define log_warning() Logger::get().warning() << "[EDITOR] "
+#define log_error() Logger::get().error()  << "[EDITOR] "

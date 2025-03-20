@@ -5,7 +5,7 @@
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
-#include "logger/logger.h"
+#include "logger.h"
 
 void EntityDocument::save_to_file() const {
     std::filesystem::create_directories(ENTITY_FOLDER);
