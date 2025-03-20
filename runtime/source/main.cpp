@@ -5,8 +5,6 @@
 #include "editor/editor_event.h"
 #include "game/rttr_registration.h"
 
-#include "remote_logger/remote_logger.h"
-
 int main(int argc, char* argv[]) {
 
 #if EDITOR_MODE
@@ -26,11 +24,11 @@ int main(int argc, char* argv[]) {
     EditorEventBus::get().subscribe<const rapidjson::Document&>(
        EditorEvent::WindowStateChanged,
        [](const rapidjson::Document& doc) {
-           if (doc.HasMember("is_focused")) {
-               bool is_focused = doc["is_focused"].GetBool();
+           if (doc.HasMember("is_minimize")) {
+               bool is_minimize = doc["is_minimize"].GetBool();
 
-               if(is_focused && IsWindowMinimized()) {
-                   SetWindowFocused();
+               if(is_minimize) {
+                    MinimizeWindow();
                }
    
            }
@@ -82,6 +80,15 @@ int main(int argc, char* argv[]) {
             Zeytin::get().update_variants(); 
             DrawText("1920x1080", 20, 20, 40, BLACK);
 
+            if(IsKeyPressed(KEY_H)) {
+                if(IsWindowMinimized()) {
+                    SetWindowFocused();
+                }
+                else {
+                    MinimizeWindow();
+                }
+            }
+
             // NOTE: temp solution, to notify editor with updated variants
             if(!Zeytin::get().m_synced_once) {
                 Zeytin::get().sync_editor(); 
@@ -104,6 +111,7 @@ int main(int argc, char* argv[]) {
                     Zeytin::get().update_variants(); 
                     Zeytin::get().play_start_variants();
                     Zeytin::get().play_update_variants();
+
 #endif
         EndTextureMode();
         BeginDrawing();

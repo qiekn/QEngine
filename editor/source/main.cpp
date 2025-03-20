@@ -55,6 +55,15 @@ int main(int argc, char* argv[])
 
     while (!WindowShouldClose())
     {
+        if(IsKeyPressed(KEY_H)) {
+            if(IsWindowMinimized()) {
+                SetWindowFocused();
+            }
+            else {
+                MinimizeWindow();
+            }
+        }
+
         SetWindowState(FLAG_WINDOW_UNFOCUSED);
         BeginDrawing();
         ClearBackground(BLACK);

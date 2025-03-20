@@ -4,6 +4,7 @@
 #include "game/speed.h"
 #include "game/sprite.h"
 #include "game/velocity.h"
+#include "raylib.h"
 
 RTTR_REGISTRATION
 {
@@ -15,6 +16,53 @@ RTTR_REGISTRATION
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("entity_id", &VariantBase::entity_id)(rttr::metadata("NO_SERIALIZE", true));
+
+    
+    rttr::registration::class_<Vector2>("Vector2")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("x", &Vector2::x)
+        .property("y", &Vector2::y)
+        (rttr::metadata("RAYLIB", true));
+
+    rttr::registration::class_<Vector3>("Vector3")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("x", &Vector3::x)
+        .property("y", &Vector3::y)
+        .property("z", &Vector3::z)
+        (rttr::metadata("RAYLIB", true));
+
+    rttr::registration::class_<Rectangle>("Rectangle")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("x", &Rectangle::x)
+        .property("y", &Rectangle::y)
+        .property("width", &Rectangle::width)
+        .property("height", &Rectangle::height)
+        (rttr::metadata("RAYLIB", true));
+
+    rttr::registration::class_<Color>("Color")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("r", &Color::r)
+        .property("g", &Color::g)
+        .property("b", &Color::b)
+        .property("a", &Color::a)
+        (rttr::metadata("RAYLIB", true));
+
+    rttr::registration::class_<Camera2D>("Camera2D")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("offset", &Camera2D::offset)
+        .property("target", &Camera2D::target)
+        .property("rotation", &Camera2D::rotation)
+        .property("zoom", &Camera2D::zoom)
+        (rttr::metadata("RAYLIB", true));
+
+    rttr::registration::class_<Texture2D>("Texture2D")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .property("id", &Texture2D::id)
+        .property("width", &Texture2D::width)
+        .property("height", &Texture2D::height)
+        .property("mipmaps", &Texture2D::mipmaps)
+        .property("format", &Texture2D::format)
+        (rttr::metadata("RAYLIB", true));
 
     rttr::registration::class_<Sprite>("Sprite")
         .constructor<>()(rttr::policy::ctor::as_object)

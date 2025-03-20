@@ -1,6 +1,3 @@
-* embed engine window
-* implement engine logging to editor
-* implement engine stopped event
 * add proper deinitialization to engine
 
 * register raylib types
@@ -15,7 +12,9 @@
 * investigate enums
 * open in vim?
 -----------------------------------------
-
+* [DONE] implement engine stopped event
+* [DONE] embed engine window
+* [DONE] implement engine logging to editor
 * [DONE] improve ui, add docking maybe
 * [DONE] make entity list and variant list coherent because modified/removed variants may cause issue 
 * [DONE] add proper error handling 

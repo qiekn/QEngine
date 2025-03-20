@@ -91,7 +91,7 @@ void WindowManager::sync_engine_window() {
 
 
     document.AddMember("type", "window_state", allocator);
-    document.AddMember("is_focused", IsWindowFocused(), allocator);
+    document.AddMember("is_minimize", IsWindowMinimized(), allocator);
     
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

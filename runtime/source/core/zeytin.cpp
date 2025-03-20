@@ -484,7 +484,11 @@ void Zeytin::generate_variants() {
         if (!type.is_derived_from<VariantBase>() || 
             type.get_name() == "VariantBase" || 
             type.is_pointer() || 
-            type.is_wrapper()) {
+            type.is_wrapper() ||
+            type.get_metadata("RAYLIB")) {
+
+            log_info() << "Skipped type: " << type.get_name() << " for variant creation." << std::endl;
+
             continue;
         }
         

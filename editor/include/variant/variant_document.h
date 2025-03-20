@@ -17,6 +17,7 @@ public:
 
     inline const bool is_dead() { return m_is_dead; }
     inline void mark_dead() { m_is_dead = true; }
+    inline void set_alive() { m_is_dead = false; }
 
     void load_from_file();
 
