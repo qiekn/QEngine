@@ -4,7 +4,6 @@
 
 WindowManager::WindowManager() 
     : m_hierarchy_render_func([]() {}),  
-      m_content_render_func([]() {}),
       m_console_render_func([](float, float, float) {}),
       m_asset_browser_render_func([]() {}) {}
 
@@ -69,23 +68,21 @@ void WindowManager::render() {
     ImGuiWindowFlags content_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | 
                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
 
-    m_content_size = ImVec2(window_size.x - m_hierarchy_width - m_asset_browser_width, main_content_height);
-    m_content_position = ImVec2(m_hierarchy_width + 5, m_content_size.y - 720 + 5);
+    auto content_size = ImVec2(window_size.x - m_hierarchy_width - m_asset_browser_width, main_content_height);
+    auto content_position = ImVec2(m_hierarchy_width + 5, content_size.y - 720 + 5);
+    bool is_minimized = IsWindowMinimized();
 
-    //log_info() << m_content_size.x << " | " << m_content_size.y << std::endl;
-    //log_info() << m_content_position.x << " | " << m_content_position.y << std::endl;
+    static bool was_minimized = false;
+
+    if(is_minimized != was_minimized) {
+        was_minimized = is_minimized;
+        sync_engine_window();
+    }
 
     if(IsWindowMinimized()) {
         log_info() << IsWindowMinimized() << std::endl;
     }
-
-
-    
-    //if (ImGui::Begin("Content", nullptr, content_flags)) {
-    //    m_content_render_func();
-    //    ImGui::End();
-    //}
-    
+        
     float console_y = menu_bar_height + main_content_height;
     const float console_resize_height = 16.0f;
     ImVec2 console_resize_start(0, console_y - console_resize_height / 2);

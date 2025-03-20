@@ -32,7 +32,6 @@ EngineControls::EngineControls()
             m_is_play_mode = false;
             m_is_paused = false;
             exit_play_mode();
-            log_info() << "Engine stopped" << std::endl;
         }
     );
 }

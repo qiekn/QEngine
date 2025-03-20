@@ -4,8 +4,6 @@
 #include "editor/editor_communication.h" // IWYU pragma: keep
 #include "game/rttr_registration.h"
 
-#include "remote_logger/remote_logger.h"
-
 int main(int argc, char* argv[]) {
 
 #if EDITOR_MODE
@@ -39,8 +37,6 @@ int main(int argc, char* argv[]) {
         (windowHeight - (virtualHeight * scale)) * 0.5f
     };
     SetTargetFPS(60);
-
-    log_info() << "Engine started." << std::endl;
 
 #ifndef EDITOR_MODE
     Zeytin::get().deserialize_entities();

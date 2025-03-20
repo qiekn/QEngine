@@ -1,5 +1,4 @@
 #include <cassert>
-#include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <sstream>
@@ -15,6 +14,8 @@
 #include "editor/editor_event.h"
 #include "core/variant/variant_base.h"
 
+#include "remote_logger/remote_logger.h"
+
 namespace {
     template<typename T>
     void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, 
@@ -28,10 +29,6 @@ namespace {
         if (path_index == path_parts.size() - 1) {
             for (auto& property : obj.get_type().get_properties()) {
                 if (property.get_name() == current_path) {
-                    std::cout << "Variant type: " << obj.get_type().get_name() 
-                              << " | Property type: " << property.get_type().get_name() 
-                              << " | Property name: " << property.get_name() << std::endl;
-
                     property.set_value(obj, value);
                     std::string set_callback_name = "on_" + property.get_name().to_string() + "_set";
                     rttr::method set_callback = obj.get_type().get_method(set_callback_name);;
@@ -52,7 +49,7 @@ namespace {
             }
         }
 
-        std::cerr << "Property " << current_path << " not found in path" << std::endl;
+        log_error() << "Property " << current_path << " not found in path" << std::endl;
     }
 
     std::vector<std::string> split_path(const std::string& path) {
@@ -182,14 +179,14 @@ void Zeytin::deserialize_scene(const std::string& scene) {
     rapidjson::ParseResult parse_result = scene_data.Parse(scene.c_str());
 
     if (parse_result.IsError()) {
-        std::cerr << "Error parsing scene at offset " << parse_result.Offset() << std::endl;
+        log_error() << "Error parsing scene at offset " << parse_result.Offset() << std::endl;
         exit(1);
     }
 
     if (!scene_data.IsObject() || !scene_data.HasMember("type") ||
         !scene_data["type"].IsString() || strcmp(scene_data["type"].GetString(), "scene") != 0 ||
         !scene_data.HasMember("entities") || !scene_data["entities"].IsArray()) {
-        std::cerr << "Failed to deserialize scene: invalid scene format" << std::endl;
+        log_error() << "Failed to deserialize scene: invalid scene format" << std::endl;
         exit(1);
     }
 
@@ -226,7 +223,7 @@ void Zeytin::deserialize_entities() {
 
     } 
     catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Filesystem error: " << e.what() << std::endl;
+        log_error() << "Filesystem error: " << e.what() << std::endl;
     }
 }
 
@@ -351,7 +348,6 @@ void Zeytin::subscribe_editor_events() {
     EditorEventBus::get().subscribe<bool>(
         EditorEvent::Die, 
         [this](bool) {
-            std::cout << "Should die" << std::endl;
             m_should_die = true;
         }
     );
@@ -372,7 +368,7 @@ void Zeytin::handle_entity_property_changed(const rapidjson::Document& doc) {
     const std::string& value_str = doc["value"].GetString();
 
     if (m_storage.find(entity_id) == m_storage.end()) {
-        std::cerr << "Entity " << entity_id << " not found" << std::endl;
+        log_error() << "Entity " << entity_id << " not found" << std::endl;
         return;
     }
 
@@ -381,7 +377,7 @@ void Zeytin::handle_entity_property_changed(const rapidjson::Document& doc) {
             std::vector<std::string> path_parts = split_path(key_path);
 
             if (path_parts.empty()) {
-                std::cerr << "Invalid key path: " << key_path << std::endl;
+                log_error() << "Invalid key path: " << key_path << std::endl;
                 return;
             }
 
@@ -471,7 +467,7 @@ void Zeytin::exit_play_mode() {
         std::filesystem::remove_all("temp");
     }
     else {
-        std::cerr << "Cannot exit playmode because scene backup is not found" << std::endl;
+        log_error() << "Cannot exit playmode because scene backup is not found" << std::endl;
         exit(1);
     }
 }
@@ -494,10 +490,10 @@ void Zeytin::generate_variants() {
         
         try {
             generate_variant(type);
-            std::cout << "Created variant for: " << name << ".variant" << std::endl;
+             log_info() << "Created variant for: " << name << ".variant" << std::endl;
         } 
         catch (const std::exception& e) {
-            std::cerr << "Error creating variant for " << name << ": " << e.what() << std::endl;
+            log_error() << "Error creating variant for " << name << ": " << e.what() << std::endl;
         }
     }    
 }

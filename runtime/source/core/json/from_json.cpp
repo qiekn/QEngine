@@ -230,6 +230,8 @@ rttr::variant from(entity_id entity_id, const std::string& json)
     Document document;
     document.Parse(json.c_str());
     assert(!document.HasParseError());
+    assert(document.HasMember("type"));
+    assert(document.HasMember("value"));
 
     Value& type = document["type"];
     Value& value = document["value"];

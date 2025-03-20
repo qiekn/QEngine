@@ -9,6 +9,7 @@
 #include "rapidjson/writer.h"
 
 #include "editor/editor_event.h"
+#include "remote_logger/remote_logger.h"
 
 EditorCommunication::EditorCommunication()
     : m_running(false)
@@ -47,12 +48,12 @@ bool EditorCommunication::initialize() {
         m_receive_thread = std::thread(&EditorCommunication::receive_messages, this);
 
         m_initialized = true;
-        std::cout << "EditorCommunication initialized successfully" << std::endl;
+        log_info() << "EditorCommunication initialized successfully" << std::endl;
 
         return true;
     }
     catch (const zmq::error_t& e) {
-        std::cerr << "ZeroMQ error: " << e.what() << std::endl;
+        log_error() << "ZeroMQ error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -76,9 +77,9 @@ void EditorCommunication::start_connection_attempts() {
         }
 
         if (connection_confirmed) {
-            std::cout << "Connection to editor confirmed!" << std::endl;
+            log_info() << "Connection to editor confirmed!" << std::endl;
         } else if (attempts >= max_attempts) {
-            std::cout << "Failed to connect to editor after " << max_attempts << " attempts" << std::endl;
+            log_error() << "Failed to connect to editor after " << max_attempts << " attempts" << std::endl;
         }
     }).detach();
 }
@@ -126,7 +127,7 @@ void EditorCommunication::shutdown() {
 
 bool EditorCommunication::send_message(const std::string& message) {
     if (!m_initialized) {
-        std::cerr << "EditorCommunication not initialized" << std::endl;
+        log_warning() << "EditorCommunication not initialized" << std::endl;
         return false;
     }
     
@@ -138,7 +139,7 @@ bool EditorCommunication::send_message(const std::string& message) {
         return result.has_value();
     }
     catch (const std::exception& e) {
-        std::cerr << "Failed to send message: " << e.what() << std::endl;
+        log_warning() << "Failed to send message: " << e.what() << std::endl;
         return false;
     }
 }
@@ -150,7 +151,7 @@ void EditorCommunication::raise_events() {
         doc.Parse(msg.c_str());
         
         if (doc.HasParseError() || !doc.HasMember("type")) {
-            std::cerr << "Invalid message format received" << std::endl;
+            log_warning() << "Invalid message format received" << std::endl;
             m_message_queue.pop();
             continue;
         }
@@ -192,7 +193,7 @@ void EditorCommunication::raise_events() {
             EditorEventBus::get().publish<bool>(EditorEvent::Die, true);
         }
         else {
-            std::cout << "ENGINE: unknown message type received from editor" << std::endl;
+            log_warning() << "Unknown message type received from editor" << std::endl;
         }
         
         m_message_queue.pop();
@@ -223,7 +224,7 @@ void EditorCommunication::receive_messages() {
             }
         }
         catch (const zmq::error_t& e) {
-            std::cerr << "Error receiving message: " << e.what() << std::endl;
+            log_error() << "Error receiving message: " << e.what() << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
