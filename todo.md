@@ -1,6 +1,9 @@
+* open in vim?
+* embed engine window
+* implement engine logging to editor
+
 * register raylib types
 * implement world camera system
-* improve ui, add docking maybe
 * think about animation
 * investigate shaders
 * add dependency check
@@ -9,9 +12,9 @@
 * support double type
 * Implement adding elements to array
 * investigate enums
-* embed engine window
 -----------------------------------------
 
+* [DONE] improve ui, add docking maybe
 * [DONE] make entity list and variant list coherent because modified/removed variants may cause issue 
 * [DONE] add proper error handling 
 * [DONE] add proper logging

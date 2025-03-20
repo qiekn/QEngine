@@ -67,10 +67,10 @@ void WindowManager::render() {
     ImGuiWindowFlags content_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | 
                                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
     
-    if (ImGui::Begin("Content", nullptr, content_flags)) {
-        m_content_render_func();
-        ImGui::End();
-    }
+    //if (ImGui::Begin("Content", nullptr, content_flags)) {
+    //    m_content_render_func();
+    //    ImGui::End();
+    //}
     
     float console_y = menu_bar_height + main_content_height;
     const float console_resize_height = 16.0f;

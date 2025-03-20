@@ -21,6 +21,58 @@ namespace {
     void notify_engine_entity_variant_added(uint64_t entity_id, const std::string& variant_type);
     void notify_engine_entity_variant_removed(uint64_t entity_id, const std::string& variant_type);
     void notify_entity_removed(uint64_t entity_id);
+
+    namespace {
+    std::string find_variant_source_file(const std::string& variant_type) {
+        std::vector<std::string> source_paths = {
+            "../runtime/source/game/",
+            "../runtime/source/core/",
+            "../runtime/source/"
+        };
+
+        std::string lowercase_type = variant_type;
+        std::transform(lowercase_type.begin(), lowercase_type.end(), lowercase_type.begin(),
+            [](unsigned char c){ return std::tolower(c); });
+
+        std::vector<std::string> filename_variations = {
+            lowercase_type + ".cpp",
+            lowercase_type + ".h"
+        };
+
+        for (const auto& path : source_paths) {
+            for (const auto& filename : filename_variations) {
+                std::filesystem::path full_path = std::filesystem::path(path) / filename;
+
+                if (std::filesystem::exists(full_path)) {
+                    return full_path.string();
+                }
+            }
+        }
+
+        return "";
+    }
+
+    void open_in_vim(const std::string& filepath) {
+    if (filepath.empty()) {
+        std::cerr << "No source file found for variant" << std::endl;
+        return;
+    }
+
+    std::string vim_command = "vim --remote-send '<ESC>:e " + filepath + "<CR>' || vim \"" + filepath + "\"";
+
+    std::string terminal_command = "x-terminal-emulator -e \"" + vim_command + "\" &";
+
+    int result = system(terminal_command.c_str());
+
+    if (result == 0) {
+        std::cout << "Opened " << filepath << " in Vim" << std::endl;
+    } else {
+        std::cerr << "Failed to open " << filepath << " in Vim" << std::endl;
+    }
+}
+    
+}
+
 }
 
 Hierarchy::Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantDocument>& variants)
@@ -226,6 +278,14 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
             }
 
             if (ImGui::BeginPopup(popup_name)) {
+                if (ImGui::MenuItem("Open in Vim")) {
+                    std::string type = variants[i].GetObject()["type"].GetString();
+                    open_in_vim(find_variant_source_file(type));
+                }
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::BeginPopup(popup_name)) {
                 if (ImGui::MenuItem("Remove Variant")) {
                     std::string type = variants[i].GetObject()["type"].GetString();
                     notify_engine_entity_variant_removed(entity_id, type);
@@ -233,6 +293,9 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
                 }
                 ImGui::EndPopup();
             }
+
+
+
 
             ImGui::PopID();
         }
@@ -290,6 +353,7 @@ void Hierarchy::render_variant(rapidjson::Document& document, rapidjson::Value& 
         if (variant.HasMember("value")) {
             render_object(document, variant["value"], entity_id, type);
         }
+
     }
 
     ImGui::Unindent();

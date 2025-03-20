@@ -14,11 +14,12 @@ int main(int argc, char* argv[]) {
 
 #ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
-    SetConfigFlags(FLAG_WINDOW_TOPMOST);
+    SetConfigFlags(FLAG_WINDOW_TOPMOST |  FLAG_WINDOW_UNDECORATED );
     const int windowWidth = 800;
     const int windowHeight = 600;
     InitWindow(windowWidth, windowHeight, "ZeytinEngine"); 
     SetWindowPosition(1051, 393);
+    HideCursor();
 #else
     const int windowWidth = 1920;
     const int windowHeight = 1080;
@@ -61,7 +62,6 @@ int main(int argc, char* argv[]) {
             Zeytin::get().update_variants(); 
             DrawText("1920x1080", 20, 20, 40, BLACK);
             DrawCircle(virtualMousePosition.x, virtualMousePosition.y, 10, GREEN);
-
 
             // NOTE: temp solution, to notify editor with updated variants
             if(!Zeytin::get().m_synced_once) {
