@@ -1,3 +1,4 @@
+* make engine and editor stable
 * add proper deinitialization to engine
 
 * register raylib types

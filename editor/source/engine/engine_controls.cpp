@@ -176,6 +176,5 @@ void EngineControls::enter_play_mode() {
 }
 
 void EngineControls::exit_play_mode() {
-    EngineEventBus::get().publish<bool>(EngineEvent::EnterPlayMode, m_is_paused);
     EngineEventBus::get().publish<bool>(EngineEvent::ExitPlayMode, true);
 }

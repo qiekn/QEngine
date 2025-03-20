@@ -441,6 +441,8 @@ void Zeytin::handle_entity_removed(const rapidjson::Document& msg) {
 
 
 void Zeytin::enter_play_mode(bool is_paused) {
+    if(m_is_play_mode) return;
+
     std::string scene = serialize_scene();
 
     std::filesystem::create_directory("temp");
@@ -463,8 +465,9 @@ void Zeytin::exit_play_mode() {
         std::string scene((std::istreambuf_iterator<char>(scene_file)),
                          std::istreambuf_iterator<char>());
         scene_file.close();
+        log_info() << "Loading: " << scene << std::endl;
         deserialize_scene(scene);
-        std::filesystem::remove_all("temp");
+        //std::filesystem::remove_all("temp");
     }
     else {
         log_error() << "Cannot exit playmode because scene backup is not found" << std::endl;
