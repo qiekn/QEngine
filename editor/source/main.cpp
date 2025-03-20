@@ -22,11 +22,11 @@ int main(int argc, char* argv[])
     EngineControls engine_controls;
     EngineCommunication engine_communication;
 
-    int screenWidth = 1280;
-    int screenHeight = 800;
+    int screen_width = GetScreenWidth();
+    int screen_height = GetScreenHeight();
 
-    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-    InitWindow(screenWidth, screenHeight, "ZeytinEditor");
+    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_ALWAYS_RUN);
+    InitWindow(screen_width, screen_height, "ZeytinEditor");
     MaximizeWindow();
     SetTargetFPS(144);
     SetExitKey(0);
@@ -39,37 +39,36 @@ int main(int argc, char* argv[])
 
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
 
-    WindowManager windowManager;
+    WindowManager window_manager;
     
-    windowManager.set_hierarchy_render_func([&hierarchy]() {
+    window_manager.set_hierarchy_render_func([&hierarchy]() {
         hierarchy.update();
     });
     
-    windowManager.set_content_render_func([]() {
-        ImGui::Text("Embeded scene");
-    });
-    
-    windowManager.set_console_render_func([](float y_position, float width, float height) {
+    window_manager.set_console_render_func([](float y_position, float width, float height) {
         ConsoleWindow::get().render(y_position, width, height);
     });
 
-    windowManager.set_asset_browser_render_func([]() {
+    window_manager.set_asset_browser_render_func([]() {
         AssetBrowser::get().render();
     });
 
     while (!WindowShouldClose())
     {
+        SetWindowState(FLAG_WINDOW_UNFOCUSED);
         BeginDrawing();
         ClearBackground(BLACK);
 
         rlImGuiBegin();
 
         engine_controls.render_main_menu_controls();
-        windowManager.render();
+        window_manager.render();
 
         rlImGuiEnd();
         EndDrawing();
     }
+
+    engine_controls.kill_engine();
 
     rlImGuiShutdown();
     CloseWindow();

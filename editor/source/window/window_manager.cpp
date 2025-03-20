@@ -1,11 +1,25 @@
 #include "window/window_manager.h"
 #include "raylib.h"
-#include "logger.h"
+
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+
+#include "engine/engine_event.h"
 
 WindowManager::WindowManager() 
     : m_hierarchy_render_func([]() {}),  
       m_console_render_func([](float, float, float) {}),
-      m_asset_browser_render_func([]() {}) {}
+      m_asset_browser_render_func([]() {}) {
+
+
+    EngineEventBus::get().subscribe<bool>(
+        EngineEvent::EngineStarted,
+        [this](bool) {
+                sync_engine_window();
+            }
+    );
+
+}
 
 void WindowManager::render() {
     float menu_bar_height = ImGui::GetFrameHeight();
@@ -29,14 +43,6 @@ void WindowManager::render() {
         ImGui::Separator();
         ImGui::Text("Hierarchy");
 
-        if (ImGui::Button("+", ImVec2(20, 20))) {
-            m_hierarchy_width += 10.0f;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("-", ImVec2(20, 20))) {
-            m_hierarchy_width -= 10.0f;
-        }
-
         m_hierarchy_render_func();
         ImGui::End();
     }
@@ -48,41 +54,17 @@ void WindowManager::render() {
                                             ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize;
     
     if (ImGui::Begin("Asset Browser", nullptr, asset_browser_flags)) {
-        ImGui::Text("Asset Browser");
-        ImGui::Separator();
-
-        if (ImGui::Button("+", ImVec2(20, 20))) {
-            m_asset_browser_width += 10.0f;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("-", ImVec2(20, 20))) {
-            m_asset_browser_width -= 10.0f;
-        }
-
         m_asset_browser_render_func();
         ImGui::End();
     }
 
-    ImGui::SetNextWindowPos(ImVec2(m_hierarchy_width, menu_bar_height));
-    ImGui::SetNextWindowSize(ImVec2(window_size.x - m_hierarchy_width - m_asset_browser_width, main_content_height));
-    ImGuiWindowFlags content_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | 
-                                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
-
-    auto content_size = ImVec2(window_size.x - m_hierarchy_width - m_asset_browser_width, main_content_height);
-    auto content_position = ImVec2(m_hierarchy_width + 5, content_size.y - 720 + 5);
-    bool is_minimized = IsWindowMinimized();
-
-    static bool was_minimized = false;
-
-    if(is_minimized != was_minimized) {
-        was_minimized = is_minimized;
+    m_sync_timer += ImGui::GetIO().DeltaTime;
+    
+    if (m_sync_timer >= m_sync_interval) {
         sync_engine_window();
+        m_sync_timer = 0.0f;
     }
 
-    if(IsWindowMinimized()) {
-        log_info() << IsWindowMinimized() << std::endl;
-    }
-        
     float console_y = menu_bar_height + main_content_height;
     const float console_resize_height = 16.0f;
     ImVec2 console_resize_start(0, console_y - console_resize_height / 2);
@@ -96,16 +78,25 @@ void WindowManager::render() {
     if (ImGui::Begin("Console", nullptr, console_flags)) {
         ImGui::Text("Console Window");
 
-        if (ImGui::Button("+", ImVec2(20, 20))) {
-            m_console_height += 10.0f;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("-", ImVec2(20, 20))) {
-            m_console_height -= 10.0f;
-        }
-
         m_console_render_func(console_y, window_size.x, m_console_height);
         ImGui::End();
     }
+}
+
+
+void WindowManager::sync_engine_window() {
+    rapidjson::Document document;
+    document.SetObject();
+    auto& allocator = document.GetAllocator();
+
+
+    document.AddMember("type", "window_state", allocator);
+    document.AddMember("is_focused", IsWindowFocused(), allocator);
+    
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    document.Accept(writer);
+    
+    EngineEventBus::get().publish<const std::string&>(EngineEvent::WindowStateChanged, buffer.GetString());
 }
 

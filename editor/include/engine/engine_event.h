@@ -16,6 +16,7 @@ enum class EngineEvent {
     UnPausePlayMode,
     ExitPlayMode,
     SyncEditor,
+    WindowStateChanged,
 };
 
 class EngineEventBus {

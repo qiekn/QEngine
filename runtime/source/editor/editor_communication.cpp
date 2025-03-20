@@ -192,6 +192,9 @@ void EditorCommunication::raise_events() {
         else if(type == "die") {
             EditorEventBus::get().publish<bool>(EditorEvent::Die, true);
         }
+        else if(type == "window_state") {
+            EditorEventBus::get().publish<const rapidjson::Document&>(EditorEvent::WindowStateChanged, doc);
+        }
         else {
             log_warning() << "Unknown message type received from editor" << std::endl;
         }

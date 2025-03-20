@@ -2,7 +2,10 @@
 #include <iostream> // IWYU pragma: keep
 #include "core/zeytin.h" // IWYU pragma: keep
 #include "editor/editor_communication.h" // IWYU pragma: keep
+#include "editor/editor_event.h"
 #include "game/rttr_registration.h"
+
+#include "remote_logger/remote_logger.h"
 
 int main(int argc, char* argv[]) {
 
@@ -14,11 +17,26 @@ int main(int argc, char* argv[]) {
 
 #ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
-    SetConfigFlags(FLAG_WINDOW_TOPMOST |  FLAG_WINDOW_UNDECORATED );
+    SetConfigFlags(FLAG_WINDOW_TOPMOST |  FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_ALWAYS_RUN );
     const int windowWidth = 1280;
     const int windowHeight = 720;
     InitWindow(windowWidth, windowHeight, "ZeytinEngine"); 
-    SetWindowPosition(1051, 393);
+    SetWindowPosition(466, 172);
+
+    EditorEventBus::get().subscribe<const rapidjson::Document&>(
+       EditorEvent::WindowStateChanged,
+       [](const rapidjson::Document& doc) {
+           if (doc.HasMember("is_focused")) {
+               bool is_focused = doc["is_focused"].GetBool();
+
+               if(is_focused && IsWindowMinimized()) {
+                   SetWindowFocused();
+               }
+   
+           }
+       }
+   );
+
 #else
     const int windowWidth = 1920;
     const int windowHeight = 1080;
@@ -41,18 +59,22 @@ int main(int argc, char* argv[]) {
 #ifndef EDITOR_MODE
     Zeytin::get().deserialize_entities();
 #endif
-
     while (!WindowShouldClose() 
             #ifdef EDITOR_MODE
              &&   !Zeytin::get().should_die()
             #endif
           ) {
 
+
 #ifdef EDITOR_MODE
             editor_comm.raise_events();
-            if(!Zeytin::get().is_scene_ready()) continue; 
+            if(!Zeytin::get().is_scene_ready())  {
+                BeginDrawing();
+                ClearBackground(BLACK);
+                EndDrawing();
+                continue;
+            }
 #endif
-
         BeginTextureMode(target);
             ClearBackground(RAYWHITE);
 #ifdef EDITOR_MODE

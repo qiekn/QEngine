@@ -3,7 +3,11 @@
 class EngineControls {
 public:
     EngineControls();
+    ~EngineControls();
+
     void render_main_menu_controls();
+    void start_engine();
+    void kill_engine();
 
 private:
     void render_file_menu();
@@ -11,8 +15,6 @@ private:
     void render_engine_controls();
     void render_play_controls();
     
-    void start_engine();
-    void kill_engine();
     void enter_play_mode();
     void exit_play_mode();
 

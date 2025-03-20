@@ -15,7 +15,6 @@ void Player::move() {
 
     auto speed_ref = get_variant<Speed>();
     if(!speed_ref.has_value()) return;
-
     auto& speed = speed_ref->get();
 
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) {
@@ -31,3 +30,7 @@ void Player::move() {
         position.x += speed.value;
     }
 }
+
+
+
+

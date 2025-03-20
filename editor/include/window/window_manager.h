@@ -23,6 +23,9 @@ private:
     float m_hierarchy_width = 460.0f;
     float m_console_height = 490.0f;
     float m_asset_browser_width = 810.0f;
+    
+    float m_sync_timer = 0.0f;
+    const float m_sync_interval = 0.5f;
 
     std::function<void()> m_hierarchy_render_func;
     std::function<void(float, float, float)> m_console_render_func;

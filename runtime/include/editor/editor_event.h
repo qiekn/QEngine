@@ -19,6 +19,7 @@ enum class EditorEvent {
     SyncEditor,
     Die,
     LogToEditor,
+    WindowStateChanged,
 };
 
 class EditorEventBus {

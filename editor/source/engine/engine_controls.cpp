@@ -36,6 +36,11 @@ EngineControls::EngineControls()
     );
 }
 
+EngineControls::~EngineControls() {
+    std::cout << "Kill engine" << std::endl;
+    kill_engine();
+}
+
 void EngineControls::render_main_menu_controls() {
     if (ImGui::BeginMainMenuBar()) {
         render_file_menu();

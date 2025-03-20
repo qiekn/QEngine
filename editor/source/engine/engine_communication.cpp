@@ -71,6 +71,13 @@ void EngineCommunication::register_event_handlers() {
             send_simple_message("die");
         }
     );
+
+    EngineEventBus::get().subscribe<const std::string&>(
+        EngineEvent::WindowStateChanged,
+        [this](const std::string& message) {
+            send_message(message);
+        }
+    );
 }
 
 bool EngineCommunication::initialize() {
