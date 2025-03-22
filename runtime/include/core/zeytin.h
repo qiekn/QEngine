@@ -25,6 +25,7 @@ public:
     }
 
     void init();
+    Camera2D* get_camera();
     void run_frame();
     inline bool should_die() const { return m_should_die || WindowShouldClose(); }
 

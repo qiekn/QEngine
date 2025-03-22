@@ -93,8 +93,7 @@ RTTR_REGISTRATION
         .property("zoom_increment", &Camera2DSystem::zoom_increment)
         .property("min_zoom", &Camera2DSystem::min_zoom)
         .property("max_zoom", &Camera2DSystem::max_zoom)
-        .property("drag_speed", &Camera2DSystem::drag_speed)
-        .property("m_camera", &Camera2DSystem::m_camera);
+        .property("drag_speed", &Camera2DSystem::drag_speed);
 
     rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)

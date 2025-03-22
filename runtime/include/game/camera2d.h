@@ -15,8 +15,6 @@ public:
     float max_zoom = 10.0f; PROPERTY()
     float drag_speed = 1.0f; PROPERTY()
 
-    Camera2D m_camera; PROPERTY()
-
     void on_init() override;
     void on_update() override;
     
@@ -27,6 +25,7 @@ public:
     Vector2 world_to_screen(Vector2 world_pos) const;
 
 private:
+    Camera2D m_camera;
     Vector2 m_drag_start = {0};
     Vector2 m_previous_mouse_position = {0};
     bool m_is_dragging = false;

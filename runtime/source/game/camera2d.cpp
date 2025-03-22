@@ -45,21 +45,24 @@ void Camera2DSystem::handle_dragging() {
 void Camera2DSystem::handle_zooming() {
     float wheel = GetMouseWheelMove();
     if (wheel != 0) {
-        Vector2 mouse_world_pos = screen_to_world(GetMousePosition());
-        
+       
+        Vector2 mouse_screen_pos = GetMousePosition();
+        Vector2 mouse_world_pos_before = GetScreenToWorld2D(mouse_screen_pos, m_camera);
+          
+        float old_zoom = m_camera.zoom;
         float zoom_delta = wheel * zoom_increment * zoom;
-        
         zoom += zoom_delta;
         
+
         if (zoom < min_zoom) zoom = min_zoom;
         if (zoom > max_zoom) zoom = max_zoom;
         
         m_camera.zoom = zoom;
-        
-        Vector2 new_mouse_world_pos = screen_to_world(GetMousePosition());
-        
-        m_camera.target.x += (mouse_world_pos.x - new_mouse_world_pos.x);
-        m_camera.target.y += (mouse_world_pos.y - new_mouse_world_pos.y);
+
+        Vector2 mouse_world_pos_after = GetScreenToWorld2D(mouse_screen_pos, m_camera);
+
+        m_camera.target.x += (mouse_world_pos_before.x - mouse_world_pos_after.x);
+        m_camera.target.y += (mouse_world_pos_before.y - mouse_world_pos_after.y);
     }
 }
 
