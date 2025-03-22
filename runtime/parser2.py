@@ -146,6 +146,7 @@ def main(headers_dir="."):
     includes = set()
     
     includes.add('#include "raylib.h"')
+    includes.add('#include "rttr/registration.h"')
     
     for header_file in header_files:
         relative_path = os.path.normpath(header_file).replace('\\', '/')

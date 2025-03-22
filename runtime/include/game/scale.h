@@ -6,6 +6,6 @@ class Scale : public VariantBase {
     VARIANT(Scale);
 
 public:
-    float x = 0; PROPERTY();
-    float y = 0; PROPERTY();
+    float x = 1; PROPERTY();
+    float y = 1; PROPERTY();
 };

@@ -21,20 +21,6 @@ int main(int argc, char* argv[]) {
     InitWindow(windowWidth, windowHeight, "ZeytinEngine"); 
     SetWindowPosition(466, 172);
 
-    EditorEventBus::get().subscribe<const rapidjson::Document&>(
-       EditorEvent::WindowStateChanged,
-       [](const rapidjson::Document& doc) {
-           if (doc.HasMember("is_minimize")) {
-               bool is_minimize = doc["is_minimize"].GetBool();
-
-               if(is_minimize) {
-                    MinimizeWindow();
-               }
-   
-           }
-       }
-   );
-
 #else
     const int windowWidth = 1920;
     const int windowHeight = 1080;

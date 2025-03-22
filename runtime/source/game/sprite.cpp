@@ -1,5 +1,5 @@
 #include "game/sprite.h"
-#include "game/speed.h"
+#include "game/scale.h"
 
 #include "raylib.h"
 
@@ -13,19 +13,16 @@ void Sprite::on_init() {
 void Sprite::on_update() {
     if(!m_texture_loaded) return;
 
-    auto& pos = get_variant_or_default<Position>(); 
+    auto& position = get_variant_or_default<Position>(); 
+    auto& scale = get_variant_or_default<Scale>(); 
 
-    const float x = pos.x;
-    const float y = pos.y;
-
-    float scale = 0.25;
-    float width = texture.width * scale;
-    float height = texture.height * scale;
+    float width = texture.width * scale.x;
+    float height = texture.height * scale.y;
 
     DrawTexturePro(
         texture,
         Rectangle{ 0, 0, (float)texture.width, (float)texture.height },  
-        Rectangle{ x, y, width, height },  
+        Rectangle{ position.x, position.y, width, height },  
         Vector2{ width/2, height/2 },  
         0.0f,  
         WHITE   

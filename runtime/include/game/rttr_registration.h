@@ -1,11 +1,10 @@
-#include "game/game.h"
 #include "game/player.h"
 #include "game/position.h"
 #include "game/scale.h"
 #include "game/speed.h"
 #include "game/sprite.h"
-#include "game/velocity.h"
 #include "raylib.h"
+#include "rttr/registration.h"
 
 RTTR_REGISTRATION
 {
@@ -83,21 +82,10 @@ RTTR_REGISTRATION
         .property("x", &Scale::x)
         .property("y", &Scale::y);
 
-    rttr::registration::class_<ZCamera>("ZCamera")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("ray_cam", &ZCamera::ray_cam);
-
     rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("name", &Player::name);
-
-    rttr::registration::class_<Velocity>("Velocity")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("x", &Velocity::x)
-        .property("y", &Velocity::y);
 
     rttr::registration::class_<Position>("Position")
         .constructor<>()(rttr::policy::ctor::as_object)
