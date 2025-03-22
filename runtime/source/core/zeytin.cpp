@@ -1,11 +1,15 @@
 #include <cassert>
-#include <fstream>
 #include <filesystem>
 #include <sstream>
+#include <iostream>
+
+#ifdef EDITOR_MODE
+#include <fstream>
+#endif
+
 #include <algorithm>
 
 #include "rapidjson/document.h"
-#include "rapidjson/prettywriter.h" 
 #include "rapidjson/writer.h"
 
 #include "core/zeytin.h"
@@ -15,6 +19,11 @@
 #include "variant/variant_base.h"
 
 #include "remote_logger/remote_logger.h"
+#include "game/rttr_registration.h"
+
+
+constexpr float VIRTUAL_WIDTH = 1920;
+constexpr float VIRTUAL_HEIGHT = 1080;
 
 namespace {
     template<typename T>
@@ -63,6 +72,91 @@ namespace {
 
         return path_parts;
     }
+}
+
+void Zeytin::init() {
+    m_render_texture = LoadRenderTexture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    float scaleX = (float)GetScreenWidth() / VIRTUAL_WIDTH;
+    float scaleY = (float)GetScreenHeight() / VIRTUAL_HEIGHT;
+    float scale = (scaleX < scaleY) ? scaleX : scaleY;
+    m_render_position = {
+        (GetScreenWidth() - (VIRTUAL_WIDTH * scale)) * 0.5f,
+        (GetScreenHeight() - (VIRTUAL_HEIGHT * scale)) * 0.5f
+    };
+
+    SetExitKey(0);
+    SetTargetFPS(60);
+
+#ifdef EDITOR_MODE
+    m_editor_communication = std::make_unique<EditorCommunication>();
+    generate_variants();
+    subscribe_editor_events();
+#else
+    deserialize_entities(); // TODO: this should be named as load_scene and be uniform with editor_mode scene loading
+    m_is_play_mode = true; // always set to play mode true if standalone
+#endif
+
+}
+
+void Zeytin::run_frame() {
+
+#ifdef EDITOR_MODE
+    m_editor_communication->raise_events();
+    if(!Zeytin::get().is_scene_ready())  {
+        BeginDrawing();
+        ClearBackground(BLACK);
+        EndDrawing();
+        return;
+    }
+
+    if(!Zeytin::get().m_synced_once) {
+        Zeytin::get().sync_editor();
+        Zeytin::get().m_synced_once = true;
+    }
+#endif
+
+    BeginTextureMode(m_render_texture);
+    ClearBackground(RAYWHITE);
+
+    Zeytin::get().post_init_variants();
+    Zeytin::get().update_variants();
+
+    if(IsKeyPressed(KEY_H)) {
+        if(IsWindowMinimized()) {
+            SetWindowFocused();
+        }
+        else {
+            MinimizeWindow();
+        }
+    }
+
+    if(m_is_play_mode) {
+        play_start_variants();
+        play_update_variants();
+#ifdef EDITOR_MODE
+        sync_editor();
+#endif
+    }
+
+    EndTextureMode();
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    float scaleX = (float)GetScreenWidth() / VIRTUAL_WIDTH;
+    float scaleY = (float)GetScreenHeight() / VIRTUAL_HEIGHT;
+    float scale = (scaleX < scaleY) ? scaleX : scaleY;
+
+    DrawTexturePro(
+        m_render_texture.texture,
+        (Rectangle){ 0, 0, (float)m_render_texture.texture.width, (float)-m_render_texture.texture.height },
+        (Rectangle){ m_render_position.x, m_render_position.y, VIRTUAL_WIDTH * scale, VIRTUAL_HEIGHT * scale },
+        (Vector2){ 0, 0 },
+        0.0f,
+        WHITE
+    );
+
+    EndDrawing();
 }
 
 entity_id Zeytin::new_entity_id() {
@@ -492,8 +586,6 @@ void Zeytin::sync_editor() {
 }
 
 void Zeytin::generate_variants() {
-    std::filesystem::remove_all("../shared/variants");
-
     for (const auto& type : rttr::type::get_types()) {
         const auto& name = type.get_name().to_string();
 

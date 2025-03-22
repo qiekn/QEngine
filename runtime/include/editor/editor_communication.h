@@ -1,5 +1,4 @@
 #pragma once
-#ifdef EDITOR_MODE
 
 #include <thread>
 #include <mutex>
@@ -33,5 +32,3 @@ private:
     std::mutex m_queue_mutex;
     std::queue<std::string> m_message_queue;
 };
-
-#endif

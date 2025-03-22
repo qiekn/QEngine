@@ -337,10 +337,14 @@ std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::
 }
 
 void create_dummy(const rttr::type& type) {
-    std::filesystem::create_directory("../shared/variants");
-    const std::filesystem::path path = "../shared/variants/" + type.get_name().to_string() + ".variant";
-    rttr::variant var = type.create();
-    to(var, path);
+        std::cout << "Processing type: " << type.get_name() << std::endl;
+        std::filesystem::create_directory("../shared/variants");
+        std::cout << "Created directory: " << type.get_name() << std::endl;
+        const std::filesystem::path path = "../shared/variants/" + type.get_name().to_string() + ".variant";
+        std::cout << "path: " << path << std::endl;
+        rttr::variant var = type.create();
+        std::cout << "variant created: " << path << std::endl;
+        to(var, path);
 }
 
 }} // end of namespace

@@ -1,13 +1,19 @@
 #pragma once
 
+#include "raylib.h"
+
 #include <vector>
 #include <filesystem>
 #include <optional>
 #include <unordered_map>
-#include "rapidjson/document.h"
 
+#include "rapidjson/document.h"
 #include "rttr/variant.h"
+
 #include "entity/entity.h"
+#include "editor/editor_communication.h"
+
+#define get_zeytin() Zeytin::get()
 
 class Zeytin {
 public:
@@ -17,6 +23,10 @@ public:
         static Zeytin instance;
         return instance;
     }
+
+    void init();
+    void run_frame();
+    inline bool should_die() const { return m_should_die || WindowShouldClose(); }
 
     entity_id new_entity_id();
     void add_variant(const entity_id& entity, rttr::variant variant);
@@ -89,7 +99,6 @@ public:
     inline bool is_play_mode() const { return m_is_play_mode; }
     inline bool is_paused_play_mode() const { return m_is_pause_play_mode; }
     inline bool is_scene_ready() const { return m_is_scene_ready; }
-    inline bool should_die() const { return m_should_die; }
 
     bool m_synced_once = false;
 #endif
@@ -100,12 +109,19 @@ private:
     
     bool m_post_inited = false;
     bool m_started = false;
-    std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage;
+    bool m_should_die = false;
 
-#ifdef EDITOR_MODE
     bool m_is_scene_ready = false;
     bool m_is_play_mode = false;
     bool m_is_pause_play_mode = false;
-    bool m_should_die = false;
+
+    std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage;
+
+    // NOTE: maybe move to somewhere else
+    RenderTexture2D m_render_texture;
+    Vector2 m_render_position;
+
+#ifdef EDITOR_MODE
+    std::unique_ptr<EditorCommunication> m_editor_communication;
 #endif
 };
