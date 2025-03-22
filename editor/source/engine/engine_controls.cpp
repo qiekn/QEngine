@@ -155,7 +155,7 @@ void EngineControls::start_engine() {
         #ifdef _WIN32
         int result = std::system("cd ../runtime && build.sh && run.sh");
         #else
-        int result = std::system("cd ../runtime && ./build.sh && ./run.sh");
+        int result = std::system("cd ../runtime && ./build.sh && python3 debug.py --run");
         #endif
     }).detach();
 }

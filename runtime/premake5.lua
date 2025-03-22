@@ -27,13 +27,16 @@ workspace "Zeytin"
         "asound", 
         "stdc++", 
         "rttr_core",
-        "zmq"
+        "zmq",
     }
 
     buildoptions { 
         "-w",              
         "-std=c++17",     
         "-stdlib=libstdc++", 
+        "-g3",            
+        "-fno-omit-frame-pointer",
+        "-rdynamic",
     }
 
     filter "action:gmake"
@@ -48,4 +51,5 @@ workspace "Zeytin"
         filter "configurations:EDITOR_MODE"
             defines {"DEBUG=1", "EDITOR_MODE=1"}
             symbols "On"
+            optimize "Off"
 

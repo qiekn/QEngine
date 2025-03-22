@@ -41,6 +41,7 @@ workspace "ZeytinEditor"
     project "ZeytinEditor"
         kind "ConsoleApp"
         language "C++"
+        symbols "on"
 
         files { "source/**.cpp" }
 

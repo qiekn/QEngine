@@ -11,6 +11,7 @@
 
 #include "entity/entity.h"
 
+
 using namespace rapidjson;
 using namespace rttr;
 
@@ -74,8 +75,14 @@ bool write_atomic_types_to_json(const type& t, const variant& var, PrettyWriter<
     }
     else if (t == type::get<std::string>())
     {
-        writer.String(var.to_string());
-        return true;
+        if (var.can_convert<std::string>()) {
+            writer.String(var.to_string());
+            return true;
+        }
+        
+        writer.Null();
+        std::cerr << "Failed to convert property to string" << std::endl;
+        return false;
     }
 
     return false;
@@ -85,26 +92,32 @@ bool write_atomic_types_to_json(const type& t, const variant& var, PrettyWriter<
 static void write_array(const variant_sequential_view& view, PrettyWriter<StringBuffer>& writer)
 {
     writer.StartArray();
-    for (const auto& item : view)
-    {
-        if (item.is_sequential_container())
+    
+    try {
+        for (const auto& item : view)
         {
-            write_array(item.create_sequential_view(), writer);
-        }
-        else
-        {
-            variant wrapped_var = item.extract_wrapped_value();
-            type value_type = wrapped_var.get_type();
-            if (value_type.is_arithmetic() || value_type == type::get<std::string>() || value_type.is_enumeration())
+            if (item.is_sequential_container())
             {
-                write_atomic_types_to_json(value_type, wrapped_var, writer);
+                write_array(item.create_sequential_view(), writer);
             }
-            else // object
+            else
             {
-                to_json_recursively(wrapped_var, writer);
+                variant wrapped_var = item.extract_wrapped_value();
+                type value_type = wrapped_var.get_type();
+                if (value_type.is_arithmetic() || value_type == type::get<std::string>() || value_type.is_enumeration())
+                {
+                    write_atomic_types_to_json(value_type, wrapped_var, writer);
+                }
+                else // object
+                {
+                    to_json_recursively(wrapped_var, writer);
+                }
             }
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in write_array: " << e.what() << std::endl;
     }
+    
     writer.EndArray();
 }
 
@@ -116,28 +129,32 @@ static void write_associative_container(const variant_associative_view& view, Pr
 
     writer.StartArray();
 
-    if (view.is_key_only_type())
-    {
-        for (auto& item : view)
+    try {
+        if (view.is_key_only_type())
         {
-            write_variant(item.first, writer);
+            for (auto& item : view)
+            {
+                write_variant(item.first, writer);
+            }
         }
-    }
-    else
-    {
-        for (auto& item : view)
+        else
         {
-            writer.StartObject();
-            writer.String(key_name.data(), static_cast<rapidjson::SizeType>(key_name.length()), false);
+            for (auto& item : view)
+            {
+                writer.StartObject();
+                writer.String(key_name.data(), static_cast<rapidjson::SizeType>(key_name.length()), false);
 
-            write_variant(item.first, writer);
+                write_variant(item.first, writer);
 
-            writer.String(value_name.data(), static_cast<rapidjson::SizeType>(value_name.length()), false);
+                writer.String(value_name.data(), static_cast<rapidjson::SizeType>(value_name.length()), false);
 
-            write_variant(item.second, writer);
+                write_variant(item.second, writer);
 
-            writer.EndObject();
+                writer.EndObject();
+            }
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in write_associative_container: " << e.what() << std::endl;
     }
 
     writer.EndArray();
@@ -145,6 +162,11 @@ static void write_associative_container(const variant_associative_view& view, Pr
 
 bool write_variant(const variant& var, PrettyWriter<StringBuffer>& writer)
 {
+    if (!var.is_valid()) {
+        writer.Null();
+        return false;
+    }
+    
     auto value_type = var.get_type();
     auto wrapped_type = value_type.is_wrapper() ? value_type.get_wrapped_type() : value_type;
     bool is_wrapper = wrapped_type != value_type;
@@ -152,14 +174,17 @@ bool write_variant(const variant& var, PrettyWriter<StringBuffer>& writer)
     if (write_atomic_types_to_json(is_wrapper ? wrapped_type : value_type,
                                    is_wrapper ? var.extract_wrapped_value() : var, writer))
     {
+        return true;
     }
     else if (var.is_sequential_container())
     {
         write_array(var.create_sequential_view(), writer);
+        return true;
     }
     else if (var.is_associative_container())
     {
         write_associative_container(var.create_associative_view(), writer);
+        return true;
     }
     else
     {
@@ -167,22 +192,28 @@ bool write_variant(const variant& var, PrettyWriter<StringBuffer>& writer)
         if (!child_props.empty())
         {
             to_json_recursively(var, writer);
+            return true;
         }
         else
         {
-            bool ok = false;
-            auto text = var.to_string(&ok);
-            if (!ok)
-            {
+            try {
+                bool ok = false;
+                auto text = var.to_string(&ok);
+                if (!ok)
+                {
+                    writer.String(text);
+                    return false;
+                }
+
                 writer.String(text);
+                return true;
+            } catch (const std::exception& e) {
+                std::cerr << "Exception converting variant to string: " << e.what() << std::endl;
+                writer.Null();
                 return false;
             }
-
-            writer.String(text);
         }
     }
-
-    return true;
 }
 
 
@@ -190,23 +221,44 @@ void to_json_recursively(const instance& obj2, PrettyWriter<StringBuffer>& write
 {
     writer.StartObject();
 
+    if (!obj2.is_valid()) {
+        std::cerr << "Invalid object instance in to_json_recursively" << std::endl;
+        writer.EndObject();
+        return;
+    }
+
     instance obj = obj2.get_type().get_raw_type().is_wrapper() ? obj2.get_wrapped_instance() : obj2;
+
+    if (!obj.is_valid()) {
+        std::cerr << "Invalid wrapped object instance in to_json_recursively" << std::endl;
+        writer.EndObject();
+        return;
+    }
 
     auto prop_list = obj.get_derived_type().get_properties();
     for (auto prop : prop_list)
     {
+        if (!prop.is_valid()) {
+            std::cerr << "Invalid property encountered" << std::endl;
+            continue;
+        }
+        
         if (prop.get_metadata("NO_SERIALIZE"))
             continue;
 
-        variant prop_value = prop.get_value(obj);
-        if (!prop_value)
-            continue; 
+        try {
+            variant prop_value = prop.get_value(obj);
+            if (!prop_value.is_valid())
+                continue; 
 
-        const auto name = prop.get_name();
-        writer.String(name.data(), static_cast<rapidjson::SizeType>(name.length()), false);
-        if (!write_variant(prop_value, writer))
-        {
-            std::cerr << "cannot serialize property: " << name << std::endl;
+            const auto name = prop.get_name();
+            writer.String(name.data(), static_cast<rapidjson::SizeType>(name.length()), false);
+            if (!write_variant(prop_value, writer))
+            {
+                std::cerr << "Failed to serialize property: " << name.to_string() << std::endl;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Exception handling property: " << e.what() << std::endl;
         }
     }
 
@@ -216,136 +268,213 @@ void to_json_recursively(const instance& obj2, PrettyWriter<StringBuffer>& write
 
 std::string serialize_value(rttr::instance obj)
 {
-    if (!obj.is_valid())
+    if (!obj.is_valid()) {
+        std::cerr << "Invalid object passed to serialize_value" << std::endl;
         return std::string();
+    }
 
     StringBuffer sb;
     PrettyWriter<StringBuffer> writer(sb);
 
-    to_json_recursively(obj, writer);
+    try {
+        to_json_recursively(obj, writer);
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in serialize_value: " << e.what() << std::endl;
+        return std::string();
+    }
 
     return sb.GetString();
 }
 
 std::string to(rttr::instance obj, const std::string& path) {
+    if (!obj.is_valid()) {
+        std::cerr << "Invalid object passed to to() function" << std::endl;
+        return std::string();
+    }
+    
+    try {
         const std::string serialized_value = serialize_value(obj);
+        if (serialized_value.empty()) {
+            std::cerr << "Failed to serialize object" << std::endl;
+            return std::string();
+        }
 
         rapidjson::Document document;
         document.SetObject();
         rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
         rttr::type type = obj.get_type().get_raw_type();
+        if (!type.is_valid()) {
+            std::cerr << "Invalid type for serialization" << std::endl;
+            return std::string();
+        }
+        
         document.AddMember("type", type.get_name().to_string(), allocator);
 
         rapidjson::Document value_doc;
-        value_doc.Parse(serialized_value.c_str());
-        assert(!value_doc.HasParseError());
-        assert(value_doc.IsObject());
+
+        const auto& parse_result = value_doc.Parse(serialized_value.c_str());
+        if (parse_result.HasParseError()) {
+            std::cerr << "JSON parse error at offset " << parse_result.GetErrorOffset() << std::endl;
+            return std::string();
+        }
+        
+        if (!value_doc.IsObject()) {
+            std::cerr << "Serialized value is not a valid JSON object" << std::endl;
+            return std::string();
+        }
 
         document.AddMember("value", value_doc, allocator);
 
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+        
         std::ofstream out(path);
+        if (!out.is_open()) {
+            std::cerr << "Failed to open output file: " << path << std::endl;
+            return std::string();
+        }
+        
         rapidjson::StringBuffer buffer;
         rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
 
         document.Accept(writer);
-
-        out << buffer.GetString();
+        
+        auto json_string = buffer.GetString();
+        out << json_string;
+        
+        if (out.fail()) {
+            std::cerr << "Failed to write to file: " << path << std::endl;
+        }
+        
         out.close();
 
-        return buffer.GetString();
+        return json_string;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in to() function: " << e.what() << std::endl;
+        return std::string();
     }
+}
 
 }  // end of anonymous namespace
 
 namespace zeytin { namespace json  {
 
 std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::variant>& variants) {
-    rapidjson::Document document;
-    document.SetObject();
-    rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
-
-    document.AddMember("entity_id", entity_id, allocator);
-
-    rapidjson::Value variants_array(rapidjson::kArrayType);
-
-    for (const auto& variant : variants) {
-        const std::string serialized_variant = serialize_value(variant);
-
-        rapidjson::Document variant_document;
-        variant_document.Parse(serialized_variant.c_str());
-        assert(!variant_document.HasParseError());
-        assert(variant_document.IsObject());
-
-        rapidjson::Value variant_obj(rapidjson::kObjectType);
-        variant_obj.AddMember("type", variant.get_type().get_name().to_string(), allocator);
-
-        rapidjson::Value value_obj(rapidjson::kObjectType);
-        value_obj.CopyFrom(variant_document, allocator);
-        variant_obj.AddMember("value", value_obj, allocator);
-
-        variants_array.PushBack(variant_obj, allocator);
+    if (variants.empty()) {
+        std::cerr << "Serializing entity with no variants" << std::endl;
     }
+    
+    try {
+        rapidjson::Document document;
+        document.SetObject();
+        rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
-    document.AddMember("variants", variants_array, allocator);
+        document.AddMember("entity_id", entity_id, allocator);
 
-    rapidjson::StringBuffer buffer;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-    document.Accept(writer);
+        rapidjson::Value variants_array(rapidjson::kArrayType);
 
-    return buffer.GetString();
+        for (const auto& variant : variants) {
+            if (!variant.is_valid()) {
+                std::cerr << "Invalid variant in serialize_entity" << std::endl;
+                continue;
+            }
+            
+            const std::string serialized_variant = serialize_value(variant);
+            if (serialized_variant.empty()) {
+                std::cerr << "Failed to serialize variant of type: " << variant.get_type().get_name().to_string() << std::endl;
+                continue;
+            }
+
+            rapidjson::Document variant_document;
+            const auto& parse_result = variant_document.Parse(serialized_variant.c_str());
+            if (parse_result.HasParseError()) {
+                std::cerr << "JSON parse error at offset " << parse_result.GetErrorOffset() << std::endl;
+                continue;
+            }
+            
+            if (!variant_document.IsObject()) {
+                std::cerr << "Serialized variant is not a valid JSON object" << std::endl;
+                continue;
+            }
+
+            rapidjson::Value variant_obj(rapidjson::kObjectType);
+            variant_obj.AddMember("type", variant.get_type().get_name().to_string(), allocator);
+
+            rapidjson::Value value_obj(rapidjson::kObjectType);
+            value_obj.CopyFrom(variant_document, allocator);
+            variant_obj.AddMember("value", value_obj, allocator);
+
+            variants_array.PushBack(variant_obj, allocator);
+        }
+
+        document.AddMember("variants", variants_array, allocator);
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+        document.Accept(writer);
+
+        return buffer.GetString();
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in serialize_entity: " << e.what() << std::endl;
+        return std::string();
+    }
 }
 
 std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::variant>& variants, const std::filesystem::path& path) {
-    rapidjson::Document document;
-    document.SetObject();
-    rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+    try {
+        std::string json_string = serialize_entity(entity_id, variants);
+        if (json_string.empty()) {
+            std::cerr << "Failed to serialize entity" << std::endl;
+            return std::string();
+        }
+        
+        std::filesystem::create_directories(path.parent_path());
+        
+        std::ofstream out(path);
+        if (!out.is_open()) {
+            std::cerr << "Failed to open output file: " << path.string() << std::endl;
+            return json_string;
+        }
+        
+        out << json_string;
+        
+        if (out.fail()) {
+            std::cerr << "Failed to write to file: " << path.string() << std::endl;
+        }
+        
+        out.close();
 
-    document.AddMember("entity_id", entity_id, allocator);
-
-    rapidjson::Value variants_array(rapidjson::kArrayType);
-
-    for (const auto& variant : variants) {
-        const std::string serialized_variant = serialize_value(variant);
-
-        rapidjson::Document variant_document;
-        variant_document.Parse(serialized_variant.c_str());
-        assert(!variant_document.HasParseError());
-        assert(variant_document.IsObject());
-
-        rapidjson::Value variant_obj(rapidjson::kObjectType);
-        variant_obj.AddMember("type", variant.get_type().get_name().to_string(), allocator);
-
-        rapidjson::Value value_obj(rapidjson::kObjectType);
-        value_obj.CopyFrom(variant_document, allocator);
-        variant_obj.AddMember("value", value_obj, allocator);
-
-        variants_array.PushBack(variant_obj, allocator);
+        return json_string;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in serialize_entity with path: " << e.what() << std::endl;
+        return std::string();
     }
-
-    document.AddMember("variants", variants_array, allocator);
-
-    rapidjson::StringBuffer buffer;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-    document.Accept(writer);
-
-    std::ofstream out(path);
-    out << buffer.GetString();
-    out.close();
-
-    return buffer.GetString();
 }
 
 void create_dummy(const rttr::type& type) {
-        std::cout << "Processing type: " << type.get_name() << std::endl;
-        std::filesystem::create_directory("../shared/variants");
-        std::cout << "Created directory: " << type.get_name() << std::endl;
-        const std::filesystem::path path = "../shared/variants/" + type.get_name().to_string() + ".variant";
-        std::cout << "path: " << path << std::endl;
+    if (!type.is_valid()) {
+        std::cerr << "Invalid type passed to create_dummy" << std::endl;
+        return;
+    }
+    
+    try {
+        std::filesystem::path variants_dir = "../shared/variants";
+        std::filesystem::create_directories(variants_dir);
+        
+        
+        const std::filesystem::path path = variants_dir / (type.get_name().to_string() + ".variant");
+        
         rttr::variant var = type.create();
-        std::cout << "variant created: " << path << std::endl;
-        to(var, path);
+        if (!var.is_valid()) {
+            std::cerr << "Failed to create instance of type: " << type.get_name().to_string() << std::endl;
+            return;
+        }
+        
+        
+        to(var, path.string());
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in create_dummy: " << e.what() << std::endl;
+    }
 }
 
 }} // end of namespace
-

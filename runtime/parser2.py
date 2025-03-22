@@ -7,6 +7,20 @@ def parse_header(file_path):
     with open(file_path, 'r') as f:
         content = f.read()
     
+    content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+    
+    lines = content.split('\n')
+    cleaned_lines = []
+    
+    for line in lines:
+        # Remove single-line comments
+        comment_pos = line.find('//')
+        if comment_pos >= 0:
+            line = line[:comment_pos]
+        cleaned_lines.append(line)
+    
+    content = '\n'.join(cleaned_lines)
+    
     variant_match = re.search(r'VARIANT\((\w+)\)', content)
     if not variant_match:
         return None
