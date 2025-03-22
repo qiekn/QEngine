@@ -1,8 +1,11 @@
 #include "engine/engine_controls.h"
 #include <cstdlib>
-#include <thread>
+#include <fstream>
+#include <sstream>
+#include <filesystem>
 
 #include "imgui.h"
+#include "rapidjson/document.h"
 
 #include "logger.h"
 #include "engine/engine_event.h"
@@ -12,6 +15,8 @@ EngineControls::EngineControls()
     , m_is_play_mode(false)
     , m_is_paused(false)
     , m_is_engine_starting(false)
+    , m_build_status(BuildStatus::None)
+    , m_build_monitor_active(false)
 {
     EngineEventBus::get().subscribe<bool>(
         EngineEvent::EngineStarted,
@@ -19,6 +24,7 @@ EngineControls::EngineControls()
             if (success) {
                 m_is_running = true;
                 m_is_engine_starting = false;
+                m_build_status = BuildStatus::None;
                 log_info() << "Engine started successfully." << std::endl;
             } 
         }
@@ -31,17 +37,39 @@ EngineControls::EngineControls()
             m_is_engine_starting = false;
             m_is_play_mode = false;
             m_is_paused = false;
-            exit_play_mode();
         }
     );
+    
+    std::filesystem::create_directories("../runtime/build_status");
+    
+    std::string status_file = "../runtime/build_status/build_status.json";
+    if (std::filesystem::exists(status_file)) {
+        try {
+            std::ofstream file(status_file);
+            if (file.is_open()) {
+                file << "{\"status\":\"none\",\"message\":\"Editor started\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
+                file.close();
+            }
+        } catch (...) {
+            try {
+                std::filesystem::remove(status_file);
+            } catch (...) {
+            }
+        }
+    }
 }
 
 EngineControls::~EngineControls() {
-    std::cout << "Kill engine" << std::endl;
+    m_build_monitor_active = false;
+    if (m_build_monitor_future.valid()) {
+        m_build_monitor_future.wait();
+    }
     kill_engine();
 }
 
 void EngineControls::render_main_menu_controls() {
+    check_build_status();
+    
     if (ImGui::BeginMainMenuBar()) {
         render_file_menu();
         render_edit_menu();
@@ -53,6 +81,10 @@ void EngineControls::render_main_menu_controls() {
         render_play_controls();
         
         ImGui::EndMainMenuBar();
+    }
+    
+    if (m_build_status == BuildStatus::Running || m_build_status == BuildStatus::Failed) {
+        render_build_status();
     }
 }
 
@@ -79,7 +111,14 @@ void EngineControls::render_engine_controls() {
     if (!m_is_running) {
         ImGui::SameLine();
         if (!m_is_engine_starting) {
-            if (ImGui::Button("Start Engine")) {
+            if (m_build_status == BuildStatus::Running) {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                ImGui::Button("Building...");
+                ImGui::PopStyleColor(4);
+            } else if (ImGui::Button("Start Engine")) {
                 m_is_engine_starting = true;
                 start_engine();
             }
@@ -94,6 +133,21 @@ void EngineControls::render_engine_controls() {
     } else {
         ImGui::SameLine();
         ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Engine Running");
+    }
+    
+    ImGui::SameLine(ImGui::GetWindowWidth() - 120);
+    switch (m_build_status) {
+        case BuildStatus::Running:
+            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Building...");
+            break;
+        case BuildStatus::Success:
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Build OK");
+            break;
+        case BuildStatus::Failed:
+            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Build Failed!");
+            break;
+        default:
+            break;
     }
 }
 
@@ -148,16 +202,186 @@ void EngineControls::render_play_controls() {
     }
 }
 
+void EngineControls::render_build_status() {
+    if (m_build_status == BuildStatus::Failed) {
+        m_is_engine_starting = false;
+        m_is_running = false;
+    }
+    else if (m_build_status == BuildStatus::Running) {
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 210, 50));
+        ImGui::SetNextWindowSize(ImVec2(200, 80));
+        ImGui::Begin("Building", nullptr, 
+                    ImGuiWindowFlags_NoTitleBar | 
+                    ImGuiWindowFlags_NoResize | 
+                    ImGuiWindowFlags_NoMove |
+                    ImGuiWindowFlags_NoCollapse);
+        
+        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Building Runtime...");
+        
+        float progress = (float)(ImGui::GetTime() * 0.5f);
+        progress = progress - (int)progress;
+        
+        ImGui::ProgressBar(progress, ImVec2(-1, 0), "");
+        
+        ImGui::End();
+    }
+}
+
+void EngineControls::check_build_status() {
+    std::string status_file = "../runtime/build_status/build_status.json";
+    
+    if (!std::filesystem::exists(status_file)) {
+        return;
+    }
+    
+    try {
+        std::ifstream file(status_file);
+        if (!file.is_open()) {
+            return;
+        }
+        
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string json_string = buffer.str();
+        file.close();
+        
+        rapidjson::Document doc;
+        doc.Parse(json_string.c_str());
+        
+        if (doc.HasParseError() || !doc.IsObject() || !doc.HasMember("status")) {
+            return;
+        }
+        
+        std::string status = doc["status"].GetString();
+        std::string message = doc.HasMember("message") ? doc["message"].GetString() : "";
+        
+        if (status == "none") {
+            return;
+        }
+        
+        if (status == "running" && m_build_status != BuildStatus::Running) {
+            m_build_status = BuildStatus::Running;
+            log_info() << "Build status: RUNNING - " << message << std::endl;
+            
+            static std::string build_log_path = "../runtime/build_status/build_output.log";
+            if (std::filesystem::exists(build_log_path)) {
+                static std::ifstream log_file(build_log_path);
+                if (log_file.is_open()) {
+                    std::string line;
+                    while (std::getline(log_file, line)) {
+                        log_info() << "BUILD: " << line << std::endl;
+                    }
+                }
+            }
+        }
+        else if (status == "success" && m_build_status != BuildStatus::Success) {
+            m_build_status = BuildStatus::Success;
+            
+            static float success_timer = 0.0f;
+            if (m_build_status == BuildStatus::Success) {
+                success_timer += ImGui::GetIO().DeltaTime;
+                if (success_timer > 3.0f) {
+                    m_build_status = BuildStatus::None;
+                    success_timer = 0.0f;
+                }
+            }
+        }
+        else if (status == "failed" && m_build_status != BuildStatus::Failed) {
+            m_build_status = BuildStatus::Failed;
+            
+            if (doc.HasMember("message")) {
+                m_build_message = doc["message"].GetString();
+            }
+            
+            if (doc.HasMember("details")) {
+                m_build_details = doc["details"].GetString();
+                log_error() << "Build status: FAILED - " << m_build_message << std::endl;
+                log_error() << "Details: " << m_build_details << std::endl;
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        log_error() << "Error reading build status: " << e.what() << std::endl;
+    }
+}
+
 void EngineControls::start_engine() {
     log_info() << "Attempt to start the engine..." << std::endl;
+    
+    m_build_status = BuildStatus::Running;
+    m_build_message.clear();
+    m_build_details.clear();
+    
+    std::filesystem::create_directories("../runtime/build_status");
+    
+    monitor_build();
+}
 
-    std::thread([this]() {
+void EngineControls::monitor_build() {
+    if (m_build_monitor_future.valid()) {
+        m_build_monitor_active = false;
+        m_build_monitor_future.wait();
+    }
+    
+    m_build_monitor_active = true;
+    log_info() << "Starting build process..." << std::endl;
+    
+    m_build_monitor_future = std::async(std::launch::async, [this]() {
+        std::filesystem::remove_all("../runtime/build_status");
+        std::filesystem::create_directory("../runtime/build_status");
+        
         #ifdef _WIN32
-        int result = std::system("cd ../runtime && build.sh && run.sh");
+        log_info() << "Executing: cd ../runtime && build_wrapper.sh build_status/build_status.json" << std::endl;
+        int result = std::system("cd ../runtime && build_wrapper.sh build_status/build_status.json");
         #else
-        int result = std::system("cd ../runtime && ./build.sh && python3 debug.py --run");
+        log_info() << "Executing: cd ../runtime && ./build_wrapper.sh build_status/build_status.json" << std::endl;
+        int result = std::system("cd ../runtime && ./build_wrapper.sh build_status/build_status.json");
         #endif
-    }).detach();
+        
+        if (result != 0) {
+            log_error() << "Build command failed with exit code: " << result << std::endl;
+            std::ofstream status_file("../runtime/build_status/build_status.json");
+            if (status_file.is_open()) {
+                status_file << "{\"status\":\"failed\",\"message\":\"Build process failed with code " << result << "\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
+                status_file.close();
+            }
+            
+            try {
+                std::ifstream log_file("../runtime/build_status/build_output.log");
+                if (log_file.is_open()) {
+                    std::string line;
+                    std::vector<std::string> last_lines;
+                    while (std::getline(log_file, line)) {
+                        last_lines.push_back(line);
+                        if (last_lines.size() > 10) {
+                            last_lines.erase(last_lines.begin());
+                        }
+                    }
+                    log_file.close();
+                    
+                    log_error() << "Last " << last_lines.size() << " lines of build log:" << std::endl;
+                    for (const auto& line : last_lines) {
+                        log_error() << line << std::endl;
+                    }
+                }
+            } catch (const std::exception& e) {
+                log_error() << "Failed to read build log: " << e.what() << std::endl;
+            }
+        } else {
+            std::ofstream status_file("../runtime/build_status/build_status.json");
+            if (status_file.is_open()) {
+                status_file << "{\"status\":\"success\",\"message\":\"Build completed successfully\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
+                status_file.close();
+            }
+            
+            log_info() << "Launching engine..." << std::endl;
+            #ifdef _WIN32
+            std::system("cd ../runtime && run.sh");
+            #else
+            std::system("cd ../runtime && ./run.sh");
+            #endif
+        }
+    });
 }
 
 void EngineControls::kill_engine() {

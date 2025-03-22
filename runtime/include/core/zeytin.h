@@ -32,9 +32,11 @@ public:
     void add_variant(const entity_id& entity, rttr::variant variant);
     
     template<typename T, typename... Args>
-    void add_variant(const entity_id& entity, Args&&... args) {
+    T& add_variant(const entity_id& entity, Args&&... args) {
         T t(std::forward<Args>(args)...);
         m_storage[entity].push_back(std::move(t));
+        auto& variants  = m_storage[entity];
+        return variants[variants.size() - 1].get_value<T>();
     }
     
     template<typename T>
@@ -117,9 +119,10 @@ private:
 
     std::unordered_map<entity_id, std::vector<rttr::variant>> m_storage;
 
-    // NOTE: maybe move to somewhere else
+    // NOTE: maybe move these to somewhere else
     RenderTexture2D m_render_texture;
     Vector2 m_render_position;
+    Camera2D* m_camera = nullptr;
 
 #ifdef EDITOR_MODE
     std::unique_ptr<EditorCommunication> m_editor_communication;

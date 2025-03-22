@@ -100,6 +100,8 @@ void Zeytin::init() {
     m_is_play_mode = true; // always set to play mode true if standalone
 #endif
 
+    auto camera =add_variant<Camera2DSystem>(0);
+    m_camera = &camera.m_camera;
 }
 
 void Zeytin::run_frame() {
@@ -114,16 +116,34 @@ void Zeytin::run_frame() {
     }
 
     if(!Zeytin::get().m_synced_once) {
-        Zeytin::get().sync_editor();
-        Zeytin::get().m_synced_once = true;
+        sync_editor();
+        m_synced_once = true;
     }
 #endif
 
     BeginTextureMode(m_render_texture);
     ClearBackground(RAYWHITE);
 
-    Zeytin::get().post_init_variants();
-    Zeytin::get().update_variants();
+    if(m_camera == nullptr) {
+        for (auto& [entity_id, variants] : m_storage) {
+            for (auto& variant : get_variants(entity_id)) {
+                if (variant.get_type() == rttr::type::get<Camera2DSystem>()) {
+                    Camera2DSystem& camera_system = variant.get_value<Camera2DSystem&>();
+                    m_camera = &camera_system.m_camera;
+                    break;
+                }
+            }
+        }
+    }
+
+    if(m_camera != nullptr)
+        BeginMode2D(*m_camera);
+
+    post_init_variants();
+    update_variants();
+
+    if(m_camera != nullptr)
+        EndMode2D();
 
     if(IsKeyPressed(KEY_H)) {
         if(IsWindowMinimized()) {
@@ -141,6 +161,7 @@ void Zeytin::run_frame() {
         sync_editor();
 #endif
     }
+
 
     EndTextureMode();
 
