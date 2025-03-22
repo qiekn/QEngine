@@ -1,19 +1,18 @@
 #include <raylib.h> // IWYU pragme: keep
 #include <iostream> // IWYU pragma: keep
+
 #include "core/zeytin.h" // IWYU pragma: keep
 #include "editor/editor_communication.h" // IWYU pragma: keep
 #include "editor/editor_event.h"
+#include "remote_logger/remote_logger.h"
+
 #include "game/rttr_registration.h"
 
 int main(int argc, char* argv[]) {
 
 #if EDITOR_MODE
     EditorCommunication editor_comm;
-    Zeytin::get().generate_variants();
-    Zeytin::get().subscribe_editor_events();
-#endif
 
-#ifdef EDITOR_MODE 
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_TOPMOST |  FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_ALWAYS_RUN );
     const int windowWidth = 1280;
@@ -21,6 +20,8 @@ int main(int argc, char* argv[]) {
     InitWindow(windowWidth, windowHeight, "ZeytinEngine"); 
     SetWindowPosition(466, 172);
 
+    Zeytin::get().generate_variants();
+    Zeytin::get().subscribe_editor_events();
 #else
     const int windowWidth = 1920;
     const int windowHeight = 1080;
@@ -43,6 +44,30 @@ int main(int argc, char* argv[]) {
 #ifndef EDITOR_MODE
     Zeytin::get().deserialize_entities();
 #endif
+
+    bool found_camera = false;
+    for (const auto& [entity_id, variants] : Zeytin::get().get_storage()) {
+        for (const auto& variant : variants) {
+            if (variant.get_type() == rttr::type::get<Camera2DSystem>()) {
+                found_camera = true;
+                break;
+            }
+        }
+        if (found_camera) {
+            log_info() << "Camera system is found" << std::endl;
+            break;
+        }
+    }
+
+    if (!found_camera) {
+        entity_id camera_entity = Zeytin::get().new_entity_id();
+        VariantCreateInfo info;
+        info.entity_id = camera_entity;
+        Zeytin::get().add_variant(camera_entity, Camera2DSystem(info));
+        
+        log_warning() << "Created default camera system" << std::endl;
+    }
+
     while (!WindowShouldClose() 
             #ifdef EDITOR_MODE
              &&   !Zeytin::get().should_die()
@@ -59,13 +84,36 @@ int main(int argc, char* argv[]) {
                 continue;
             }
 #endif
+
         BeginTextureMode(target);
             ClearBackground(RAYWHITE);
-#ifdef EDITOR_MODE
+            
+            Camera2D* active_camera = nullptr;
+            for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
+                for (auto& variant : variants) {
+                    if (variant.get_type() == rttr::type::get<Camera2DSystem>()) {
+                        Camera2DSystem& camera_system = variant.get_value<Camera2DSystem&>();
+                        active_camera = &camera_system.get_camera();
+                        break;
+                    }
+                }
+                if (active_camera) break;
+            }
+            
+            if (active_camera) {
+                BeginMode2D(*active_camera);
+            }
+            
             Zeytin::get().post_init_variants();
-            Zeytin::get().update_variants(); 
+            Zeytin::get().update_variants();
+            
+            if (active_camera) {
+                EndMode2D();
+            }
+            
             DrawText("1920x1080", 20, 20, 40, BLACK);
-
+            
+        #ifdef EDITOR_MODE
             if(IsKeyPressed(KEY_H)) {
                 if(IsWindowMinimized()) {
                     SetWindowFocused();
@@ -92,14 +140,12 @@ int main(int argc, char* argv[]) {
                     Zeytin::get().sync_editor(); 
                 }
             }
-#else
-                    Zeytin::get().post_init_variants();
-                    Zeytin::get().update_variants(); 
-                    Zeytin::get().play_start_variants();
-                    Zeytin::get().play_update_variants();
-
-#endif
+        #else
+            Zeytin::get().play_start_variants();
+            Zeytin::get().play_update_variants();
+        #endif
         EndTextureMode();
+
         BeginDrawing();
             ClearBackground(BLACK);
             DrawTexturePro(

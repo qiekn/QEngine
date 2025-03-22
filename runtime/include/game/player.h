@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/variant/variant_base.h"
+#include "variant/variant_base.h"
 
 class Player : public VariantBase {
     VARIANT(Player);

@@ -1,3 +1,5 @@
+#include "game/collision.h"
+#include "game/framework/camera_system.h"
 #include "game/player.h"
 #include "game/position.h"
 #include "game/scale.h"
@@ -87,10 +89,25 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("name", &Player::name);
 
+    rttr::registration::class_<Collision>("Collision")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+
     rttr::registration::class_<Position>("Position")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Position::x)
         .property("y", &Position::y);
+
+    rttr::registration::class_<Camera2DSystem>("Camera2DSystem")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("zoom", &Camera2DSystem::zoom)
+        .property("enable_drag", &Camera2DSystem::enable_drag)
+        .property("enable_zoom", &Camera2DSystem::enable_zoom)
+        .property("zoom_increment", &Camera2DSystem::zoom_increment)
+        .property("min_zoom", &Camera2DSystem::min_zoom)
+        .property("max_zoom", &Camera2DSystem::max_zoom)
+        .property("drag_speed", &Camera2DSystem::drag_speed);
 
 }

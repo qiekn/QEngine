@@ -12,7 +12,7 @@
 #include "core/json/json.h"
 #include "core/guid/guid.h"
 #include "editor/editor_event.h"
-#include "core/variant/variant_base.h"
+#include "variant/variant_base.h"
 
 #include "remote_logger/remote_logger.h"
 
@@ -502,15 +502,11 @@ void Zeytin::generate_variants() {
             type.is_pointer() || 
             type.is_wrapper() ||
             type.get_metadata("RAYLIB")) {
-
-            log_info() << "Skipped type: " << type.get_name() << " for variant creation." << std::endl;
-
             continue;
         }
         
         try {
             generate_variant(type);
-            log_info() << "Created variant for: " << name << ".variant" << std::endl;
         } 
         catch (const std::exception& e) {
             log_error() << "Error creating variant for " << name << ": " << e.what() << std::endl;

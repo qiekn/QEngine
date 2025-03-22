@@ -1,7 +1,7 @@
 #pragma once
 
 #include "raylib.h"
-#include "core/variant/variant_base.h"
+#include "variant/variant_base.h"
 
 #include "game/position.h"
 #include "game/speed.h"

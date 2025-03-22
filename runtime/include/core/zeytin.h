@@ -1,16 +1,13 @@
 #pragma once
 
-#include <iostream>
-#include <cassert>
 #include <vector>
 #include <filesystem>
 #include <optional>
 #include <unordered_map>
-
 #include "rapidjson/document.h"
-#include "rttr/type.h"
 
-#include "core/entity.h"
+#include "rttr/variant.h"
+#include "entity/entity.h"
 
 class Zeytin {
 public:
@@ -71,6 +68,9 @@ public:
     void play_start_variants();
     void play_update_variants();
 
+    inline const std::unordered_map<entity_id, std::vector<rttr::variant>>& get_storage() const { return m_storage; }
+    inline std::unordered_map<entity_id, std::vector<rttr::variant>>& get_storage() { return m_storage; }
+
 #ifdef EDITOR_MODE
     void generate_variants();
     void generate_variant(const rttr::type& type);
@@ -107,6 +107,5 @@ private:
     bool m_is_play_mode = false;
     bool m_is_pause_play_mode = false;
     bool m_should_die = false;
-
 #endif
 };

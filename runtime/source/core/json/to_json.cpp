@@ -9,13 +9,10 @@
 #include <rapidjson/document.h>     
 #include <rttr/type.h>
 
-#include "core/entity.h"
-
-#include "core/variant/variant_base.h"
+#include "entity/entity.h"
 
 using namespace rapidjson;
 using namespace rttr;
-
 
 namespace
 {

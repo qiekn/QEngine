@@ -3,7 +3,8 @@
 #include <string>
 #include <rttr/type>
 #include <filesystem>
-#include "core/entity.h"
+
+#include "entity/entity.h"
 
 namespace zeytin
 {

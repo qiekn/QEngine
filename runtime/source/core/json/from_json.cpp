@@ -9,8 +9,8 @@
 #include <rapidjson/document.h>     
 #include <rttr/type>
 
-#include "core/entity.h"
-#include "core/variant/variant_base.h"
+#include "entity/entity.h"
+#include "variant/variant_base.h"
 
 #include "remote_logger/remote_logger.h"
 

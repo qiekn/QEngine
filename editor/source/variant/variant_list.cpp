@@ -32,7 +32,6 @@ void VariantList::load_variants() {
 
 void VariantList::load_variant(const std::filesystem::path& path) {
     std::string name = path.stem().string();
-    log_info() << "Loading: " << path << std::endl;
 
     auto it = std::find_if(m_variants.begin(), m_variants.end(),
                           [&name](const auto& variant) {
@@ -40,11 +39,9 @@ void VariantList::load_variant(const std::filesystem::path& path) {
                           });
 
     if (it != m_variants.end()) {
-        log_info() << "Already here: " << path << std::endl;
         it->set_alive();
         it->load_from_file();
     } else {
-        log_info() << "New: " << path << std::endl;
         auto& rv = m_variants.emplace_back(VariantDocument(std::move(name)));
         rv.load_from_file();
     }
@@ -53,7 +50,6 @@ void VariantList::load_variant(const std::filesystem::path& path) {
 void VariantList::start_watching() {
     m_variant_watcher.add_callback({ ".variant"}, [this](const fs::path& path, const std::string& status) {
         if(status == "modified" || status == "created") {
-            log_info() << path << " is " << status << "." << std::endl;
             load_variant(path);
         }
         else if(status == "deleted") {

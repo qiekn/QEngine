@@ -1,7 +1,6 @@
 #pragma once
 
 #include "rttr/rttr_enable.h"
-#include "core/entity.h"
 #include "core/zeytin.h"
 
 #define VARIANT(ClassName) public: ClassName() = default; ClassName(VariantCreateInfo info) : VariantBase(info) {} RTTR_ENABLE(VariantBase); private:
