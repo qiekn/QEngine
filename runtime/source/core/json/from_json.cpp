@@ -12,6 +12,8 @@
 #include "core/entity.h"
 #include "core/variant/variant_base.h"
 
+#include "remote_logger/remote_logger.h"
+
 using namespace rapidjson;
 using namespace rttr;
 
@@ -287,8 +289,24 @@ entity_id deserialize_entity(const std::filesystem::path& path, entity_id& entit
     assert(document.HasMember("variants") && document["variants"].IsArray());
     const rapidjson::Value& variant_values = document["variants"];
 
+    const auto& known_types = rttr::type::get_types();
+
     for(rapidjson::SizeType i = 0; i < variant_values.Size(); ++i) {
         const rapidjson::Value& variant = variant_values[i];
+
+        const std::string& input_type = variant["type"].GetString();
+        bool found = false;
+
+        for(const auto& type : known_types) {
+            if(type.get_name() == input_type) {
+                found = true;
+            }
+        }
+
+        if(!found) {
+            log_warning() << "Skipped not known variant type: " << input_type << std::endl;
+            continue;
+        }
 
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -313,8 +331,24 @@ entity_id deserialize_entity(const std::string& entity_json, entity_id& entity, 
     assert(document.HasMember("variants") && document["variants"].IsArray());
     const rapidjson::Value& variant_values = document["variants"];
 
+    const auto& known_types = rttr::type::get_types();
+
     for(rapidjson::SizeType i = 0; i < variant_values.Size(); ++i) {
         const rapidjson::Value& variant = variant_values[i];
+
+        const std::string& input_type = variant["type"].GetString();
+        bool found = false;
+
+        for(const auto& type : known_types) {
+            if(type.get_name() == input_type) {
+                found = true;
+            }
+        }
+
+        if(!found) {
+            log_warning() << "Skipped not known variant type: " << input_type << std::endl;
+            continue;
+        }
 
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

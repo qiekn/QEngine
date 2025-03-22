@@ -72,7 +72,7 @@ void ConsoleWindow::render(float y_position, float width, float height) {
 
         ImGui::Separator();
 
-        const float footer_height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing() + 5.0f;
+        const float footer_height = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing() + 6.0f;
         
         ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height), false, ImGuiWindowFlags_HorizontalScrollbar);
 

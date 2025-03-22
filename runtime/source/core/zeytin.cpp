@@ -413,6 +413,12 @@ void Zeytin::handle_entity_variant_added(const rapidjson::Document& msg) {
     args.push_back(info);
 
     rttr::type rttr_type = rttr::type::get_by_name(msg["variant_type"].GetString());
+    
+    if(!rttr_type.is_valid()) {
+        log_error() << "Variant type is invalid: " << rttr_type.get_name() << std::endl;
+        return;
+    }
+
     rttr::variant obj = rttr_type.create(args);
 
     variants.push_back(std::move(obj));
@@ -426,6 +432,11 @@ void Zeytin::handle_entity_variant_removed(const rapidjson::Document& msg) {
     entity_id entity_id = msg["entity_id"].GetUint64();
     auto& variants = m_storage[entity_id];
     rttr::type rttr_type = rttr::type::get_by_name(msg["variant_type"].GetString());
+
+    if(!rttr_type.is_valid()) {
+        log_error() << "Variant type is invalid: " << rttr_type.get_name() << std::endl;
+        return;
+    }
 
     remove_variant(entity_id, rttr_type);
 }
@@ -467,7 +478,7 @@ void Zeytin::exit_play_mode() {
         scene_file.close();
         log_info() << "Loading: " << scene << std::endl;
         deserialize_scene(scene);
-        //std::filesystem::remove_all("temp");
+        std::filesystem::remove_all("temp");
     }
     else {
         log_error() << "Cannot exit playmode because scene backup is not found" << std::endl;
@@ -481,6 +492,8 @@ void Zeytin::sync_editor() {
 }
 
 void Zeytin::generate_variants() {
+    std::filesystem::remove_all("../shared/variants");
+
     for (const auto& type : rttr::type::get_types()) {
         const auto& name = type.get_name().to_string();
 
@@ -497,7 +510,7 @@ void Zeytin::generate_variants() {
         
         try {
             generate_variant(type);
-             log_info() << "Created variant for: " << name << ".variant" << std::endl;
+            log_info() << "Created variant for: " << name << ".variant" << std::endl;
         } 
         catch (const std::exception& e) {
             log_error() << "Error creating variant for " << name << ": " << e.what() << std::endl;

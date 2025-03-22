@@ -1,3 +1,4 @@
+#include "game/game.h"
 #include "game/player.h"
 #include "game/position.h"
 #include "game/scale.h"
@@ -81,6 +82,11 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Scale::x)
         .property("y", &Scale::y);
+
+    rttr::registration::class_<ZCamera>("ZCamera")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("ray_cam", &ZCamera::ray_cam);
 
     rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)
