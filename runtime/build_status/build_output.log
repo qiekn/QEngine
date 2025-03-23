@@ -2,7 +2,8 @@ Generated RTTR registration code for 7 classes.
 Output written to include/game/rttr_registration.h
 Building configurations...
 Running action 'gmake'...
-Done (29ms).
+Done (19ms).
 ==== Building Zeytin (editor_mode) ====
 zeytin.cpp
+player.cpp
 Linking Zeytin

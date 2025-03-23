@@ -15,6 +15,7 @@ public:
     float max_zoom = 10.0f; PROPERTY()
     float drag_speed = 1.0f; PROPERTY()
 
+    void on_init() override;
     void on_update() override;
     
     Vector2 screen_to_world(Vector2 screen_pos) const;
