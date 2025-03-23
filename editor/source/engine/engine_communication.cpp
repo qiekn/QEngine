@@ -120,6 +120,10 @@ void EngineCommunication::raise_events() {
     while (!messages.empty()) {
         const std::string& msg = messages.front();
 
+        if(msg.empty()) {
+            continue;
+        }
+
         rapidjson::Document doc;
         doc.Parse(msg.c_str());
 
@@ -145,6 +149,10 @@ void EngineCommunication::raise_events() {
         }
 
         const std::string type = doc["type"].GetString();
+
+        if(type.empty()) {
+            continue;
+        }
 
         if (type == "scene") {
             EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);

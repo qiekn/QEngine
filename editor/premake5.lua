@@ -41,11 +41,12 @@ workspace "ZeytinEditor"
     project "ZeytinEditor"
         kind "ConsoleApp"
         language "C++"
-        symbols "on"
+        symbols "On"
+        optimize "Off"  
 
         files { "source/**.cpp" }
 
         filter "configurations:Debug"
             defines {"DEBUG=1"}
             symbols "On"
-
+            optimize "Off"  

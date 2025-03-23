@@ -363,37 +363,51 @@ void Hierarchy::render_variant(rapidjson::Document& document, rapidjson::Value& 
 void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& object,
                              uint64_t entity_id, const std::string& variant_type,
                              const std::string& parent_path) {
+    if (!object.IsObject()) {
+        log_warning() << "Expected JSON object but received different type" << std::endl;
+        return;
+    }
+
     static std::map<std::string, bool> editingField;
     ImGui::Indent(5);
 
-    for (auto& member : object.GetObject()) {
-        std::string key = member.name.GetString();
-        rapidjson::Value& value = member.value;
+    for (rapidjson::Value::MemberIterator it = object.MemberBegin(); it != object.MemberEnd(); ++it) {
+        if (!it->name.IsString()) {
+            continue;
+        }
+
+        std::string key = it->name.GetString();
+        rapidjson::Value& value = it->value;
 
         std::string current_path = parent_path.empty() ? key : parent_path + "." + key;
-        std::string uniqueId = std::to_string(entity_id) + "_" + variant_type + "_" + current_path;
+
+        std::string safe_variant_type = variant_type.empty() ? "unknown_type" : variant_type;
+        std::string uniqueId = std::to_string(entity_id) + "_" + safe_variant_type + "_" + current_path;
 
         ImGui::PushID(key.c_str());
 
         if (value.IsInt()) {
-            render_int_field(document, value, entity_id, variant_type, key, current_path, uniqueId, editingField);
+            render_int_field(document, value, entity_id, safe_variant_type, key, current_path, uniqueId, editingField);
         }
         else if (value.IsFloat()) {
-            render_float_field(document, value, entity_id, variant_type, key, current_path, uniqueId, editingField);
+            render_float_field(document, value, entity_id, safe_variant_type, key, current_path, uniqueId, editingField);
         }
         else if (value.IsBool()) {
-            render_bool_field(value, entity_id, variant_type, key, current_path);
+            render_bool_field(value, entity_id, safe_variant_type, key, current_path);
         }
         else if (value.IsString()) {
-            render_string_field(document, value, entity_id, variant_type, key, current_path, uniqueId, editingField);
+            render_string_field(document, value, entity_id, safe_variant_type, key, current_path, uniqueId, editingField);
         }
         else if (value.IsArray()) {
-            render_array_field(document, value, entity_id, variant_type, key, current_path, editingField);
+            render_array_field(document, value, entity_id, safe_variant_type, key, current_path, editingField);
         }
         else if (value.IsObject()) {
             if (ImGui::CollapsingHeader(key.c_str())) {
-                render_object(document, value, entity_id, variant_type, current_path);
+                render_object(document, value, entity_id, safe_variant_type, current_path);
             }
+        }
+        else {
+            ImGui::Text("%s: [Unsupported JSON type]", key.c_str());
         }
 
         ImGui::PopID();

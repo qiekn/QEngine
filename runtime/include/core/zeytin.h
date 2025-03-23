@@ -13,6 +13,7 @@
 #include "entity/entity.h"
 #include "editor/editor_communication.h"
 
+
 #define get_zeytin() Zeytin::get()
 
 class Zeytin {
@@ -25,7 +26,6 @@ public:
     }
 
     void init();
-    Camera2D* get_camera();
     void run_frame();
     inline bool should_die() const { return m_should_die || WindowShouldClose(); }
 
@@ -81,6 +81,7 @@ public:
     void play_start_variants();
     void play_update_variants();
 
+    inline Camera2D& get_camera() { return m_camera; }
     inline const std::unordered_map<entity_id, std::vector<rttr::variant>>& get_storage() const { return m_storage; }
     inline std::unordered_map<entity_id, std::vector<rttr::variant>>& get_storage() { return m_storage; }
 
@@ -110,6 +111,9 @@ private:
     Zeytin() = default;
     ~Zeytin() = default;
     
+    void initialize_camera();
+    void update_camera();
+    
     bool m_post_inited = false;
     bool m_started = false;
     bool m_should_die = false;
@@ -123,7 +127,7 @@ private:
     // NOTE: maybe move these to somewhere else
     RenderTexture2D m_render_texture;
     Vector2 m_render_position;
-    Camera2D* m_camera = nullptr;
+    Camera2D m_camera;
 
 #ifdef EDITOR_MODE
     std::unique_ptr<EditorCommunication> m_editor_communication;

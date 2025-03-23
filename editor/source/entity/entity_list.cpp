@@ -37,7 +37,6 @@ void EntityList::register_event_handlers() {
         [this](const rapidjson::Document& document) {
             if(should_sync_runtime()) {
                 sync_entities_from_document(document);
-                log_info() << "Syncing scene: " << std::endl;
                 if(!m_is_synced_once) {
                     m_is_synced_once = true;
                     log_info() << "Initial sync with runtime" << std::endl;

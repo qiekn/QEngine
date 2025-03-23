@@ -99,23 +99,11 @@ void Zeytin::init() {
     deserialize_entities(); // TODO: this should be named as load_scene and be uniform with editor_mode scene loading
     m_is_play_mode = true; // always set to play mode true if standalone
 #endif
-}
 
-Camera2D* Zeytin::get_camera() {
-    if(m_camera != nullptr) return m_camera;
-
-    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
-        for (auto& variant : variants) {
-            if (variant.get_type() == rttr::type::get<Camera2DSystem>()) {
-                Camera2DSystem& camera_system = variant.get_value<Camera2DSystem&>();
-                m_camera = &camera_system.get_camera();
-                break;
-            }
-        }
-        if (m_camera) break;
-    }
-
-    return m_camera;
+    m_camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+    m_camera.target = {0, 0};
+    m_camera.rotation = 0.0f;
+    m_camera.zoom = 1.0f;
 }
 
 void Zeytin::run_frame() {
@@ -138,7 +126,7 @@ void Zeytin::run_frame() {
     BeginTextureMode(m_render_texture);
     ClearBackground(RAYWHITE);
 
-    BeginMode2D(*get_camera());
+    BeginMode2D(m_camera);
 
     post_init_variants();
     update_variants();
