@@ -31,23 +31,6 @@ struct VariantBase {
     uint64_t get_id() { return entity_id; }
     const uint64_t get_id() const { return entity_id; }
 
-    template<typename T>
-    T& get_variant_or_default() {
-        T default_instance{};
-        auto variant_ref = Zeytin::get().try_get_variant<T>(entity_id);
-        return variant_ref.has_value() ? variant_ref.value().get() : default_instance;
-    }
-
-    template<typename T>
-    VariantRef<T> get_variant() {
-        return Zeytin::get().try_get_variant<T>(entity_id);
-    }
-
-    template<typename T>
-    VariantRef<T> entity_get_variant(entity_id id) {
-        return Zeytin::get().try_get_variant<T>(id);
-    }
-
     entity_id entity_id;
     bool is_dead = false;
 

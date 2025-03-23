@@ -4,7 +4,7 @@
         {
             "type": "Camera2DSystem",
             "value": {
-                "zoom": 1.0,
+                "zoom": 0.10000000149011612,
                 "enable_drag": true,
                 "enable_zoom": true,
                 "zoom_increment": 0.10000000149011612,

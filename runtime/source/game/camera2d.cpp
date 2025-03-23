@@ -1,5 +1,4 @@
 #include "game/camera2d.h"
-#include "core/zeytin.h"
 
 void Camera2DSystem::on_init() {
     auto& camera = get_zeytin().get_camera();

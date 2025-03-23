@@ -12,10 +12,9 @@ void Player::on_play_update() {
 void Player::move() {
     auto components = Query::get_components<Position, Speed>(this);
     if (components) {
-        auto& [pos, spd] = *components;
-        auto& position = pos.get();
-        auto& speed = spd.get();
-
+        auto& [position_ref, speed_ref] = *components;
+        auto& position = position_ref.get();
+        auto& speed = speed_ref.get();
 
         if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) {
             position.y -= speed.value;

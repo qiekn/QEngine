@@ -2,6 +2,7 @@
 #include "game/scale.h"
 
 #include "raylib.h"
+#include "core/query.h"
 
 void Sprite::on_init() {
     if(!path_to_sprite.empty()) {
@@ -13,8 +14,12 @@ void Sprite::on_init() {
 void Sprite::on_update() {
     if(!m_texture_loaded) return;
 
-    auto& position = get_variant_or_default<Position>(); 
-    auto& scale = get_variant_or_default<Scale>(); 
+    auto components = Query::get_components<Position, Scale>(this);
+    if(!components) return;
+
+    auto& [position_ref, scale_ref]  = *components;
+    auto& position = position_ref.get();
+    auto& scale = scale_ref.get();
 
     float width = texture.width * scale.x;
     float height = texture.height * scale.y;

@@ -180,19 +180,6 @@ std::vector<rttr::variant>& Zeytin::get_variants(const entity_id& entity) {
     return m_storage[entity];
 }
 
-void Zeytin::add_variant(const entity_id& entity, rttr::variant variant) {
-    m_storage[entity].push_back(std::move(variant));
-}
-
-void Zeytin::remove_variant(entity_id id, const rttr::type& type) {
-    for(auto& variant : get_variants(id)) {
-        if(variant.get_type() == type) {
-            VariantBase& base = variant.get_value<VariantBase&>();
-            base.is_dead = true;
-        }
-    }
-}
-
 void Zeytin::clean_dead_variants() {
     for(auto& [entity_id, variants] : m_storage) {
         variants.erase(
@@ -547,6 +534,20 @@ void Zeytin::handle_entity_variant_removed(const rapidjson::Document& msg) {
 
     remove_variant(entity_id, rttr_type);
 }
+
+void Zeytin::remove_variant(entity_id id, const rttr::type& type) {
+    for(auto& variant : get_variants(id)) {
+        if(variant.get_type() == type) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            base.is_dead = true;
+        }
+    }
+}
+
+void Zeytin::remove_entity(entity_id id) {
+    m_storage[id].clear();
+}
+
 
 void Zeytin::handle_entity_removed(const rapidjson::Document& msg) {
     assert(!msg.HasParseError());

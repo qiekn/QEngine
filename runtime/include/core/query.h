@@ -323,20 +323,6 @@ void remove_variant_from(const VariantBase* base) {
     get_zeytin().remove_variant(base->entity_id, rttr::type::get<T>());
 }
 
-template<typename T, typename... Args>
-T& add_variant_to(entity_id id, Args&&... args) {
-    return get_zeytin().add_variant<T>(id, std::forward<Args>(args)...);
-}
 
-template<typename T, typename... Args>
-T& add_variant_to(const VariantBase* base, Args&&... args) {
-    return get_zeytin().add_variant<T>(base->entity_id, std::forward<Args>(args)...);
-}
-
-template<typename T, typename... Args>
-T& create_entity_with(Args&&... args) {
-    entity_id id = get_zeytin().new_entity_id();
-    return get_zeytin().add_variant<T>(id, std::forward<Args>(args)...);
-}
 
 } 

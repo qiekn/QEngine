@@ -13,7 +13,6 @@
 #include "entity/entity.h"
 #include "editor/editor_communication.h"
 
-
 #define get_zeytin() Zeytin::get()
 
 class Zeytin {
@@ -30,39 +29,9 @@ public:
     inline bool should_die() const { return m_should_die || WindowShouldClose(); }
 
     entity_id new_entity_id();
-    void add_variant(const entity_id& entity, rttr::variant variant);
     
-    template<typename T, typename... Args>
-    T& add_variant(const entity_id& entity, Args&&... args) {
-        T t(std::forward<Args>(args)...);
-        m_storage[entity].push_back(std::move(t));
-        auto& variants  = m_storage[entity];
-        return variants[variants.size() - 1].get_value<T>();
-    }
-    
-    template<typename T>
-    std::optional<std::reference_wrapper<T>> try_get_variant(const entity_id entity_id) {
-        const rttr::type& rttr_type = rttr::type::get<T>();
-        auto entity_it = m_storage.find(entity_id);
-        if (entity_it == m_storage.end()) {
-            return std::nullopt;
-        }
-        
-        auto& variants = entity_it->second;
-        for (auto& variant : variants) {
-            if (variant.get_type() == rttr_type) {
-                return std::reference_wrapper<T>(variant.get_value<T>());
-            }
-        }
-        
-        return std::nullopt;
-    }
-
     void remove_variant(entity_id id, const rttr::type& type);
-
-    void remove_entity(entity_id id) {
-        get_variants(id).clear();
-    }
+    void remove_entity(entity_id id);
     
     void clean_dead_variants();
     std::vector<rttr::variant>& get_variants(const entity_id& entity);
