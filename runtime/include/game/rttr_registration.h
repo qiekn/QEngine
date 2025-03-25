@@ -1,3 +1,4 @@
+#include "game/ball.h"
 #include "game/camera2d.h"
 #include "game/collider.h"
 #include "game/paddle.h"
@@ -103,6 +104,10 @@ RTTR_REGISTRATION
         .property("min_zoom", &Camera2DSystem::min_zoom)
         .property("max_zoom", &Camera2DSystem::max_zoom)
         .property("drag_speed", &Camera2DSystem::drag_speed);
+
+    rttr::registration::class_<Ball>("Ball")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 
     rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)

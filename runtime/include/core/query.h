@@ -13,15 +13,14 @@
 namespace Query {
 
 template<typename T>
-std::optional<T&> find_first() {
+std::optional<std::reference_wrapper<T>> find_first() {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     const rttr::type& type = rttr::type::get<T>();
     
     for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
         for (auto& variant : variants) {
             if (variant.get_type() == type) {
-                T& component = variant.get_value<T&>();
-                return component;
+                return std::ref(variant.get_value<T&>());
             }
         }
     }

@@ -19,8 +19,11 @@ public:
     void on_update() override;
     bool intersects(const Collider& other) const;
 
+    Rectangle get_rectangle() const;
+
+    Vector2 get_circle_center() const;
+    inline float get_radius() const { return m_radius; }
+
 private:
     void debug_draw();
-    Rectangle get_rectangle() const;
-    Vector2 get_circle_center() const;
 };

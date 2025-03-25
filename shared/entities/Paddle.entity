@@ -15,6 +15,17 @@
                 "x": 0.0,
                 "y": 0.0
             }
+        },
+        {
+            "type": "Collider",
+            "value": {
+                "m_collider_type": 1,
+                "m_is_trigger": false,
+                "m_width": 100.0,
+                "m_height": 20.0,
+                "m_radius": 0.0,
+                "m_draw_debug": false
+            }
         }
     ]
 }

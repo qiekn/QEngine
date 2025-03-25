@@ -1,0 +1,40 @@
+{
+    "entity_id": 6085105188533341686,
+    "variants": [
+        {
+            "type": "Ball",
+            "value": {}
+        },
+        {
+            "type": "Collider",
+            "value": {
+                "m_collider_type": 2,
+                "m_is_trigger": false,
+                "m_width": 0.0,
+                "m_height": 0.0,
+                "m_radius": 20.0,
+                "m_draw_debug": false
+            }
+        },
+        {
+            "type": "Position",
+            "value": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        },
+        {
+            "type": "Speed",
+            "value": {
+                "value": 400.0
+            }
+        },
+        {
+            "type": "Velocity",
+            "value": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        }
+    ]
+}

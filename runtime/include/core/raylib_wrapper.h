@@ -100,3 +100,5 @@ inline const char* get_file_name(const char* filePath) { return GetFileName(file
 inline Color color_alpha(Color c, float alpha) { return ColorAlpha(c, alpha); }
 inline Color color_tint(Color color, Color tint) { return ColorTint(color, tint); }
 inline Color color_fade(Color color, float alpha) { return Fade(color, alpha); }
+
+inline float get_random_value(int min, int max) { return GetRandomValue(min, max); }

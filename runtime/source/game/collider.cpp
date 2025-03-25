@@ -3,8 +3,6 @@
 #include "core/query.h"
 #include "raymath.h"
 
-#include "remote_logger/remote_logger.h"
-
 enum class ColliderType : int {
     None = 0,
     Rectangle = 1,
@@ -18,7 +16,6 @@ void Collider::on_update() {
         if(collider.entity_id == entity_id) return; // this collider
 
         if(collider.intersects(*this)) {
-            log_info() << "Collision" << std::endl;
         }
     });
 }

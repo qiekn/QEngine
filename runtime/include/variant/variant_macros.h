@@ -37,13 +37,14 @@ bool has_component(entity_id id) {
     } \
     template<typename T, typename... Rest> \
     bool _check_dependencies() const { \
+        bool not_found = false; \
         if (!has_component<T>(this->entity_id)) { \
             log_error() << rttr::type::get<T>().get_name() << " variant is required by " << this->get_variant_name() \
                         << " variant but not found on entity id: " << entity_id; \
-            return false; \
+            not_found = true; \
         } \
         if constexpr (sizeof...(Rest) > 0) { \
             return _check_dependencies<Rest...>(); \
         } \
-        return true; \
+        return not_found; \
 }
