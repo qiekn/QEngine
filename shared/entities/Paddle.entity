@@ -1,0 +1,20 @@
+{
+    "entity_id": 12344827143988247836,
+    "variants": [
+        {
+            "type": "Paddle",
+            "value": {
+                "width": 100.0,
+                "height": 20.0,
+                "speed": 400.0
+            }
+        },
+        {
+            "type": "Position",
+            "value": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        }
+    ]
+}

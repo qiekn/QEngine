@@ -1,13 +1,7 @@
 #pragma once
 
 #include "rttr/rttr_enable.h"
-#include "core/zeytin.h"
-
-#define VARIANT(ClassName) public: ClassName() = default; ClassName(VariantCreateInfo info) : VariantBase(info) {} RTTR_ENABLE(VariantBase); private:
-#define PROPERTY() 
-
-#define SET_CALLBACK(property_name) \
-    void on_##property_name##_set();
+#include "variant/variant_macros.h"
 
 template<typename T>
 using VariantRef = std::optional<std::reference_wrapper<T>>;
@@ -28,11 +22,14 @@ struct VariantBase {
     virtual void on_play_start() {}
     virtual void on_play_update() {}
 
+    virtual bool check_dependencies() const { return true; }
+
     uint64_t get_id() { return entity_id; }
     const uint64_t get_id() const { return entity_id; }
 
     entity_id entity_id;
     bool is_dead = false;
+    bool post_inited = false;
 
     RTTR_ENABLE();
 };

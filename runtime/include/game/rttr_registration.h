@@ -1,6 +1,6 @@
-#include "game/ball.h"
 #include "game/camera2d.h"
 #include "game/collider.h"
+#include "game/paddle.h"
 #include "game/player.h"
 #include "game/position.h"
 #include "game/scale.h"
@@ -75,6 +75,13 @@ RTTR_REGISTRATION
 
         .method("on_path_to_sprite_set", &Sprite::on_path_to_sprite_set);
 
+    rttr::registration::class_<Paddle>("Paddle")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("width", &Paddle::width)
+        .property("height", &Paddle::height)
+        .property("speed", &Paddle::speed);
+
     rttr::registration::class_<Speed>("Speed")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
@@ -96,12 +103,6 @@ RTTR_REGISTRATION
         .property("min_zoom", &Camera2DSystem::min_zoom)
         .property("max_zoom", &Camera2DSystem::max_zoom)
         .property("drag_speed", &Camera2DSystem::drag_speed);
-
-    rttr::registration::class_<Ball>("Ball")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("radius", &Ball::radius)
-        .property("active", &Ball::active);
 
     rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)

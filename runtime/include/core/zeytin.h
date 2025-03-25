@@ -1,6 +1,6 @@
 #pragma once
 
-#include "raylib.h"
+#include "core/raylib_wrapper.h"
 
 #include <vector>
 #include <filesystem>
@@ -83,7 +83,6 @@ private:
     void initialize_camera();
     void update_camera();
     
-    bool m_post_inited = false;
     bool m_started = false;
     bool m_should_die = false;
 

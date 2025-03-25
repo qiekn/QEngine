@@ -33,7 +33,6 @@ void EngineCommunication::register_event_handlers() {
     EngineEventBus::get().subscribe<const std::string&>(
         EngineEvent::EntityModifiedEditor, 
         [this](const std::string& msg) {
-            log_info() << msg << std::endl;
             send_message(msg);
         }
     );

@@ -322,13 +322,14 @@ void Zeytin::deserialize_entities() {
 }
 
 void Zeytin::post_init_variants() {
-    if(m_post_inited) return;
-    m_post_inited = true;
-
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
-            if (!base.is_dead) {
+            if (!base.is_dead && !base.post_inited) {
+                base.post_inited = true;
+#ifdef EDITOR_MODE
+                base.check_dependencies();
+#endif
                 base.on_post_init();
             }
         }
@@ -351,6 +352,9 @@ void Zeytin::play_update_variants() {
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if (!base.is_dead) {
+#ifdef EDITOR_MODE
+                base.check_dependencies();
+#endif
                 base.on_play_update();
             }
         }
@@ -575,7 +579,6 @@ void Zeytin::enter_play_mode(bool is_paused) {
 
 void Zeytin::exit_play_mode() {
     m_storage.clear();
-    m_post_inited = false;
     m_started = false;
     m_is_play_mode = false;
 
@@ -584,7 +587,6 @@ void Zeytin::exit_play_mode() {
         std::string scene((std::istreambuf_iterator<char>(scene_file)),
                          std::istreambuf_iterator<char>());
         scene_file.close();
-        log_info() << "Loading: " << scene << std::endl;
         deserialize_scene(scene);
         std::filesystem::remove_all("temp");
     }

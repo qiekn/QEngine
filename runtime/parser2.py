@@ -13,13 +13,14 @@ def parse_header(file_path):
     cleaned_lines = []
     
     for line in lines:
-        # Remove single-line comments
         comment_pos = line.find('//')
         if comment_pos >= 0:
             line = line[:comment_pos]
         cleaned_lines.append(line)
     
     content = '\n'.join(cleaned_lines)
+    
+    content = re.sub(r'enum\s+class\s+\w+\s*{[^}]*}', '', content, flags=re.DOTALL)
     
     variant_match = re.search(r'VARIANT\((\w+)\)', content)
     if not variant_match:
