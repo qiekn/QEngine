@@ -602,7 +602,12 @@ void Zeytin::sync_editor() {
 }
 
 void Zeytin::generate_variants() {
-    std::filesystem::remove_all("../shared/variants");
+    for(const auto& entry : std::filesystem::directory_iterator("../shared/variants")) {
+        if(entry.is_regular_file() && entry.path().extension() == ".variant") {
+            std::filesystem::remove(entry.path());
+        }
+    }
+
     auto all_types = rttr::type::get_types();
 
     std::vector<rttr::type> valid_types;

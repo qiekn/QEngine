@@ -47,6 +47,7 @@ private:
                            std::map<std::string, bool>& editingField);
     
     void add_variant_to_entity(EntityDocument& entity_document, VariantDocument& variant_document);
+    void add_required_variants_to_entity(EntityDocument& entity_document, const std::string& variant_type);
     void save_all_entities();
     void subscribe_events();
 

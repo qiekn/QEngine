@@ -1,6 +1,7 @@
 import os
 import re
 import glob
+import json
 from pathlib import Path
 
 def parse_header(file_path):
@@ -39,6 +40,13 @@ def parse_header(file_path):
     if variant_class_name != class_name:
         return None
     
+    required_variants = []
+    requires_pattern = r'REQUIRES\s*\(\s*(.*?)\s*\)'
+    requires_match = re.search(requires_pattern, content)
+    if requires_match:
+        requirements = requires_match.group(1)
+        required_variants = [var.strip() for var in requirements.split(',')]
+    
     properties = []
     property_pattern = r'(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)(?:\s*=\s*[^;]*)?;\s*PROPERTY\(\)(?:\s+SET_CALLBACK\((\w+)\))?'
     
@@ -59,7 +67,8 @@ def parse_header(file_path):
     return {
         'class_name': class_name,
         'base_class': base_class,
-        'properties': properties
+        'properties': properties,
+        'required_variants': required_variants
     }
 
 def generate_raylib_registrations():
@@ -152,6 +161,21 @@ def generate_rttr_registration(classes_info):
     
     return registration_code
 
+def generate_requires_files(classes_info, output_dir):
+    for class_info in classes_info:
+        if class_info['required_variants']:
+            class_name = class_info['class_name']
+            requires_file_path = os.path.join(output_dir, f"{class_name}.requires")
+            
+            requires_data = {
+                "requires": class_info['required_variants']
+            }
+            
+            with open(requires_file_path, 'w') as f:
+                json.dump(requires_data, f, indent=4)
+            
+            print(f"Generated requirements file: {requires_file_path}")
+
 def main(headers_dir="."):
     headers_dir = os.path.normpath(headers_dir).replace('\\', '/')
     
@@ -184,6 +208,13 @@ def main(headers_dir="."):
     
     print(f"Generated RTTR registration code for {len(classes_info)} classes.")
     print(f"Output written to {output_path}")
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    requires_dir = os.path.normpath(os.path.join(script_dir, "../shared/variants/requires"))
+    
+    os.makedirs(requires_dir, exist_ok=True)
+    generate_requires_files(classes_info, requires_dir)
+    print(f"Requirements files written to {requires_dir}")
 
 if __name__ == "__main__":
     import sys

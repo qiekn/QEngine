@@ -3,6 +3,7 @@
 #include <random>
 #include <algorithm>
 #include <map>
+#include <fstream>
 
 #include "imgui.h"
 #include "rapidjson/document.h"
@@ -568,6 +569,81 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
         rapidjson::Value copied_variant(variant_doc, entity_doc.GetAllocator());
         entity_variants.PushBack(copied_variant, entity_doc.GetAllocator());
         notify_engine_entity_variant_added(entity_id, type);
+        add_required_variants_to_entity(entity_document, type);
+    }
+}
+
+void Hierarchy::add_required_variants_to_entity(EntityDocument& entity_document, const std::string& variant_type) {
+    std::string requires_path = std::string(VARIANT_FOLDER) + "/requires/" + variant_type + ".requires";
+
+    if (!std::filesystem::exists(requires_path)) {
+        return;
+    }
+
+    log_info() << "Found requirements file for " << variant_type << std::endl;
+
+    try {
+        std::ifstream requires_file(requires_path);
+        if (!requires_file.is_open()) {
+            log_error() << "Failed to open requires file: " << requires_path << std::endl;
+            return;
+        }
+
+        std::string json_str((std::istreambuf_iterator<char>(requires_file)), std::istreambuf_iterator<char>());
+        requires_file.close();
+
+        rapidjson::Document requires_doc;
+        requires_doc.Parse(json_str.c_str());
+
+        if (requires_doc.HasParseError()) {
+            log_error() << "Error parsing requires file: " << requires_path << std::endl;
+            return;
+        }
+
+        if (!requires_doc.HasMember("requires") || !requires_doc["requires"].IsArray()) {
+            log_error() << "Invalid requires file format: " << requires_path << std::endl;
+            return;
+        }
+
+        const auto& required_variants = requires_doc["requires"].GetArray();
+        for (rapidjson::SizeType i = 0; i < required_variants.Size(); i++) {
+            if (!required_variants[i].IsString()) {
+                continue;
+            }
+
+            std::string required_type = required_variants[i].GetString();
+
+            bool variant_already_exists = false;
+            for (const auto& variant : entity_document.get_document()["variants"].GetArray()) {
+                if (std::string(variant["type"].GetString()) == required_type) {
+                    variant_already_exists = true;
+                    break;
+                }
+            }
+
+            if (variant_already_exists) {
+                log_info() << "Required variant " << required_type << " already exists on entity" << std::endl;
+                continue;
+            }
+
+            bool variant_found = false;
+            for (auto& variant : m_variants) {
+                if (variant.is_dead()) continue;
+
+                if (variant.get_name() == required_type) {
+                    log_info() << "Adding required variant " << required_type << " to entity" << std::endl;
+                    add_variant_to_entity(entity_document, variant);
+                    variant_found = true;
+                    break;
+                }
+            }
+
+            if (!variant_found) {
+                log_warning() << "Required variant " << required_type << " was not found in variant list" << std::endl;
+            }
+        }
+    } catch (const std::exception& e) {
+        log_error() << "Exception processing requires file: " << e.what() << std::endl;
     }
 }
 

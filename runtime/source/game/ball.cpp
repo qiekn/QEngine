@@ -80,8 +80,8 @@ void Ball::reset_position(float x, float y) {
 }
 
 void Ball::handle_collisions() {
-    //handle_paddle_collision();
-    //handle_brick_collision();
+    handle_paddle_collision();
+    handle_brick_collision();
 }
 
 void Ball::handle_paddle_collision() {
