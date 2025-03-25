@@ -1,0 +1,7 @@
+{
+    "type": "Ball",
+    "value": {
+        "radius": 10.0,
+        "active": true
+    }
+}

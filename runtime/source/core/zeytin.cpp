@@ -146,7 +146,7 @@ void Zeytin::run_frame() {
         play_start_variants();
         play_update_variants();
 #ifdef EDITOR_MODE
-        sync_editor();
+        //sync_editor();
 #endif
     }
 

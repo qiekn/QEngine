@@ -1,12 +1,6 @@
 {
-    "entity_id": 8974132248845796088,
+    "entity_id": 7651305614685938872,
     "variants": [
-        {
-            "type": "Player",
-            "value": {
-                "name": ""
-            }
-        },
         {
             "type": "Scale",
             "value": {
@@ -17,8 +11,8 @@
         {
             "type": "Position",
             "value": {
-                "x": 0.0,
-                "y": 0.0
+                "x": 1000.0,
+                "y": 1000.0
             }
         },
         {
@@ -30,7 +24,18 @@
         {
             "type": "Speed",
             "value": {
-                "value": 10.0
+                "value": 0.0
+            }
+        },
+        {
+            "type": "Collider",
+            "value": {
+                "m_collider_type": 2,
+                "m_is_trigger": false,
+                "m_width": 1200.0,
+                "m_height": 1200.0,
+                "m_radius": 600.0,
+                "m_draw_debug": true
             }
         }
     ]

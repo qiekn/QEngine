@@ -1,10 +1,12 @@
+#include "game/ball.h"
 #include "game/camera2d.h"
-#include "game/collision.h"
+#include "game/collider.h"
 #include "game/player.h"
 #include "game/position.h"
 #include "game/scale.h"
 #include "game/speed.h"
 #include "game/sprite.h"
+#include "game/velocity.h"
 #include "raylib.h"
 #include "rttr/registration.h"
 
@@ -95,19 +97,37 @@ RTTR_REGISTRATION
         .property("max_zoom", &Camera2DSystem::max_zoom)
         .property("drag_speed", &Camera2DSystem::drag_speed);
 
+    rttr::registration::class_<Ball>("Ball")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("radius", &Ball::radius)
+        .property("active", &Ball::active);
+
     rttr::registration::class_<Player>("Player")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("name", &Player::name);
 
-    rttr::registration::class_<Collision>("Collision")
+    rttr::registration::class_<Velocity>("Velocity")
         .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("x", &Velocity::x)
+        .property("y", &Velocity::y);
 
     rttr::registration::class_<Position>("Position")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Position::x)
         .property("y", &Position::y);
+
+    rttr::registration::class_<Collider>("Collider")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("m_collider_type", &Collider::m_collider_type)
+        .property("m_is_trigger", &Collider::m_is_trigger)
+        .property("m_width", &Collider::m_width)
+        .property("m_height", &Collider::m_height)
+        .property("m_radius", &Collider::m_radius)
+        .property("m_draw_debug", &Collider::m_draw_debug);
 
 }
