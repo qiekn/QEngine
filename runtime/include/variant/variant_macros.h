@@ -47,4 +47,10 @@ bool has_component(entity_id id) {
             return _check_dependencies<Rest...>(); \
         } \
         return not_found; \
-}
+    } \
+
+
+#define acquire(Type, VarName) \
+    auto _##VarName##_ref = get_component<Type>(this->entity_id); \
+    if (!_##VarName##_ref) return; \
+    auto& VarName = _##VarName##_ref->get()

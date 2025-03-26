@@ -33,3 +33,4 @@ struct VariantBase {
 
     RTTR_ENABLE();
 };
+

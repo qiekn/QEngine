@@ -13,11 +13,9 @@ void Ball::on_init() {
 }
 
 void Ball::on_update() {
-    auto collider_ref = Query::get_component<Collider>(this);
-    if(collider_ref) {
-        const auto& circular_collider = collider_ref->get();
-        draw_circle_v(circular_collider.get_circle_center(), circular_collider.get_radius(), GREEN);
-    }
+    acquire(Collider, collider);
+
+    draw_circle_v(collider.get_circle_center(), collider.get_radius(), GREEN);
 }
 
 void Ball::on_play_update() {
