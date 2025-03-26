@@ -5,8 +5,9 @@ Generated requirements file: /home/redgrain/Dev/Zeytin/shared/variants/requires/
 Requirements files written to /home/redgrain/Dev/Zeytin/shared/variants/requires
 Building configurations...
 Running action 'gmake'...
-Done (23ms).
+Done (20ms).
 ==== Building Zeytin (editor_mode) ====
+application.cpp
 from_json.cpp
 zeytin.cpp
 ball.cpp

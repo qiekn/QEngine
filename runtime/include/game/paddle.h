@@ -1,11 +1,13 @@
 #pragma once
 
 #include "variant/variant_base.h"
+
 #include "game/position.h"
+#include "game/collider.h"
 
 class Paddle : public VariantBase {
     VARIANT(Paddle);
-    REQUIRES(Position);
+    REQUIRES(Position, Collider);
 
 public:
     float width = 100.0f; PROPERTY()

@@ -2,6 +2,7 @@
 
 #include "rttr/rttr_enable.h"
 #include "variant/variant_macros.h"
+#include <functional>
 
 template<typename T>
 using VariantRef = std::optional<std::reference_wrapper<T>>;
@@ -22,7 +23,7 @@ struct VariantBase {
     virtual void on_play_start() {}
     virtual void on_play_update() {}
 
-    virtual bool check_dependencies() const { return true; }
+    virtual bool check_dependencies(const std::string& method_name) const { return true; }
 
     uint64_t get_id() { return entity_id; }
     const uint64_t get_id() const { return entity_id; }

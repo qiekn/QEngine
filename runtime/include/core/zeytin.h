@@ -15,6 +15,9 @@
 
 #define get_zeytin() Zeytin::get()
 
+constexpr float VIRTUAL_WIDTH = 1920;
+constexpr float VIRTUAL_HEIGHT = 1080;
+
 class Zeytin {
 public:
     Zeytin(const Zeytin&) = delete;

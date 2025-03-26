@@ -14,7 +14,7 @@ public: \
 private:
 
 template<typename T>
-std::optional<std::reference_wrapper<T>> get_component(entity_id id) {
+std::optional<std::reference_wrapper<T>> get(entity_id id) {
     auto& variants = get_zeytin().get_variants(id);
     
     for (auto& variant : variants) {
@@ -27,30 +27,29 @@ std::optional<std::reference_wrapper<T>> get_component(entity_id id) {
 }
 
 template<typename T>
-bool has_component(entity_id id) {
-    return get_component<T>(id).has_value();
+bool has(entity_id id) {
+    return get<T>(id).has_value();
 }
 
 #define REQUIRES(...) \
-    bool check_dependencies() const override { \
-        return _check_dependencies<__VA_ARGS__>(); \
+    bool check_dependencies(const std::string& method_name) const override { \
+        return check_dependencies_impl<__VA_ARGS__>(method_name); \
     } \
     template<typename T, typename... Rest> \
-    bool _check_dependencies() const { \
-        bool not_found = false; \
-        if (!has_component<T>(this->entity_id)) { \
+    bool check_dependencies_impl(const std::string& method_name) const { \
+        bool has_all = true; \
+        if (!has<T>(this->entity_id)) { \
             log_error() << rttr::type::get<T>().get_name() << " variant is required by " << this->get_variant_name() \
-                        << " variant but not found on entity id: " << entity_id; \
-            not_found = true; \
+                        << " variant but not found on entity id: " << entity_id << ". Method will not be called: " << method_name << std::endl; \
+            has_all = false; \
         } \
         if constexpr (sizeof...(Rest) > 0) { \
-            return _check_dependencies<Rest...>(); \
+            has_all = check_dependencies_impl<Rest...>(method_name) && has_all; \
         } \
-        return not_found; \
+        return has_all; \
     } \
 
-
-#define acquire(Type, VarName) \
-    auto _##VarName##_ref = get_component<Type>(this->entity_id); \
-    if (!_##VarName##_ref) return; \
-    auto& VarName = _##VarName##_ref->get()
+template<typename... Ts>
+bool _check_components_present(entity_id id) {
+    return (has<Ts>(id) && ...);
+}

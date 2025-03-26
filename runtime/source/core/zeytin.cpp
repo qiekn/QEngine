@@ -24,9 +24,6 @@
 #include "crash_handler/crash_handler.hpp"
 
 
-constexpr float VIRTUAL_WIDTH = 1920;
-constexpr float VIRTUAL_HEIGHT = 1080;
-
 namespace {
     template<typename T>
     void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, 
@@ -328,7 +325,9 @@ void Zeytin::post_init_variants() {
             if (!base.is_dead && !base.post_inited) {
                 base.post_inited = true;
 #ifdef EDITOR_MODE
-                base.check_dependencies();
+                if(!base.check_dependencies("post_init_variants")) {
+                    return;
+                }
 #endif
                 base.on_post_init();
             }
@@ -341,6 +340,11 @@ void Zeytin::update_variants() {
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if (!base.is_dead) {
+#ifdef EDITOR_MODE
+                if(!base.check_dependencies("update_variants")) {
+                    return;
+                }
+#endif
                 base.on_update();
             }
         }
@@ -353,7 +357,9 @@ void Zeytin::play_update_variants() {
             VariantBase& base = variant.get_value<VariantBase&>();
             if (!base.is_dead) {
 #ifdef EDITOR_MODE
-                base.check_dependencies();
+                if(!base.check_dependencies("play_update_variants")) {
+                    return;
+                }
 #endif
                 base.on_play_update();
             }
@@ -369,6 +375,11 @@ void Zeytin::play_start_variants() {
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if (!base.is_dead) {
+#ifdef EDITOR_MODE
+                if(!base.check_dependencies("play_start_variants")) {
+                    return;
+                }
+#endif
                 base.on_play_start();
             }
         }
