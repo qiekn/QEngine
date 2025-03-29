@@ -5,6 +5,7 @@
 
 class Collider : public VariantBase {
     VARIANT(Collider)
+    REQUIRES(Position)
 
 public:
     int m_collider_type = 0; PROPERTY() // 0=None, 1=Rectangle, 2=Circle
@@ -20,10 +21,11 @@ public:
     bool intersects(const Collider& other) const;
 
     Rectangle get_rectangle() const;
-
     Vector2 get_circle_center() const;
     inline float get_radius() const { return m_radius; }
 
 private:
     void debug_draw();
+    void check_collisions();
+    void handle_collision(Collider& other);
 };

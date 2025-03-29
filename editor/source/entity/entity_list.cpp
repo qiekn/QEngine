@@ -32,11 +32,18 @@ void EntityList::register_event_handlers() {
         }
     );
 
-    EngineEventBus::get().subscribe<const rapidjson::Document&>(
+    EngineEventBus::get().subscribe<std::string>(
         EngineEvent::SyncEditor,
-        [this](const rapidjson::Document& document) {
+        [this](auto msg) {
             if(should_sync_runtime()) {
-                sync_entities_from_document(document);
+                rapidjson::Document doc;
+                doc.Parse(msg.c_str());
+
+                if(doc.HasParseError()) {
+                    return;
+                }
+
+                sync_entities_from_document(doc);
                 if(!m_is_synced_once) {
                     m_is_synced_once = true;
                     log_info() << "Initial sync with runtime" << std::endl;
@@ -122,6 +129,10 @@ std::string EntityList::as_string() const {
 }
 
 void EntityList::sync_entities_from_document(const rapidjson::Document& document) {
+    if(!document.IsObject()) {
+        return;
+    }
+
     if (!document.HasMember("entities")) {
         log_error() << "Received sync message does not have 'entities' member" << std::endl;
         return;
@@ -134,16 +145,16 @@ void EntityList::sync_entities_from_document(const rapidjson::Document& document
     
     const auto& entities = document["entities"].GetArray();
     for (const auto& entity : entities) {
-        if (!entity.HasMember("entity_id")) {
+        if (!entity.HasMember("entity_id") || !entity["entity_id"].IsUint64()) {
             log_error() << "Entity missing required 'entity_id' field" << std::endl;
             continue;
         }
         
-        if (!entity.HasMember("variants")) {
+        if (!entity.HasMember("variants") || !entity["variants"].IsArray()) {
             log_error() << "Entity missing required 'variants' field" << std::endl;
             continue;
         }
-        
+
         uint64_t entity_id = entity["entity_id"].GetUint64();
         bool found = false;
         

@@ -155,7 +155,7 @@ void EngineCommunication::raise_events() {
         }
 
         if (type == "scene") {
-            EngineEventBus::get().publish<rapidjson::Document>(EngineEvent::SyncEditor, doc);
+            EngineEventBus::get().publish<std::string>(EngineEvent::SyncEditor, msg);
         }
         else if (type == "engine_started") {
             send_simple_message("engine_start_confirmed");

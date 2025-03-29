@@ -9,6 +9,7 @@
 
 #include <algorithm>
 
+#include "core/raylib_wrapper.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
@@ -143,7 +144,7 @@ void Zeytin::run_frame() {
         play_start_variants();
         play_update_variants();
 #ifdef EDITOR_MODE
-        //sync_editor();
+        sync_editor();
 #endif
     }
 
@@ -608,9 +609,19 @@ void Zeytin::exit_play_mode() {
 }
 
 void Zeytin::sync_editor() {
-    std::string scene = serialize_scene();
-    EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
+    static float sync_timer = 0.0f;
+    static const float SYNC_INTERVAL = 0.5f; 
+    
+    sync_timer += get_frame_time(); 
+    
+    if (sync_timer >= SYNC_INTERVAL) {
+        sync_timer = 0.0f; 
+        
+        std::string scene = serialize_scene();
+        EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
+    }
 }
+
 
 void Zeytin::generate_variants() {
     for(const auto& entry : std::filesystem::directory_iterator("../shared/variants")) {

@@ -22,58 +22,6 @@ namespace {
     void notify_engine_entity_variant_added(uint64_t entity_id, const std::string& variant_type);
     void notify_engine_entity_variant_removed(uint64_t entity_id, const std::string& variant_type);
     void notify_entity_removed(uint64_t entity_id);
-
-    namespace {
-    std::string find_variant_source_file(const std::string& variant_type) {
-        std::vector<std::string> source_paths = {
-            "../runtime/source/game/",
-            "../runtime/source/core/",
-            "../runtime/source/"
-        };
-
-        std::string lowercase_type = variant_type;
-        std::transform(lowercase_type.begin(), lowercase_type.end(), lowercase_type.begin(),
-            [](unsigned char c){ return std::tolower(c); });
-
-        std::vector<std::string> filename_variations = {
-            lowercase_type + ".cpp",
-            lowercase_type + ".h"
-        };
-
-        for (const auto& path : source_paths) {
-            for (const auto& filename : filename_variations) {
-                std::filesystem::path full_path = std::filesystem::path(path) / filename;
-
-                if (std::filesystem::exists(full_path)) {
-                    return full_path.string();
-                }
-            }
-        }
-
-        return "";
-    }
-
-    void open_in_vim(const std::string& filepath) {
-    if (filepath.empty()) {
-        log_error() << "No source file found for variant" << std::endl;
-        return;
-    }
-
-    std::string vim_command = "vim --remote-send '<ESC>:e " + filepath + "<CR>' || vim \"" + filepath + "\"";
-
-    std::string terminal_command = "x-terminal-emulator -e \"" + vim_command + "\" &";
-
-    int result = system(terminal_command.c_str());
-
-    if (result == 0) {
-        log_info() << "Opened " << filepath << " in Vim" << std::endl;
-    } else {
-        log_error() << "Failed to open " << filepath << " in Vim" << std::endl;
-    }
-}
-    
-}
-
 }
 
 Hierarchy::Hierarchy(std::vector<EntityDocument>& entities, std::vector<VariantDocument>& variants)
@@ -95,27 +43,27 @@ void Hierarchy::update() {
 }
 
 void Hierarchy::render_save_controls() {
-    static bool saveRealtime = false;
-    static float saveInterval = 1.0f;
-    static float timeSinceLastSave = 0.0f;
+    static bool save_real_time = false;
+    static float save_interval = 1.0f;
+    static float time_since_last_save = 0.0f;
 
-    if (saveRealtime) {
-        timeSinceLastSave += ImGui::GetIO().DeltaTime;
+    if (save_real_time) {
+        time_since_last_save += ImGui::GetIO().DeltaTime;
     }
 
     if (ImGui::Button("Save All")) {
         save_all_entities();
-        timeSinceLastSave = 0.0f;
+        time_since_last_save = 0.0f;
     }
 
     ImGui::SameLine();
-    if (ImGui::Checkbox("Save Realtime", &saveRealtime)) {
-        timeSinceLastSave = 0.0f;
+    if (ImGui::Checkbox("Save Realtime", &save_real_time)) {
+        time_since_last_save = 0.0f;
     }
 
-    if (saveRealtime && timeSinceLastSave >= saveInterval) {
+    if (save_real_time && time_since_last_save >= save_interval) {
         save_all_entities();
-        timeSinceLastSave = 0.0f;
+        time_since_last_save = 0.0f;
     }
 }
 
@@ -131,57 +79,57 @@ void Hierarchy::save_all_entities() {
 
 void Hierarchy::render_create_entity() {
     constexpr size_t MAX_ENTITY_NAME_LENGTH = 128;
-    static char newEntityName[MAX_ENTITY_NAME_LENGTH] = "";
-    static bool showNewEntityPopup = false;
+    static char new_entity_name[MAX_ENTITY_NAME_LENGTH] = "";
+    static bool show_new_entity_popup = false;
 
     if (ImGui::Button("+ Create New Entity", ImVec2(150, 20))) {
-        memset(newEntityName, 0, sizeof(newEntityName));
-        showNewEntityPopup = true;
+        memset(new_entity_name, 0, sizeof(new_entity_name));
+        show_new_entity_popup = true;
     }
 
     ImGui::Spacing();
 
-    if (showNewEntityPopup) {
+    if (show_new_entity_popup) {
         ImGui::OpenPopup("New Entity");
     }
 
     if (ImGui::BeginPopupModal("New Entity", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Enter a name for the new entity:");
 
-        bool enterPressed = ImGui::InputTextWithHint(
+        bool enter_pressed = ImGui::InputTextWithHint(
             "##EntityName",
             "Entity name",
-            newEntityName,
-            sizeof(newEntityName),
+            new_entity_name,
+            sizeof(new_entity_name),
             ImGuiInputTextFlags_EnterReturnsTrue
         );
 
         ImGui::Spacing();
 
-        bool isValidName = strlen(newEntityName) > 0;
+        bool is_valid_name = strlen(new_entity_name) > 0;
 
-        if (enterPressed && isValidName) {
-            create_new_entity(newEntityName);
+        if (enter_pressed && is_valid_name) {
+            create_new_entity(new_entity_name);
             ImGui::CloseCurrentPopup();
-            showNewEntityPopup = false;
-            memset(newEntityName, 0, sizeof(newEntityName));
+            show_new_entity_popup = false;
+            memset(new_entity_name, 0, sizeof(new_entity_name));
         } else {
-            if (!isValidName) {
+            if (!is_valid_name) {
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
                 ImGui::Button("Create", ImVec2(100, 30));
                 ImGui::PopStyleVar();
             } else if (ImGui::Button("Create", ImVec2(100, 30))) {
-                create_new_entity(newEntityName);
+                create_new_entity(new_entity_name);
                 ImGui::CloseCurrentPopup();
-                showNewEntityPopup = false;
-                memset(newEntityName, 0, sizeof(newEntityName));
+                show_new_entity_popup = false;
+                memset(new_entity_name, 0, sizeof(new_entity_name));
             }
 
             ImGui::SameLine();
 
             if (ImGui::Button("Cancel", ImVec2(100, 30))) {
                 ImGui::CloseCurrentPopup();
-                showNewEntityPopup = false;
+                show_new_entity_popup = false;
             }
         }
 
@@ -201,15 +149,15 @@ void Hierarchy::create_new_entity(const char* name) {
     }
 
 
-    std::string safeName = name;
-    safeName.erase(std::remove_if(safeName.begin(), safeName.end(), 
+    std::string safe_name = name;
+    safe_name.erase(std::remove_if(safe_name.begin(), safe_name.end(), 
         [](char c) { return c == '/' || c == '\\' || c == ':' || c == '*' || 
                            c == '?' || c == '"' || c == '<' || c == '>' || c == '|'; }), 
-        safeName.end());
+        safe_name.end());
 
     for (auto& entity : m_entities) {
-        if (!entity.is_dead() && entity.get_name() == safeName) {
-            log_error() << "Error Entity with name " << safeName << " already exists" << std::endl;
+        if (!entity.is_dead() && entity.get_name() == safe_name) {
+            log_error() << "Error Entity with name " << safe_name << " already exists" << std::endl;
             return;
         }
     }
@@ -219,22 +167,23 @@ void Hierarchy::create_new_entity(const char* name) {
     std::uniform_int_distribution<uint64_t> dis;
     uint64_t uuid = dis(gen);
     
-    rapidjson::Document newDoc;
-    newDoc.SetObject();
-    rapidjson::Document::AllocatorType& allocator = newDoc.GetAllocator();
+    rapidjson::Document new_doc;
+    new_doc.SetObject();
+    rapidjson::Document::AllocatorType& allocator = new_doc.GetAllocator();
     
-    newDoc.AddMember("entity_id", uuid, allocator);
+    new_doc.AddMember("entity_id", uuid, allocator);
     rapidjson::Value variantsArray(rapidjson::kArrayType);
-    newDoc.AddMember("variants", variantsArray, allocator);
+    new_doc.AddMember("variants", variantsArray, allocator);
 
-    EntityDocument entity(std::move(newDoc), safeName);
+    EntityDocument entity(std::move(new_doc), safe_name);
     m_entities.push_back(std::move(entity));
 }
 
 void Hierarchy::render_entity(EntityDocument& entity_document) {
     rapidjson::Document& document = entity_document.get_document();
-    assert(!document.HasParseError());
-    assert(!entity_document.get_name().empty());
+    if(!document.IsObject()) {
+        return;
+    }
 
     uint64_t entity_id = 0;
     if (document.HasMember("entity_id") && document["entity_id"].IsUint64()) {
@@ -242,6 +191,11 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
     }
 
     const char* name = entity_document.get_name().c_str();
+
+    if(name == nullptr) {
+        return;
+    }
+
     ImGui::PushID(name);
 
     ImVec2 header_min = ImGui::GetCursorScreenPos();
@@ -279,14 +233,6 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
             }
 
             if (ImGui::BeginPopup(popup_name)) {
-                if (ImGui::MenuItem("Open in Vim")) {
-                    std::string type = variants[i].GetObject()["type"].GetString();
-                    open_in_vim(find_variant_source_file(type));
-                }
-                ImGui::EndPopup();
-            }
-
-            if (ImGui::BeginPopup(popup_name)) {
                 if (ImGui::MenuItem("Remove Variant")) {
                     std::string type = variants[i].GetObject()["type"].GetString();
                     notify_engine_entity_variant_removed(entity_id, type);
@@ -294,9 +240,6 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
                 }
                 ImGui::EndPopup();
             }
-
-
-
 
             ImGui::PopID();
         }
