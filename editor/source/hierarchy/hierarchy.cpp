@@ -366,8 +366,22 @@ void Hierarchy::render_int_field(rapidjson::Document& document, rapidjson::Value
                                 const std::string& uniqueId, std::map<std::string, bool>& editingField) {
     int intValue = value.GetInt();
 
-    ImGui::SetNextItemWidth(50.0f);
-    bool edited = ImGui::InputInt((key + " : Int").c_str(), &intValue, 0);
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "%s:", key.c_str());
+    ImGui::SameLine();
+
+    ImGui::PushItemWidth(120.0f);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.3f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.3f, 0.4f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.35f, 0.35f, 0.45f, 1.0f));
+
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", intValue);
+
+    bool edited = ImGui::InputInt("##int", &intValue, 1, 10);
+
+    ImGui::PopStyleColor(3);
+    ImGui::PopItemWidth();
 
     if (edited) {
         value.SetInt(intValue);
@@ -387,8 +401,19 @@ void Hierarchy::render_float_field(rapidjson::Document& document, rapidjson::Val
                                   const std::string& uniqueId, std::map<std::string, bool>& editingField) {
     float floatValue = value.GetFloat();
 
-    ImGui::SetNextItemWidth(200.0f);
-    bool edited = ImGui::InputFloat((key + ": Float").c_str(), &floatValue, 0.1f, 1.0f, "%.3f");
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextColored(ImVec4(0.7f, 1.0f, 1.0f, 1.0f), "%s:", key.c_str());
+    ImGui::SameLine();
+
+    ImGui::PushItemWidth(120.0f);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.2f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.2f, 0.2f, 0.25f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.25f, 0.25f, 0.3f, 1.0f));
+
+    bool edited = ImGui::DragFloat("##float", &floatValue, 0.1f, 0.0f, 0.0f, "%.3f");
+
+    ImGui::PopStyleColor(3);
+    ImGui::PopItemWidth();
 
     if (edited) {
         value.SetFloat(floatValue);
@@ -407,12 +432,22 @@ void Hierarchy::render_bool_field(rapidjson::Value& value, uint64_t entity_id,
                                  const std::string& current_path) {
     bool boolValue = value.GetBool();
 
-    if (ImGui::Checkbox(("Bool: " + key).c_str(), &boolValue)) {
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.7f, 1.0f), "%s:", key.c_str());
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.2f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.2f, 0.2f, 0.25f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(0.5f, 1.0f, 0.5f, 1.0f));
+
+    if (ImGui::Checkbox("##bool", &boolValue)) {
         value.SetBool(boolValue);
 
         std::string strValue = boolValue ? "true" : "false";
         notify_engine_entity_property_changed(entity_id, variant_type, "bool", current_path, strValue);
     }
+
+    ImGui::PopStyleColor(3);
 }
 
 void Hierarchy::render_string_field(rapidjson::Document& document, rapidjson::Value& value,
@@ -423,8 +458,19 @@ void Hierarchy::render_string_field(rapidjson::Document& document, rapidjson::Va
     strncpy(buffer, value.GetString(), sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
-    ImGui::SetNextItemWidth(200.0f);
-    bool edited = ImGui::InputText((key + " : Str").c_str(), buffer, sizeof(buffer));
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextColored(ImVec4(1.0f, 0.7f, 1.0f, 1.0f), "%s:", key.c_str());
+    ImGui::SameLine();
+
+    ImGui::PushItemWidth(200.0f);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.2f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.2f, 0.2f, 0.25f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.25f, 0.25f, 0.3f, 1.0f));
+
+    bool edited = ImGui::InputText("##string", buffer, sizeof(buffer));
+
+    ImGui::PopStyleColor(3);
+    ImGui::PopItemWidth();
 
     if (edited) {
         value.SetString(buffer, document.GetAllocator());
