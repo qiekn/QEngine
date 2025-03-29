@@ -2,6 +2,8 @@
 #include "remote_logger/remote_logger.h"
 
 #define PROPERTY() 
+#define DEBUG()
+
 #define SET_CALLBACK(property_name) \
     void on_##property_name##_set();
 

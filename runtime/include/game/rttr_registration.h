@@ -7,6 +7,7 @@
 #include "game/scale.h"
 #include "game/speed.h"
 #include "game/sprite.h"
+#include "game/tag.h"
 #include "game/velocity.h"
 #include "raylib.h"
 #include "rttr/registration.h"
@@ -93,6 +94,11 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Scale::x)
         .property("y", &Scale::y);
+
+    rttr::registration::class_<Tag>("Tag")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("value", &Tag::value);
 
     rttr::registration::class_<Camera2DSystem>("Camera2DSystem")
         .constructor<>()(rttr::policy::ctor::as_object)

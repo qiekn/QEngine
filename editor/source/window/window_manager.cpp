@@ -81,6 +81,21 @@ void WindowManager::render() {
         m_console_render_func(console_y, window_size.x, m_console_height);
         ImGui::End();
     }
+
+    if(ImGui::BeginMainMenuBar()) {
+        if(ImGui::BeginMenu("Tools")) {
+            if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected, true)) {
+
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
+
+    if(m_test_viewer_selected) {
+        m_test_viewer_render_func();
+    }
 }
 
 

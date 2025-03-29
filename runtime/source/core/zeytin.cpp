@@ -609,7 +609,7 @@ void Zeytin::initial_sync_editor() {
 
 void Zeytin::sync_editor() {
     static float sync_timer = 0.0f;
-    static const float SYNC_INTERVAL = 0.5f; 
+    static const float SYNC_INTERVAL = 1.0f;
     
     sync_timer += get_frame_time(); 
     

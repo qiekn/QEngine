@@ -1,4 +1,4 @@
-Generated RTTR registration code for 10 classes.
+Generated RTTR registration code for 11 classes.
 Output written to include/game/rttr_registration.h
 Generated requirements file: /home/redgrain/Dev/Zeytin/shared/variants/requires/Paddle.requires
 Generated requirements file: /home/redgrain/Dev/Zeytin/shared/variants/requires/Ball.requires
@@ -7,10 +7,7 @@ Generated requirements file: /home/redgrain/Dev/Zeytin/shared/variants/requires/
 Requirements files written to /home/redgrain/Dev/Zeytin/shared/variants/requires
 Building configurations...
 Running action 'gmake'...
-Done (18ms).
+Done (19ms).
 ==== Building Zeytin (editor_mode) ====
 zeytin.cpp
-ball.cpp
-collider.cpp
-paddle.cpp
 Linking Zeytin

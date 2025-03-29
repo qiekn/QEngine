@@ -14,6 +14,7 @@
 #include "console/console.h"
 #include "window/window_manager.h"
 #include "asset_browser/asset_browser.h"
+#include "test_viewer/test_viewer.h"
 
 int main(int argc, char* argv[])
 {
@@ -51,6 +52,12 @@ int main(int argc, char* argv[])
 
     window_manager.set_asset_browser_render_func([]() {
         AssetBrowser::get().render();
+    });
+
+    Test::TestViewer test_viewer;
+
+    window_manager.set_test_viewer_render_func([&test_viewer] {
+            test_viewer.render();
     });
 
     while (!WindowShouldClose())
