@@ -15,9 +15,6 @@ public:
     float max_zoom = 10.0f; PROPERTY()
     float drag_speed = 1.0f; PROPERTY()
 
-    float m_target_x = 0; PROPERTY();
-    float m_target_y = 0; PROPERTY();
-
     Vector2 m_target; PROPERTY();
 
     void on_init() override;

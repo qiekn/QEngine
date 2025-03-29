@@ -104,8 +104,6 @@ RTTR_REGISTRATION
         .property("min_zoom", &Camera2DSystem::min_zoom)
         .property("max_zoom", &Camera2DSystem::max_zoom)
         .property("drag_speed", &Camera2DSystem::drag_speed)
-        .property("m_target_x", &Camera2DSystem::m_target_x)
-        .property("m_target_y", &Camera2DSystem::m_target_y)
         .property("m_target", &Camera2DSystem::m_target);
 
     rttr::registration::class_<Ball>("Ball")
@@ -137,6 +135,7 @@ RTTR_REGISTRATION
         .property("m_width", &Collider::m_width)
         .property("m_height", &Collider::m_height)
         .property("m_radius", &Collider::m_radius)
+        .property("m_static", &Collider::m_static)
         .property("m_draw_debug", &Collider::m_draw_debug);
 
 }

@@ -1,0 +1,24 @@
+{
+    "entity_id": 3522980309218837548,
+    "variants": [
+        {
+            "type": "Collider",
+            "value": {
+                "m_collider_type": 1,
+                "m_is_trigger": false,
+                "m_width": 100.0,
+                "m_height": 2000.0,
+                "m_radius": 0.0,
+                "m_static": true,
+                "m_draw_debug": true
+            }
+        },
+        {
+            "type": "Position",
+            "value": {
+                "x": -600.0,
+                "y": 0.0
+            }
+        }
+    ]
+}

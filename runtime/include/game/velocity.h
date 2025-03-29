@@ -2,8 +2,11 @@
 
 #include "variant/variant_base.h"
 
+#include "game/position.h"
+
 class Velocity : public VariantBase {
-    VARIANT(Velocity)
+    VARIANT(Velocity);
+    REQUIRES(Position)
 
 public:
     float x = 0.0f; PROPERTY()

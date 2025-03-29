@@ -17,6 +17,10 @@ void Collider::on_update() {
 }
 
 void Collider::check_collisions() {
+    if(m_static) { // if static, skip
+        return;
+    }
+
     if (m_is_trigger || m_collider_type == (int)ColliderType::None) {
         return;
     }
@@ -47,7 +51,7 @@ void Collider::check_collisions() {
 }
 
 void Collider::handle_collision(Collider& other) {
-    if(!Query::has<Velocity>(this)) {
+    if(!Query::has<Velocity>(this)) { 
         return;
     }
 
@@ -57,7 +61,6 @@ void Collider::handle_collision(Collider& other) {
         return;
     }
 
-    
     auto& position = Query::acquire<Position>(this);
     auto& other_position = Query::acquire<Position>(other.entity_id);
 
@@ -228,7 +231,7 @@ void Collider::debug_draw() {
 
     switch (m_collider_type) {
         case (int)ColliderType::Rectangle:
-            DrawRectangleLinesEx(get_rectangle(), 1, color);
+            DrawRectangleLinesEx(get_rectangle(), 3, color);
             break;
         case (int)ColliderType::Circle:
             DrawCircleLines(

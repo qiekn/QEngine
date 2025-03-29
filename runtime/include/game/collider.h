@@ -15,6 +15,7 @@ public:
     float m_height = 0.0f; PROPERTY()
     float m_radius = 0.0f; PROPERTY()
 
+    bool m_static = false; PROPERTY()
     bool m_draw_debug = false; PROPERTY()
     
     void on_update() override;

@@ -13,27 +13,28 @@
                 "m_width": 0.0,
                 "m_height": 0.0,
                 "m_radius": 20.0,
+                "m_static": false,
                 "m_draw_debug": true
             }
         },
         {
             "type": "Position",
             "value": {
-                "x": 0.0,
-                "y": 0.0
+                "x": 140.4855194091797,
+                "y": -632.9944458007813
             }
         },
         {
             "type": "Speed",
             "value": {
-                "value": 400.0
+                "value": 600.0
             }
         },
         {
             "type": "Velocity",
             "value": {
-                "x": 254.0,
-                "y": 400.0
+                "x": -105.74569702148438,
+                "y": -610.3541259765625
             }
         }
     ]

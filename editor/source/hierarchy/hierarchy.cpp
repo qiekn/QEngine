@@ -413,10 +413,129 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
             }
         }
         else if (value.IsObject()) {
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "[Object]");
+            bool is_open = ImGui::CollapsingHeader("Object##object", ImGuiTreeNodeFlags_DefaultOpen);
+
+            if (is_open) {
+                ImGui::Indent();
+
+                if (ImGui::BeginTable("nested_object_table", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerH)) {
+                    ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+                    render_object(document, value, entity_id, variant_type, current_path);
+
+                    ImGui::EndTable();
+                }
+
+                ImGui::Unindent();
+            }
         }
         else if (value.IsArray()) {
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "[Array: %d items]", value.Size());
+            int size = value.Size();
+            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.38f, 0.25f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.3f, 0.45f, 0.3f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.35f, 0.5f, 0.35f, 1.0f));
+
+            bool is_open = ImGui::CollapsingHeader(("Array [" + std::to_string(size) + "]##array").c_str());
+
+            ImGui::PopStyleColor(3);
+
+            if (is_open) {
+                ImGui::Indent();
+
+                for (rapidjson::SizeType i = 0; i < value.Size(); ++i) {
+                    ImGui::PushID(i);
+
+                    std::string item_path = current_path + "[" + std::to_string(i) + "]";
+                    std::string item_id = std::to_string(entity_id) + "_" + safe_variant_type + "_" + item_path;
+
+                    ImGui::Text("Item %d:", i);
+                    ImGui::SameLine();
+
+                    if (value[i].IsInt()) {
+                        int intValue = value[i].GetInt();
+                        ImGui::PushItemWidth(100.0f);
+                        if (ImGui::InputInt("##arrayint", &intValue, 1, 10)) {
+                            value[i].SetInt(intValue);
+                            editingField[item_id] = true;
+                        }
+                        ImGui::PopItemWidth();
+
+                        if (editingField[item_id] && ImGui::IsItemDeactivatedAfterEdit()) {
+                            std::string strValue = std::to_string(intValue);
+                            notify_engine_entity_property_changed(entity_id, variant_type, "int", item_path, strValue);
+                            editingField[item_id] = false;
+                        }
+                    }
+                    else if (value[i].IsFloat()) {
+                        float floatValue = value[i].GetFloat();
+                        ImGui::PushItemWidth(100.0f);
+                        if (ImGui::DragFloat("##arrayfloat", &floatValue, 0.1f)) {
+                            value[i].SetFloat(floatValue);
+                            editingField[item_id] = true;
+                        }
+                        ImGui::PopItemWidth();
+
+                        if (editingField[item_id] && ImGui::IsItemDeactivatedAfterEdit()) {
+                            std::string strValue = std::to_string(floatValue);
+                            notify_engine_entity_property_changed(entity_id, variant_type, "float", item_path, strValue);
+                            editingField[item_id] = false;
+                        }
+                    }
+                    else if (value[i].IsBool()) {
+                        bool boolValue = value[i].GetBool();
+                        if (ImGui::Checkbox("##arraybool", &boolValue)) {
+                            value[i].SetBool(boolValue);
+                            std::string strValue = boolValue ? "true" : "false";
+                            notify_engine_entity_property_changed(entity_id, variant_type, "bool", item_path, strValue);
+                        }
+                    }
+                    else if (value[i].IsString()) {
+                        char buffer[256];
+                        strncpy(buffer, value[i].GetString(), sizeof(buffer));
+                        buffer[sizeof(buffer) - 1] = '\0';
+
+                        ImGui::PushItemWidth(200.0f);
+                        if (ImGui::InputText("##arraystring", buffer, sizeof(buffer))) {
+                            value[i].SetString(buffer, document.GetAllocator());
+                            editingField[item_id] = true;
+                        }
+                        ImGui::PopItemWidth();
+
+                        if (editingField[item_id] && ImGui::IsItemDeactivatedAfterEdit()) {
+                            std::string strValue = buffer;
+                            notify_engine_entity_property_changed(entity_id, variant_type, "string", item_path, strValue);
+                            editingField[item_id] = false;
+                        }
+                    }
+                    else if (value[i].IsObject()) {
+                        if (ImGui::CollapsingHeader(("Object##arrayobj" + std::to_string(i)).c_str())) {
+                            if (ImGui::BeginTable("nested_array_obj_table", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerH)) {
+                                ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+                                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+                                render_object(document, value[i], entity_id, variant_type, item_path);
+
+                                ImGui::EndTable();
+                            }
+                        }
+                    }
+                    else if (value[i].IsArray()) {
+                        ImGui::Text("Nested array [%d]", value[i].Size());
+                    }
+                    else {
+                        ImGui::TextColored(ImVec4(0.7f, 0.5f, 0.5f, 1.0f), "[Unsupported type]");
+                    }
+
+                    ImGui::PopID();
+
+                    if (i < value.Size() - 1) {
+                        ImGui::Separator();
+                    }
+                }
+
+                ImGui::Unindent();
+            }
         }
         else {
             ImGui::TextColored(ImVec4(0.7f, 0.5f, 0.5f, 1.0f), "[Unsupported type]");

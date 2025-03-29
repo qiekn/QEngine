@@ -6,13 +6,13 @@
             "value": {
                 "width": 100.0,
                 "height": 20.0,
-                "speed": 400.0
+                "speed": 600.0
             }
         },
         {
             "type": "Position",
             "value": {
-                "x": 0.0,
+                "x": -210.01351928710935,
                 "y": 0.0
             }
         },
@@ -24,6 +24,7 @@
                 "m_width": 100.0,
                 "m_height": 20.0,
                 "m_radius": 0.0,
+                "m_static": false,
                 "m_draw_debug": false
             }
         }

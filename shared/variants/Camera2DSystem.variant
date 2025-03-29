@@ -8,8 +8,6 @@
         "min_zoom": 0.10000000149011612,
         "max_zoom": 10.0,
         "drag_speed": 1.0,
-        "m_target_x": 0.0,
-        "m_target_y": 0.0,
         "m_target": {
             "x": 0.0,
             "y": 0.0

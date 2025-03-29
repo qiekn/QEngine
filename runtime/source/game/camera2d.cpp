@@ -3,6 +3,7 @@
 void Camera2DSystem::on_init() {
     auto& camera = get_zeytin().get_camera();
     camera.zoom = zoom;
+    camera.target = m_target;
 }
 
 void Camera2DSystem::on_update() {
@@ -17,6 +18,9 @@ void Camera2DSystem::on_update() {
     if (enable_zoom) {
         handle_zooming();
     }
+
+    m_target.x = camera.target.x;
+    m_target.y = camera.target.y;
 }
 
 void Camera2DSystem::handle_dragging() {
@@ -36,9 +40,6 @@ void Camera2DSystem::handle_dragging() {
             
             camera.target.x += delta.x;
             camera.target.y += delta.y;
-
-            m_target_x = camera.target.x;
-            m_target_y = camera.target.y;
             
             m_previous_mouse_position = mouse_position;
         }
