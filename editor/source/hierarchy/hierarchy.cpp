@@ -340,12 +340,24 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
         ImGui::PushID(key.c_str());
 
         ImGui::TableNextRow();
+        static int row_index = 0;
+        row_index++;
+        if (row_index % 2 == 0) {
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(50, 50, 60, 255));
+        } else {
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(40, 40, 48, 255));
+        }
 
         ImGui::TableNextColumn();
-
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.4f, 1.0f)); // Bright yellow-white
         ImGui::Text("%s", key.c_str());
+        ImGui::PopStyleColor();
 
         ImGui::TableNextColumn();
+
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.24f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.25f, 0.25f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.3f, 0.3f, 0.36f, 1.0f));
 
         if (value.IsInt()) {
             int intValue = value.GetInt();
@@ -386,11 +398,28 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
         else if (value.IsBool()) {
             bool boolValue = value.GetBool();
 
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.2f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.22f, 0.22f, 0.27f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.27f, 0.27f, 0.33f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(0.0f, 1.0f, 1.0f, 1.0f)); 
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f); 
+            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.8f, 0.8f)); 
+
+            float checkSize = ImGui::GetFrameHeight() * 1.2f;
             if (ImGui::Checkbox("##bool", &boolValue)) {
                 value.SetBool(boolValue);
                 std::string strValue = boolValue ? "true" : "false";
                 notify_engine_entity_property_changed(entity_id, variant_type, "bool", current_path, strValue);
             }
+
+            ImGui::SameLine();
+            ImGui::TextColored(
+                boolValue ? ImVec4(0.5f, 1.0f, 0.5f, 1.0f) : ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+                boolValue ? "true" : "false"
+            );
+
+            ImGui::PopStyleColor(5);
+            ImGui::PopStyleVar();
         }
         else if (value.IsString()) {
             char buffer[256];
@@ -413,17 +442,16 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
             }
         }
         else if (value.IsObject()) {
-            ImGui::SameLine();
-            ImGui::Text("[Object]");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "[Object]");
         }
         else if (value.IsArray()) {
-            ImGui::SameLine();
-            ImGui::Text("[Array: %d items]", value.Size());
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 1.0f, 1.0f), "[Array: %d items]", value.Size());
         }
         else {
-            ImGui::Text("[Unsupported type]");
+            ImGui::TextColored(ImVec4(0.7f, 0.5f, 0.5f, 1.0f), "[Unsupported type]");
         }
 
+        ImGui::PopStyleColor(3); 
         ImGui::PopID();
     }
 }

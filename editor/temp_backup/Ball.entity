@@ -9,8 +9,8 @@
             "type": "Collider",
             "value": {
                 "m_collider_type": 2,
-                "m_is_trigger": false,
-                "m_width": 0.0,
+                "m_is_trigger": true,
+                "m_width": 4.0,
                 "m_height": 0.0,
                 "m_radius": 20.0,
                 "m_draw_debug": false
