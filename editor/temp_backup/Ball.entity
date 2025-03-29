@@ -9,18 +9,18 @@
             "type": "Collider",
             "value": {
                 "m_collider_type": 2,
-                "m_is_trigger": true,
-                "m_width": 4.0,
+                "m_is_trigger": false,
+                "m_width": 0.0,
                 "m_height": 0.0,
                 "m_radius": 20.0,
-                "m_draw_debug": false
+                "m_draw_debug": true
             }
         },
         {
             "type": "Position",
             "value": {
-                "x": 290.9482727050781,
-                "y": 463.3572998046875
+                "x": 0.0,
+                "y": 0.0
             }
         },
         {

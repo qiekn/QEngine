@@ -102,3 +102,6 @@ inline Color color_tint(Color color, Color tint) { return ColorTint(color, tint)
 inline Color color_fade(Color color, float alpha) { return Fade(color, alpha); }
 
 inline float get_random_value(int min, int max) { return GetRandomValue(min, max); }
+inline void set_exit_key(int key) { SetExitKey(key); }
+inline float get_screen_width() { return GetScreenWidth(); }
+inline float get_screen_height() { return GetScreenHeight(); }

@@ -61,6 +61,7 @@ public:
     void generate_variants();
     void generate_variant(const rttr::type& type);
     void subscribe_editor_events();
+    void initial_sync_editor();
     void sync_editor();
     
     void enter_play_mode(bool is_paused);

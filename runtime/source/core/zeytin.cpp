@@ -22,9 +22,6 @@
 #include "remote_logger/remote_logger.h"
 #include "game/rttr_registration.h"
 
-#include "crash_handler/crash_handler.hpp"
-
-
 namespace {
     template<typename T>
     void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, 
@@ -75,19 +72,17 @@ namespace {
 }
 
 void Zeytin::init() {
-     zeytin::CrashHandler::initialize();
-
-    m_render_texture = LoadRenderTexture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-    float scaleX = (float)GetScreenWidth() / VIRTUAL_WIDTH;
-    float scaleY = (float)GetScreenHeight() / VIRTUAL_HEIGHT;
+    m_render_texture = load_render_texture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+    float scaleX = (float)get_screen_width() / VIRTUAL_WIDTH;
+    float scaleY = (float)get_screen_height() / VIRTUAL_HEIGHT;
     float scale = (scaleX < scaleY) ? scaleX : scaleY;
     m_render_position = {
-        (GetScreenWidth() - (VIRTUAL_WIDTH * scale)) * 0.5f,
-        (GetScreenHeight() - (VIRTUAL_HEIGHT * scale)) * 0.5f
+        (get_screen_width() - (VIRTUAL_WIDTH * scale)) * 0.5f,
+        (get_screen_height() - (VIRTUAL_HEIGHT * scale)) * 0.5f
     };
 
-    SetExitKey(0);
-    SetTargetFPS(60);
+    set_exit_key(0);
+    set_target_fps(60);
 
 #ifdef EDITOR_MODE
     m_editor_communication = std::make_unique<EditorCommunication>();
@@ -98,7 +93,7 @@ void Zeytin::init() {
     m_is_play_mode = true; // always set to play mode true if standalone
 #endif
 
-    m_camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+    m_camera.offset = {0,0},
     m_camera.target = {0, 0};
     m_camera.rotation = 0.0f;
     m_camera.zoom = 1.0f;
@@ -108,35 +103,35 @@ void Zeytin::run_frame() {
 
 #ifdef EDITOR_MODE
     m_editor_communication->raise_events();
-    if(!Zeytin::get().is_scene_ready())  {
-        BeginDrawing();
-        ClearBackground(BLACK);
-        EndDrawing();
+    if(!is_scene_ready())  {
+        begin_drawing();
+        clear_background(BLACK);
+        end_drawing();
         return;
     }
 
-    if(!Zeytin::get().m_synced_once) {
-        sync_editor();
+    if(!m_synced_once) {
+        initial_sync_editor();
         m_synced_once = true;
     }
 #endif
 
-    BeginTextureMode(m_render_texture);
-    ClearBackground(RAYWHITE);
+    begin_texture_mode(m_render_texture);
+    clear_background(RAYWHITE);
 
-    BeginMode2D(m_camera);
+    begin_mode2d(m_camera);
 
     post_init_variants();
     update_variants();
 
-    EndMode2D();
+    end_mode2d();
 
-    if(IsKeyPressed(KEY_H)) {
-        if(IsWindowMinimized()) {
-            SetWindowFocused();
+    if(is_key_pressed(KEY_H)) {
+        if(is_window_minimized()) {
+            set_window_focused();
         }
         else {
-            MinimizeWindow();
+            minimize_window();
         }
     }
 
@@ -148,17 +143,16 @@ void Zeytin::run_frame() {
 #endif
     }
 
+    end_texture_mode();
 
-    EndTextureMode();
+    begin_drawing();
+    clear_background(BLACK);
 
-    BeginDrawing();
-    ClearBackground(BLACK);
-
-    float scaleX = (float)GetScreenWidth() / VIRTUAL_WIDTH;
-    float scaleY = (float)GetScreenHeight() / VIRTUAL_HEIGHT;
+    float scaleX = (float)get_screen_width() / VIRTUAL_WIDTH;
+    float scaleY = (float)get_screen_height() / VIRTUAL_HEIGHT;
     float scale = (scaleX < scaleY) ? scaleX : scaleY;
 
-    DrawTexturePro(
+    draw_texture_pro(
         m_render_texture.texture,
         (Rectangle){ 0, 0, (float)m_render_texture.texture.width, (float)-m_render_texture.texture.height },
         (Rectangle){ m_render_position.x, m_render_position.y, VIRTUAL_WIDTH * scale, VIRTUAL_HEIGHT * scale },
@@ -167,7 +161,7 @@ void Zeytin::run_frame() {
         WHITE
     );
 
-    EndDrawing();
+    end_drawing();
 }
 
 entity_id Zeytin::new_entity_id() {
@@ -606,6 +600,11 @@ void Zeytin::exit_play_mode() {
         log_error() << "Cannot exit playmode because scene backup is not found" << std::endl;
         exit(1);
     }
+}
+
+void Zeytin::initial_sync_editor() {
+    std::string scene = serialize_scene();
+    EditorEventBus::get().publish<std::string>(EditorEvent::SyncEditor, scene);
 }
 
 void Zeytin::sync_editor() {

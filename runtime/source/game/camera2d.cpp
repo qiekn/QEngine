@@ -36,6 +36,9 @@ void Camera2DSystem::handle_dragging() {
             
             camera.target.x += delta.x;
             camera.target.y += delta.y;
+
+            m_target_x = camera.target.x;
+            m_target_y = camera.target.y;
             
             m_previous_mouse_position = mouse_position;
         }
