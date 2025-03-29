@@ -293,11 +293,23 @@ void Hierarchy::render_variant(rapidjson::Document& document, rapidjson::Value& 
     ImGui::PushID(index);
     ImGui::Indent();
 
-    if (ImGui::CollapsingHeader(type)) {
-        if (variant.HasMember("value")) {
-            render_object(document, variant["value"], entity_id, type);
-        }
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.25f, 0.35f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.3f, 0.3f, 0.4f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.35f, 0.35f, 0.45f, 1.0f));
 
+    bool is_open = ImGui::CollapsingHeader(type);
+
+    ImGui::PopStyleColor(3);
+
+    if (is_open && variant.HasMember("value")) {
+        if (ImGui::BeginTable("variant_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+            ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+            render_object(document, variant["value"], entity_id, type);
+
+            ImGui::EndTable();
+        }
     }
 
     ImGui::Unindent();
@@ -305,15 +317,13 @@ void Hierarchy::render_variant(rapidjson::Document& document, rapidjson::Value& 
 }
 
 void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& object,
-                             uint64_t entity_id, const std::string& variant_type,
-                             const std::string& parent_path) {
+                                     uint64_t entity_id, const std::string& variant_type,
+                                     const std::string& parent_path) {
     if (!object.IsObject()) {
-        log_warning() << "Expected JSON object but received different type" << std::endl;
         return;
     }
 
     static std::map<std::string, bool> editingField;
-    ImGui::Indent(5);
 
     for (rapidjson::Value::MemberIterator it = object.MemberBegin(); it != object.MemberEnd(); ++it) {
         if (!it->name.IsString()) {
@@ -324,40 +334,112 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
         rapidjson::Value& value = it->value;
 
         std::string current_path = parent_path.empty() ? key : parent_path + "." + key;
-
         std::string safe_variant_type = variant_type.empty() ? "unknown_type" : variant_type;
         std::string uniqueId = std::to_string(entity_id) + "_" + safe_variant_type + "_" + current_path;
 
         ImGui::PushID(key.c_str());
 
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+
+        if (value.IsInt() || value.IsFloat()) {
+            ImGui::TextColored(ImVec4(0.7f, 1.0f, 1.0f, 1.0f), "%s", key.c_str());
+        } else if (value.IsBool()) {
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.7f, 1.0f), "%s", key.c_str());
+        } else if (value.IsString()) {
+            ImGui::TextColored(ImVec4(1.0f, 0.7f, 1.0f, 1.0f), "%s", key.c_str());
+        } else if (value.IsObject()) {
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.9f, 1.0f), "%s", key.c_str());
+        } else {
+            ImGui::Text("%s", key.c_str());
+        }
+
+        ImGui::TableNextColumn();
+
         if (value.IsInt()) {
-            render_int_field(document, value, entity_id, safe_variant_type, key, current_path, uniqueId, editingField);
-        }
-        else if (value.IsFloat()) {
-            render_float_field(document, value, entity_id, safe_variant_type, key, current_path, uniqueId, editingField);
-        }
-        else if (value.IsBool()) {
-            render_bool_field(value, entity_id, safe_variant_type, key, current_path);
-        }
-        else if (value.IsString()) {
-            render_string_field(document, value, entity_id, safe_variant_type, key, current_path, uniqueId, editingField);
-        }
-        else if (value.IsArray()) {
-            render_array_field(document, value, entity_id, safe_variant_type, key, current_path, editingField);
-        }
-        else if (value.IsObject()) {
-            if (ImGui::CollapsingHeader(key.c_str())) {
-                render_object(document, value, entity_id, safe_variant_type, current_path);
+            int intValue = value.GetInt();
+
+            ImGui::PushItemWidth(-1);
+            bool edited = ImGui::InputInt("##int", &intValue, 1, 10);
+            ImGui::PopItemWidth();
+
+            if (edited) {
+                value.SetInt(intValue);
+                editingField[uniqueId] = true;
+            }
+
+            if (editingField[uniqueId] && ImGui::IsItemDeactivatedAfterEdit()) {
+                std::string strValue = std::to_string(intValue);
+                notify_engine_entity_property_changed(entity_id, variant_type, "int", current_path, strValue);
+                editingField[uniqueId] = false;
             }
         }
+        else if (value.IsFloat()) {
+            float floatValue = value.GetFloat();
+
+            ImGui::PushItemWidth(-1);
+            bool edited = ImGui::DragFloat("##float", &floatValue, 0.1f, 0.0f, 0.0f, "%.3f");
+            ImGui::PopItemWidth();
+
+            if (edited) {
+                value.SetFloat(floatValue);
+                editingField[uniqueId] = true;
+            }
+
+            if (editingField[uniqueId] && ImGui::IsItemDeactivatedAfterEdit()) {
+                std::string strValue = std::to_string(floatValue);
+                notify_engine_entity_property_changed(entity_id, variant_type, "float", current_path, strValue);
+                editingField[uniqueId] = false;
+            }
+        }
+        else if (value.IsBool()) {
+            bool boolValue = value.GetBool();
+
+            if (ImGui::Checkbox("##bool", &boolValue)) {
+                value.SetBool(boolValue);
+                std::string strValue = boolValue ? "true" : "false";
+                notify_engine_entity_property_changed(entity_id, variant_type, "bool", current_path, strValue);
+            }
+        }
+        else if (value.IsString()) {
+            char buffer[256];
+            strncpy(buffer, value.GetString(), sizeof(buffer));
+            buffer[sizeof(buffer) - 1] = '\0';
+
+            ImGui::PushItemWidth(-1);
+            bool edited = ImGui::InputText("##string", buffer, sizeof(buffer));
+            ImGui::PopItemWidth();
+
+            if (edited) {
+                value.SetString(buffer, document.GetAllocator());
+                editingField[uniqueId] = true;
+            }
+
+            if (editingField[uniqueId] && ImGui::IsItemDeactivatedAfterEdit()) {
+                std::string strValue = buffer;
+                notify_engine_entity_property_changed(entity_id, variant_type, "string", current_path, strValue);
+                editingField[uniqueId] = false;
+            }
+        }
+        else if (value.IsObject()) {
+            if (ImGui::Button("Edit...")) {
+            }
+            ImGui::SameLine();
+            ImGui::Text("[Object]");
+        }
+        else if (value.IsArray()) {
+            if (ImGui::Button("Edit...")) {
+            }
+            ImGui::SameLine();
+            ImGui::Text("[Array: %d items]", value.Size());
+        }
         else {
-            ImGui::Text("%s: [Unsupported JSON type]", key.c_str());
+            ImGui::Text("[Unsupported type]");
         }
 
         ImGui::PopID();
     }
-
-    ImGui::Indent(-5);
 }
 
 void Hierarchy::render_int_field(rapidjson::Document& document, rapidjson::Value& value,
