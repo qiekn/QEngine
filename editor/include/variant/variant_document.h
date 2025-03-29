@@ -15,7 +15,7 @@ public:
     inline const rapidjson::Document& get_document() const { return m_document; }
     inline const std::string& get_name() const { return m_name ; }
 
-    inline const bool is_dead() { return m_is_dead; }
+    inline bool is_dead() const { return m_is_dead; }
     inline void mark_dead() { m_is_dead = true; }
     inline void set_alive() { m_is_dead = false; }
 

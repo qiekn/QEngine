@@ -45,8 +45,14 @@ private:
                            uint64_t entity_id, const std::string& variant_type,
                            const std::string& key, const std::string& current_path,
                            std::map<std::string, bool>& editingField);
-    
+
+    void render_add_variant_menu(EntityDocument& entity_document);
+    bool check_variant_exists(const EntityDocument& entity_document, const std::string& variant_name);
+    void update_recent_variants(std::vector<std::string>& recent_variants,
+                              const std::string& variant_name,
+                              int max_recent);
     void add_variant_to_entity(EntityDocument& entity_document, VariantDocument& variant_document);
+
     void add_required_variants_to_entity(EntityDocument& entity_document, const std::string& variant_type);
     void save_all_entities();
     void subscribe_events();

@@ -247,17 +247,182 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
     ImGui::PopID();
 }
 
+void Hierarchy::render_add_variant_menu(EntityDocument& entity_document) {
+    static char search_buffer[64] = "";
+    ImGui::SetNextItemWidth(200.0f);
+    ImGui::InputTextWithHint("##variant_search", "Search variants...", search_buffer, sizeof(search_buffer));
+
+    ImGui::Separator();
+
+    static std::vector<std::string> recent_variants;
+    const int max_recent = 5;
+
+    if (!recent_variants.empty()) {
+        if (ImGui::BeginMenu("Recent")) {
+            for (const auto& recent_name : recent_variants) {
+                if (search_buffer[0] != '\0') {
+                    std::string lower_name = recent_name;
+                    std::string lower_search = search_buffer;
+
+                    std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
+                                  [](unsigned char c){ return std::tolower(c); });
+                    std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
+                                  [](unsigned char c){ return std::tolower(c); });
+
+                    if (lower_name.find(lower_search) == std::string::npos) {
+                        continue;
+                    }
+                }
+
+                bool already_exists = check_variant_exists(entity_document, recent_name);
+
+                if (already_exists) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                    ImGui::MenuItem(recent_name.c_str(), nullptr, false, false);
+                    ImGui::PopStyleColor();
+                } else if (ImGui::MenuItem(recent_name.c_str())) {
+                    for (auto& variant : m_variants) {
+                        if (variant.get_name() == recent_name) {
+                            add_variant_to_entity(entity_document, variant);
+                            update_recent_variants(recent_variants, recent_name, max_recent);
+                            break;
+                        }
+                    }
+                }
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
+    }
+
+    static std::vector<std::string> all_variants;
+    static bool variants_need_update = true;
+
+    if (variants_need_update) {
+        all_variants.clear();
+
+        for (const auto& variant : m_variants) {
+            if (variant.is_dead()) continue;
+
+            const std::string& name = variant.get_name();
+            if (!name.empty()) {
+                all_variants.push_back(name);
+            }
+        }
+
+        std::sort(all_variants.begin(), all_variants.end());
+
+        variants_need_update = false;
+    }
+
+    const int items_per_column = 20; 
+    int displayed_count = 0;
+
+    int filtered_count = 0;
+    for (const auto& variant_name : all_variants) {
+        if (search_buffer[0] != '\0') {
+            std::string lower_name = variant_name;
+            std::string lower_search = search_buffer;
+
+            std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
+                         [](unsigned char c){ return std::tolower(c); });
+            std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
+                         [](unsigned char c){ return std::tolower(c); });
+
+            if (lower_name.find(lower_search) == std::string::npos) {
+                continue;
+            }
+        }
+
+        filtered_count++;
+    }
+
+    bool use_columns = filtered_count > items_per_column;
+
+    if (use_columns) {
+        ImGui::Columns(2, "variant_columns", false);
+    }
+
+    bool found_any = false;
+
+    for (const auto& variant_name : all_variants) {
+        if (search_buffer[0] != '\0') {
+            std::string lower_name = variant_name;
+            std::string lower_search = search_buffer;
+
+            std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
+                         [](unsigned char c){ return std::tolower(c); });
+            std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
+                         [](unsigned char c){ return std::tolower(c); });
+
+            if (lower_name.find(lower_search) == std::string::npos) {
+                continue;
+            }
+        }
+
+        found_any = true;
+        displayed_count++;
+
+        bool already_exists = check_variant_exists(entity_document, variant_name);
+
+        if (already_exists) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            ImGui::MenuItem(variant_name.c_str(), nullptr, false, false);
+            ImGui::PopStyleColor();
+        } else if (ImGui::MenuItem(variant_name.c_str())) {
+            for (auto& variant : m_variants) {
+                if (variant.get_name() == variant_name) {
+                    add_variant_to_entity(entity_document, variant);
+                    update_recent_variants(recent_variants, variant_name, max_recent);
+                    break;
+                }
+            }
+        }
+
+        if (use_columns && displayed_count % items_per_column == 0 && displayed_count < filtered_count) {
+            ImGui::NextColumn();
+        }
+    }
+
+    if (use_columns) {
+        ImGui::Columns(1);
+    }
+
+    if (search_buffer[0] != '\0' && !found_any) {
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No matching variants found");
+    }
+}
+
+bool Hierarchy::check_variant_exists(const EntityDocument& entity_document, const std::string& variant_name) {
+    if (entity_document.get_document().HasMember("variants") &&
+        entity_document.get_document()["variants"].IsArray()) {
+        for (const auto& variant : entity_document.get_document()["variants"].GetArray()) {
+            if (std::string(variant["type"].GetString()) == variant_name) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Hierarchy::update_recent_variants(std::vector<std::string>& recent_variants,
+                                     const std::string& variant_name,
+                                     int max_recent) {
+    auto it = std::find(recent_variants.begin(), recent_variants.end(), variant_name);
+    if (it != recent_variants.end()) {
+        recent_variants.erase(it);
+    }
+    recent_variants.insert(recent_variants.begin(), variant_name);
+
+    if (recent_variants.size() > max_recent) {
+        recent_variants.pop_back();
+    }
+}
+
 void Hierarchy::handle_entity_context_menu(EntityDocument& entity_document, uint64_t entity_id) {
     if (ImGui::BeginPopup("entity_context_menu")) {
         if (ImGui::BeginMenu("Add Variant")) {
-            for (int i = 0; i < m_variants.size(); i++) {
-                if (m_variants[i].is_dead()) continue;
-                
-                const std::string& variant_name = m_variants[i].get_name();
-                if (ImGui::MenuItem(variant_name.c_str())) {
-                    add_variant_to_entity(entity_document, m_variants[i]);
-                }
-            }
+            render_add_variant_menu(entity_document);
             ImGui::EndMenu();
         }
 
@@ -282,6 +447,7 @@ void Hierarchy::handle_entity_context_menu(EntityDocument& entity_document, uint
             entity_document.mark_as_dead();
             notify_entity_removed(entity_id);
         }
+
         ImGui::EndPopup();
     }
 }
