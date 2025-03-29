@@ -317,8 +317,8 @@ void Hierarchy::render_variant(rapidjson::Document& document, rapidjson::Value& 
 }
 
 void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& object,
-                                     uint64_t entity_id, const std::string& variant_type,
-                                     const std::string& parent_path) {
+                             uint64_t entity_id, const std::string& variant_type,
+                             const std::string& parent_path) {
     if (!object.IsObject()) {
         return;
     }
@@ -343,17 +343,7 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
 
         ImGui::TableNextColumn();
 
-        if (value.IsInt() || value.IsFloat()) {
-            ImGui::TextColored(ImVec4(0.7f, 1.0f, 1.0f, 1.0f), "%s", key.c_str());
-        } else if (value.IsBool()) {
-            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.7f, 1.0f), "%s", key.c_str());
-        } else if (value.IsString()) {
-            ImGui::TextColored(ImVec4(1.0f, 0.7f, 1.0f, 1.0f), "%s", key.c_str());
-        } else if (value.IsObject()) {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.9f, 1.0f), "%s", key.c_str());
-        } else {
-            ImGui::Text("%s", key.c_str());
-        }
+        ImGui::Text("%s", key.c_str());
 
         ImGui::TableNextColumn();
 
@@ -423,14 +413,10 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
             }
         }
         else if (value.IsObject()) {
-            if (ImGui::Button("Edit...")) {
-            }
             ImGui::SameLine();
             ImGui::Text("[Object]");
         }
         else if (value.IsArray()) {
-            if (ImGui::Button("Edit...")) {
-            }
             ImGui::SameLine();
             ImGui::Text("[Array: %d items]", value.Size());
         }
