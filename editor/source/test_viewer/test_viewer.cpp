@@ -9,36 +9,167 @@ namespace Test {
 
 TestViewer::TestViewer() 
 {
+    for(auto& kv : expanded_tests) {
+        kv.second = false;
+    }
 }
 
 TestViewer::~TestViewer() 
 {
 }
 
-void TestViewer::render() 
+void TestViewer::render()
 {
     if (!is_test_loaded()) {
         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test plan loaded.");
         return;
     }
-    
-    ImGuiStyle& style = ImGui::GetStyle();
-    float window_width = ImGui::GetContentRegionAvail().x;
-    float list_width = window_width * 0.35f;
-    
-    ImGui::BeginChild("test_list_panel", ImVec2(list_width, 0), true);
-    render_test_list();
-    ImGui::EndChild();
 
-    ImGui::SameLine();
-    ImGui::BeginChild("test_summ", ImVec2(0, 0), true);
+    ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5), true);
     render_test_summary();
     ImGui::EndChild();
 
     ImGui::Separator();
+
     ImGui::BeginChild("test_details_panel", ImVec2(0, 0), true);
-    render_test_details();
+    for (int i = 0; i < test_plan.test_cases.size(); i++) {
+        render_single_test_case(i);
+
+        if (i < test_plan.test_cases.size() - 1) {
+            ImGui::Separator();
+        }
+    }
     ImGui::EndChild();
+}
+
+void TestViewer::render_single_test_case(int index)
+{
+    auto& test = test_plan.test_cases[index];
+
+    ImGui::PushID(index);
+
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    std::string header = "Test " + std::to_string(index + 1);
+
+    bool is_open = ImGui::CollapsingHeader(header.c_str(),
+                                          0);
+
+    ImGui::PopStyleColor();
+
+    ImGui::SameLine(ImGui::GetWindowWidth() * 0.5f);
+    ImGui::Text("Status: ");
+    ImGui::SameLine();
+
+    if (test.is_executed) {
+        ImGui::TextColored(get_test_result_color(test.actual_result.type),
+                          "%s", get_test_result_string(test.actual_result.type).c_str());
+    } else {
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Not Executed");
+    }
+
+    if (is_open) {
+        ImGui::Columns(2, ("test_columns_" + std::to_string(index)).c_str(), false);
+
+        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Action:");
+        ImGui::BeginChild(("action_text_" + std::to_string(index)).c_str(),
+                         ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 3), true);
+        ImGui::TextWrapped("%s", test.action.value.c_str());
+        ImGui::EndChild();
+
+        ImGui::NextColumn();
+
+        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Expected Result:");
+        ImGui::BeginChild(("expected_result_text_" + std::to_string(index)).c_str(),
+                         ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 3), true);
+        ImGui::TextWrapped("%s", test.expected_result.value.c_str());
+        ImGui::EndChild();
+
+        ImGui::Columns(1);
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Actual Result:");
+
+        if (actual_result_buffers.find(index) == actual_result_buffers.end()) {
+            actual_result_buffers[index] = std::vector<char>(4096, 0);
+            if (!test.actual_result.value.empty()) {
+                strncpy(actual_result_buffers[index].data(), test.actual_result.value.c_str(),
+                        actual_result_buffers[index].size() - 1);
+            }
+        }
+
+        std::string buffer_id = "##actual_result_" + std::to_string(index);
+        if (ImGui::InputTextMultiline(buffer_id.c_str(),
+                                   actual_result_buffers[index].data(),
+                                   actual_result_buffers[index].size(),
+                                   ImVec2(-1, ImGui::GetTextLineHeightWithSpacing() * 4),
+                                   ImGuiInputTextFlags_AllowTabInput)) {
+            test.actual_result.value = actual_result_buffers[index].data();
+        }
+
+        ImGui::Spacing();
+        ImGui::Text("Set Result:");
+
+        float button_width = std::min(80.0f, ImGui::GetContentRegionAvail().x / 6.0f);
+
+        std::unordered_map<ResultType, ImVec4> softened_colors;
+        softened_colors[ResultType::Todo] = ImVec4(0.5f, 0.5f, 0.7f, 0.7f);
+        softened_colors[ResultType::Passed] = ImVec4(0.0f, 0.6f, 0.0f, 0.7f);
+        softened_colors[ResultType::Failed] = ImVec4(0.7f, 0.0f, 0.0f, 0.7f);
+        softened_colors[ResultType::Blocked] = ImVec4(0.7f, 0.4f, 0.0f, 0.7f);
+        softened_colors[ResultType::Skipped] = ImVec4(0.5f, 0.5f, 0.5f, 0.7f);
+        softened_colors[ResultType::Acceptable] = ImVec4(0.7f, 0.6f, 0.0f, 0.7f);
+
+        for (int i = 1; i < static_cast<int>(ResultType::Length); i++) {
+            const ResultType result_type = static_cast<ResultType>(i);
+            const std::string& name = get_test_result_string(result_type);
+
+            if (i > 0) ImGui::SameLine();
+
+            ImGui::PushStyleColor(ImGuiCol_Button, softened_colors[result_type]);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                                ImVec4(softened_colors[result_type].x * 1.2f,
+                                       softened_colors[result_type].y * 1.2f,
+                                       softened_colors[result_type].z * 1.2f, 0.8f));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // White text for contrast
+
+            if(ImGui::Button(name.c_str(), ImVec2(button_width, 0))) {
+                test.is_executed = true;
+                test.actual_result.type = result_type;
+                update_test_statistics();
+            }
+
+            ImGui::PopStyleColor(3);
+        }
+
+    }
+
+    ImGui::PopID();
+}
+
+void TestViewer::update_test_statistics()
+{
+    tests_executed = 0;
+    tests_passed = 0;
+    tests_failed = 0;
+    tests_blocked = 0;
+    tests_skipped = 0;
+    tests_acceptable = 0;
+
+    for (const auto& test : test_plan.test_cases) {
+        if (test.is_executed) {
+            tests_executed++;
+
+            switch (test.actual_result.type) {
+                case ResultType::Passed: tests_passed++; break;
+                case ResultType::Failed: tests_failed++; break;
+                case ResultType::Blocked: tests_blocked++; break;
+                case ResultType::Skipped: tests_skipped++; break;
+                case ResultType::Acceptable: tests_acceptable++; break;
+                default: break;
+            }
+        }
+    }
 }
 
 void TestViewer::render_test_list() 
@@ -150,11 +281,11 @@ void TestViewer::render_test_summary()
     ImGui::NextColumn();
     
     ImGui::Columns(1);
+
     
     if (tests_executed > 0) {
-        float pass_percentage = (float)(tests_passed + tests_acceptable) / tests_executed * 100.0f;
-        ImGui::ProgressBar(pass_percentage / 100.0f, ImVec2(-1, 10.0f), "");
-        ImGui::SameLine(10);
+        float pass_percentage = (float)(tests_passed + tests_acceptable) / test_plan.test_cases.size() * 100.0f;
+        ImGui::ProgressBar((float)tests_executed / test_plan.test_cases.size(), ImVec2(-1, 10.0f), "");
         ImGui::Text("%.1f%% Pass Rate (including acceptable issues)", pass_percentage);
     }
 }
@@ -195,12 +326,9 @@ void TestViewer::save_results(const std::string& file_path)
             return;
         }
         
-        // Write header
         file << "Test ID,Action,Expected Result,Actual Result,Status\n";
         
-        // Write test data
         for (const auto& test : test_plan.test_cases) {
-            // Escape fields that contain commas or quotes
             auto escape_csv_field = [](const std::string& field) -> std::string {
                 if (field.find(',') != std::string::npos || field.find('"') != std::string::npos || field.find('\n') != std::string::npos) {
                     std::string escaped = field;
@@ -215,7 +343,7 @@ void TestViewer::save_results(const std::string& file_path)
                 return field;
             };
             
-            file << test.test_id << ","
+            file 
                  << escape_csv_field(test.action.value) << ","
                  << escape_csv_field(test.expected_result.value) << ",";
             
@@ -252,7 +380,6 @@ void TestViewer::parse_csv(const std::string& content)
     int test_id = 1;
     while (std::getline(stream, line)) {
         TestCase test_case = process_csv_line(line);
-        test_case.test_id = test_id++;
         test_plan.test_cases.push_back(test_case);
     }
 }

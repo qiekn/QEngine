@@ -38,7 +38,6 @@ struct TestCase {
     Action action;
     ExpectedResult expected_result;
     ActualResult actual_result;
-    int test_id = -1;
     bool is_executed = false;
 };
 
@@ -85,6 +84,12 @@ private:
     int tests_executed = 0;
 
     bool m_open = false;
+
+    void render_single_test_case(int index);
+    void update_test_statistics();
+    std::unordered_map<int, std::vector<char>> actual_result_buffers;
+
+    std::unordered_map<int, bool> expanded_tests; 
 };
 
 }
