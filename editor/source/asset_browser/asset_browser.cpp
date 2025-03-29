@@ -518,6 +518,7 @@ void AssetBrowser::render_directory(const std::string& path, std::set<std::strin
                 m_on_asset_selected(item);
             }
         }
+
         
         if (ImGui::BeginPopupContextItem()) {
             if (ImGui::MenuItem("Refresh")) {

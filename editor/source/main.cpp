@@ -60,6 +60,12 @@ int main(int argc, char* argv[])
             test_viewer.render();
     });
 
+    AssetBrowser::get().set_on_asset_activated([&test_viewer, &window_manager](const AssetItem& item) {
+        if (item.type == AssetType::Test) {
+            test_viewer.load_test_file(item.path);
+        }
+    });
+
     while (!WindowShouldClose())
     {
         if(IsKeyPressed(KEY_H)) {

@@ -29,16 +29,15 @@ void TestViewer::render()
     ImGui::BeginChild("test_list_panel", ImVec2(list_width, 0), true);
     render_test_list();
     ImGui::EndChild();
-    
+
     ImGui::SameLine();
-    
-    ImGui::BeginChild("test_details_panel", ImVec2(0, 0), true);
-    
+    ImGui::BeginChild("test_summ", ImVec2(0, 0), true);
     render_test_summary();
+    ImGui::EndChild();
+
     ImGui::Separator();
-    
+    ImGui::BeginChild("test_details_panel", ImVec2(0, 0), true);
     render_test_details();
-    
     ImGui::EndChild();
 }
 
@@ -50,30 +49,27 @@ void TestViewer::render_test_list()
     
     ImGui::Separator();
     
-    if (ImGui::BeginChild("test_list", ImVec2(0, 0), false)) {
-        for (int i = 0; i < test_plan.test_cases.size(); i++) {
-            const auto& test = test_plan.test_cases[i];
-            
-            std::string label = "Test " + std::to_string(i + 1);
-            if (test.is_executed) {
-                label += " [" + get_test_result_string(test.actual_result.type) + "]";
-            }
-            
-            if (test.is_executed) {
-                ImGui::PushStyleColor(ImGuiCol_Text, get_test_result_color(test.actual_result.type));
-            }
-            
-            bool is_selected = (i == selected_test_index);
-            if (ImGui::Selectable(label.c_str(), is_selected)) {
-                selected_test_index = i;
-            }
-            
-            if (test.is_executed) {
-                ImGui::PopStyleColor();
-            }
+    for (int i = 0; i < test_plan.test_cases.size(); i++) {
+        const auto& test = test_plan.test_cases[i];
+        
+        std::string label = "Test " + std::to_string(i + 1);
+        if (test.is_executed) {
+            label += " [" + get_test_result_string(test.actual_result.type) + "]";
         }
         
-        ImGui::EndChild();
+        if (test.is_executed) {
+            ImGui::PushStyleColor(ImGuiCol_Text, get_test_result_color(test.actual_result.type));
+        }
+        
+        bool is_selected = (i == selected_test_index);
+        if (ImGui::Selectable(label.c_str(), is_selected)) {
+            selected_test_index = i;
+            log_info() << "Selected: " << i << std::endl;
+        }
+        
+        if (test.is_executed) {
+            ImGui::PopStyleColor();
+        }
     }
 }
 
