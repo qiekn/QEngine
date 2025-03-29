@@ -13,7 +13,7 @@ public:
     inline void set_hierarchy_render_func(std::function<void()> func) { m_hierarchy_render_func = func; }
     inline void set_console_render_func(std::function<void(float, float, float)> func) { m_console_render_func = func; }
     inline void set_asset_browser_render_func(std::function<void()> func) { m_asset_browser_render_func = func; }
-    inline void set_test_viewer_render_func(std::function<void()> func) { m_asset_browser_render_func = func; }
+    inline void set_test_viewer_render_func(std::function<void()> func) { m_test_viewer_render_func = func; }
 
     float get_hierarchy_width() const { return m_hierarchy_width; }
     float get_console_height() const { return m_console_height; }

@@ -19,6 +19,8 @@ enum class AssetType {
     Entity,
     Variant,
     Scene,
+    Test,
+    Requires,
     Other
 };
 

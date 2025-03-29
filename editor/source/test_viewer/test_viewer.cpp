@@ -17,33 +17,8 @@ TestViewer::~TestViewer()
 
 void TestViewer::render() 
 {
-    ImGui::Begin("Test Viewer", &m_open, ImGuiWindowFlags_MenuBar);
-    
-    if (ImGui::BeginMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open Test File...")) {
-                load_test_file("../tests/sample_test.csv");
-            }
-            
-            if (ImGui::MenuItem("Save Results...", nullptr, false, is_test_loaded())) {
-                save_results("../tests/results.csv");
-            }
-            
-            ImGui::Separator();
-            
-            if (ImGui::MenuItem("Reset All Tests", nullptr, false, is_test_loaded())) {
-                reset_tests();
-            }
-            
-            ImGui::EndMenu();
-        }
-        
-        ImGui::EndMenuBar();
-    }
-    
     if (!is_test_loaded()) {
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test plan loaded. Use File -> Open Test File to load a test plan.");
-        ImGui::End();
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test plan loaded.");
         return;
     }
     
@@ -65,8 +40,6 @@ void TestViewer::render()
     render_test_details();
     
     ImGui::EndChild();
-    
-    ImGui::End();
 }
 
 void TestViewer::render_test_list() 

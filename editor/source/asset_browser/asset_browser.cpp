@@ -97,7 +97,9 @@ AssetType AssetBrowser::determine_asset_type(const std::string& extension) {
         {".wav", AssetType::Audio}, {".mp3", AssetType::Audio}, {".ogg", AssetType::Audio},
         {".cpp", AssetType::Script}, {".h", AssetType::Script}, {".sh", AssetType::Script}, 
         {".lua", AssetType::Script}, {".make", AssetType::Script},
-        {".entity", AssetType::Entity}, {".scene", AssetType::Scene}, {".variant", AssetType::Variant}
+        {".entity", AssetType::Entity}, {".scene", AssetType::Scene},
+        {".variant", AssetType::Variant}, {".requires", AssetType::Requires},
+        {".test", AssetType::Test},
     };
     auto it = extension_map.find(extension);
     return (it != extension_map.end()) ? it->second : AssetType::Other;
@@ -279,6 +281,12 @@ void AssetBrowser::render() {
                                         case AssetType::Scene:
                                             ImGui::Text("[SCN]");
                                             break;
+                                        case AssetType::Requires:
+                                            ImGui::Text("[REQ]");
+                                            break;
+                                        case AssetType::Test:
+                                            ImGui::Text("[TST]");
+                                            break;
                                         default:
                                             ImGui::Text("[???]");
                                             break;
@@ -410,6 +418,8 @@ void AssetBrowser::render() {
                     case AssetType::Script: 
                     case AssetType::Entity:
                     case AssetType::Variant:
+                    case AssetType::Test:
+                    case AssetType::Requires:
                     case AssetType::Scene: {
                         try {
                             std::ifstream file(m_selected_path);
@@ -563,6 +573,14 @@ void AssetBrowser::render_directory(const std::string& path, std::set<std::strin
                         case AssetType::Scene:
                             icon = "[SCN] "; 
                             color = ImVec4(1.0f, 0.5f, 0.8f, 1.0f);
+                            break;
+                        case AssetType::Requires:
+                            icon = "[REQ] "; 
+                            color = ImVec4(1.0f, 1.0f, 0.8f, 1.0f);
+                            break;
+                        case AssetType::Test:
+                            icon = "[TST] "; 
+                            color = ImVec4(0.5f, 0.7, 0.9, 1.0f);
                             break;
                         default:
                             icon = "[FILE] ";

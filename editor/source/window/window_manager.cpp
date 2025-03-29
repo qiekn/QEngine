@@ -84,7 +84,7 @@ void WindowManager::render() {
 
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("Tools")) {
-            if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected, true)) {
+            if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected)) {
 
             }
             ImGui::EndMenu();
@@ -103,7 +103,6 @@ void WindowManager::sync_engine_window() {
     rapidjson::Document document;
     document.SetObject();
     auto& allocator = document.GetAllocator();
-
 
     document.AddMember("type", "window_state", allocator);
     document.AddMember("is_minimize", IsWindowMinimized(), allocator);
