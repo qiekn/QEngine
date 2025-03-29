@@ -293,18 +293,12 @@ void Hierarchy::render_variant(rapidjson::Document& document, rapidjson::Value& 
     ImGui::PushID(index);
     ImGui::Indent();
 
-    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.25f, 0.35f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.3f, 0.3f, 0.4f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.35f, 0.35f, 0.45f, 1.0f));
-
     bool is_open = ImGui::CollapsingHeader(type);
 
-    ImGui::PopStyleColor(3);
-
     if (is_open && variant.HasMember("value")) {
-        if (ImGui::BeginTable("variant_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+        if (ImGui::BeginTable("variant_table", 2,  ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuter)) {
             ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 150.0f);
-            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoHeaderWidth);
 
             render_object(document, variant["value"], entity_id, type);
 
@@ -340,24 +334,11 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
         ImGui::PushID(key.c_str());
 
         ImGui::TableNextRow();
-        static int row_index = 0;
-        row_index++;
-        if (row_index % 2 == 0) {
-            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(50, 50, 60, 255));
-        } else {
-            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(40, 40, 48, 255));
-        }
 
         ImGui::TableNextColumn();
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.4f, 1.0f)); // Bright yellow-white
         ImGui::Text("%s", key.c_str());
-        ImGui::PopStyleColor();
 
         ImGui::TableNextColumn();
-
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.24f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.25f, 0.25f, 0.3f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.3f, 0.3f, 0.36f, 1.0f));
 
         if (value.IsInt()) {
             int intValue = value.GetInt();
@@ -398,13 +379,6 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
         else if (value.IsBool()) {
             bool boolValue = value.GetBool();
 
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.2f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.22f, 0.22f, 0.27f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.27f, 0.27f, 0.33f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(0.0f, 1.0f, 1.0f, 1.0f)); 
-            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f); 
-            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.8f, 0.8f)); 
-
             float checkSize = ImGui::GetFrameHeight() * 1.2f;
             if (ImGui::Checkbox("##bool", &boolValue)) {
                 value.SetBool(boolValue);
@@ -417,9 +391,6 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
                 boolValue ? ImVec4(0.5f, 1.0f, 0.5f, 1.0f) : ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
                 boolValue ? "true" : "false"
             );
-
-            ImGui::PopStyleColor(5);
-            ImGui::PopStyleVar();
         }
         else if (value.IsString()) {
             char buffer[256];
@@ -451,7 +422,6 @@ void Hierarchy::render_object(rapidjson::Document& document, rapidjson::Value& o
             ImGui::TextColored(ImVec4(0.7f, 0.5f, 0.5f, 1.0f), "[Unsupported type]");
         }
 
-        ImGui::PopStyleColor(3); 
         ImGui::PopID();
     }
 }
@@ -460,35 +430,6 @@ void Hierarchy::render_int_field(rapidjson::Document& document, rapidjson::Value
                                 uint64_t entity_id, const std::string& variant_type,
                                 const std::string& key, const std::string& current_path,
                                 const std::string& uniqueId, std::map<std::string, bool>& editingField) {
-    int intValue = value.GetInt();
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "%s:", key.c_str());
-    ImGui::SameLine();
-
-    ImGui::PushItemWidth(120.0f);
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.3f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.3f, 0.4f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.35f, 0.35f, 0.45f, 1.0f));
-
-    char buf[16];
-    snprintf(buf, sizeof(buf), "%d", intValue);
-
-    bool edited = ImGui::InputInt("##int", &intValue, 1, 10);
-
-    ImGui::PopStyleColor(3);
-    ImGui::PopItemWidth();
-
-    if (edited) {
-        value.SetInt(intValue);
-        editingField[uniqueId] = true;
-    }
-
-    if (editingField[uniqueId] && ImGui::IsItemDeactivatedAfterEdit()) {
-        std::string strValue = std::to_string(intValue);
-        notify_engine_entity_property_changed(entity_id, variant_type, "int", current_path, strValue);
-        editingField[uniqueId] = false;
-    }
 }
 
 void Hierarchy::render_float_field(rapidjson::Document& document, rapidjson::Value& value,
