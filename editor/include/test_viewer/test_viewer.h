@@ -67,6 +67,7 @@ private:
     void render_test_list();
     void render_test_details();
     void render_test_summary();
+    void render_toolbar();
     
     std::string get_test_result_string(ResultType result_type) const;
     ImVec4 get_test_result_color(ResultType result_type) const;

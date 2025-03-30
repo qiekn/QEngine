@@ -1,0 +1,12 @@
+Test ID,Action,Expected Result,Actual Result,Status
+Launch the application and check if the main window appears.,"""The main window should appear with the title 'Zeytin Editor'.""",,Passed
+Create a new entity by clicking on '+ Create New Entity' button and name it 'TestEntity'.,"""A new entity named 'TestEntity' should appear in the entity list.""",,Passed
+Add 'Position' variant to the 'TestEntity'.,"""The 'Position' variant should be added to 'TestEntity' and show x and y properties.""",,Passed
+Set the Position.x value to 100 and Position.y value to 200.,"""The Position variant should display x=100 and y=200.""",,Failed
+Click the 'Play' button to enter play mode.,"""The engine should enter play mode and the 'Play' button should turn green.""",,Failed
+Create a primitive cube entity with Collider variant.,"""A new entity with Collider variant should be created successfully.""",,Acceptable
+Try to add a non-existent variant 'InvalidVariant'.,"""The system should show an error or warning message.""",,Acceptable
+Create an entity with a long multi-line description spanning multiple lines to test text formatting.,"""The entity should be created successfully with the multi-line description.",,Not Executed
+,,,Not Executed
+Add 'Ball' variant to an entity and check if required variants are auto-added.,"""Position, Velocity, Collider and Speed variants should be automatically added.""",,Not Executed
+Save all entities and check if files are created in the filesystem.,"""Entity files should be created in the ../shared/entities/ directory.""",,Not Executed

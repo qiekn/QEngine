@@ -18,28 +18,48 @@ TestViewer::~TestViewer()
 {
 }
 
-void TestViewer::render()
-{
+void TestViewer::render() {
+    ImGui::Begin("Test Viewer", nullptr, 0);
+
     if (!is_test_loaded()) {
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test plan loaded.");
-        return;
+    } else {
+        render_toolbar();
+        render_test_summary();
+        ImGui::Separator();
+        render_test_list();
     }
 
-    ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5), true);
-    render_test_summary();
-    ImGui::EndChild();
+    ImGui::End();
+}
 
-    ImGui::Separator();
+void TestViewer::render_toolbar() {
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
 
-    ImGui::BeginChild("test_details_panel", ImVec2(0, 0), true);
-    for (int i = 0; i < test_plan.test_cases.size(); i++) {
-        render_single_test_case(i);
+    if (ImGui::Button("Save Results")) {
+        save_results(test_plan.name + "_results.csv");
+    }
 
-        if (i < test_plan.test_cases.size() - 1) {
-            ImGui::Separator();
+    ImGui::SameLine();
+    if (ImGui::Button("Reset All Tests")) {
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {
+            reset_tests();
+            update_test_statistics();
+        } else {
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("Hold Ctrl and click to reset all tests");
+            }
         }
     }
-    ImGui::EndChild();
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(200);
+    static char filter[64] = "";
+    ImGui::InputTextWithHint("##filter", "Filter tests...", filter, sizeof(filter));
+
+    ImGui::SameLine(ImGui::GetWindowWidth() - 120);
+    ImGui::Text("Plan: %s", test_plan.name.c_str());
+
+    ImGui::PopStyleVar();
 }
 
 void TestViewer::render_single_test_case(int index)
@@ -48,11 +68,47 @@ void TestViewer::render_single_test_case(int index)
 
     ImGui::PushID(index);
 
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImVec4 headerColor = ImVec4(0.25f, 0.25f, 0.27f, 0.8f); 
+    if (test.is_executed) {
+        headerColor = get_test_result_color(test.actual_result.type);
+
+        headerColor.x *= 0.7f;
+        headerColor.y *= 0.7f;
+        headerColor.z *= 0.7f;
+        headerColor.w = 0.6f;
+    }
+
+    ImVec2 headerStart = ImGui::GetCursorScreenPos();
+    ImVec2 headerEnd = ImVec2(
+        headerStart.x + ImGui::GetContentRegionAvail().x,
+        headerStart.y + ImGui::GetFrameHeight() + 4
+    );
+
+    ImGui::GetWindowDrawList()->AddRectFilled(
+        headerStart, headerEnd, ImGui::ColorConvertFloat4ToU32(headerColor)
+    );
+
+    ImGui::Dummy(ImVec2(0, 2));
+    ImGui::Indent(5);
+
     std::string header = "Test " + std::to_string(index + 1);
 
-    bool is_open = ImGui::CollapsingHeader(header.c_str(),
-                                          0);
+    if (expanded_tests.find(index) == expanded_tests.end()) {
+        expanded_tests[index] = false;
+    }
+
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    bool is_open = expanded_tests[index];
+    bool clicked = false;
+
+    ImGui::Text(is_open ? "v" : ">");
+    ImGui::SameLine();
+
+    if (ImGui::Selectable(header.c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+        expanded_tests[index] = !is_open;
+        clicked = true;
+    }
 
     ImGui::PopStyleColor();
 
@@ -62,76 +118,132 @@ void TestViewer::render_single_test_case(int index)
 
     if (test.is_executed) {
         ImGui::TextColored(get_test_result_color(test.actual_result.type),
-                          "%s", get_test_result_string(test.actual_result.type).c_str());
+                         "%s", get_test_result_string(test.actual_result.type).c_str());
     } else {
         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Not Executed");
     }
 
-    if (is_open) {
-        ImGui::Columns(2, ("test_columns_" + std::to_string(index)).c_str(), false);
+    ImGui::Unindent(5);
+    ImGui::Dummy(ImVec2(0, 2));
 
-        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Action:");
+    if (expanded_tests[index]) {
+        ImVec2 contentStart = ImGui::GetCursorScreenPos();
+        ImVec2 contentEnd = ImVec2(
+            contentStart.x + ImGui::GetContentRegionAvail().x,
+            contentStart.y + ImGui::GetFrameHeightWithSpacing() * 9 + 16 
+        );
+
+        ImGui::GetWindowDrawList()->AddRectFilled(
+            contentStart, contentEnd,
+            ImGui::ColorConvertFloat4ToU32(ImVec4(0.18f, 0.18f, 0.2f, 0.8f))
+        );
+
+        ImGui::GetWindowDrawList()->AddRect(
+            contentStart, contentEnd,
+            ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.3f, 0.35f, 0.5f))
+        );
+
+        ImGui::Dummy(ImVec2(0, 8));
+        ImGui::Indent(12);
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.9f, 1.0f, 1.0f));
+        ImGui::TextUnformatted("Action:");
+        ImGui::PopStyleColor();
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
         ImGui::BeginChild(("action_text_" + std::to_string(index)).c_str(),
-                         ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 3), true);
+                        ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 3),
+                        true);
         ImGui::TextWrapped("%s", test.action.value.c_str());
         ImGui::EndChild();
+        ImGui::PopStyleColor();
 
-        ImGui::NextColumn();
+        ImGui::Dummy(ImVec2(0, 8));
 
-        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Expected Result:");
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.9f, 1.0f, 1.0f));
+        ImGui::TextUnformatted("Expected Result:");
+        ImGui::PopStyleColor();
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
         ImGui::BeginChild(("expected_result_text_" + std::to_string(index)).c_str(),
-                         ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 3), true);
+                        ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 3),
+                        true);
         ImGui::TextWrapped("%s", test.expected_result.value.c_str());
         ImGui::EndChild();
+        ImGui::PopStyleColor();
 
-        ImGui::Columns(1);
+        ImGui::Dummy(ImVec2(0, 8));
 
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Actual Result:");
+        bool show_actual_result = ImGui::CollapsingHeader("Actual Result", ImGuiTreeNodeFlags_None);
 
-        if (actual_result_buffers.find(index) == actual_result_buffers.end()) {
-            actual_result_buffers[index] = std::vector<char>(4096, 0);
-            if (!test.actual_result.value.empty()) {
-                strncpy(actual_result_buffers[index].data(), test.actual_result.value.c_str(),
-                        actual_result_buffers[index].size() - 1);
+        if (show_actual_result) {
+            if (actual_result_buffers.find(index) == actual_result_buffers.end()) {
+                actual_result_buffers[index] = std::vector<char>(4096, 0);
+                if (!test.actual_result.value.empty()) {
+                    strncpy(actual_result_buffers[index].data(), test.actual_result.value.c_str(),
+                            actual_result_buffers[index].size() - 1);
+                }
             }
+
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.12f, 0.12f, 0.15f, 0.8f));
+            std::string buffer_id = "##actual_result_" + std::to_string(index);
+            if (ImGui::InputTextMultiline(buffer_id.c_str(),
+                                      actual_result_buffers[index].data(),
+                                      actual_result_buffers[index].size(),
+                                      ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 4),
+                                      ImGuiInputTextFlags_AllowTabInput)) {
+                test.actual_result.value = actual_result_buffers[index].data();
+            }
+            ImGui::PopStyleColor();
         }
 
-        std::string buffer_id = "##actual_result_" + std::to_string(index);
-        if (ImGui::InputTextMultiline(buffer_id.c_str(),
-                                   actual_result_buffers[index].data(),
-                                   actual_result_buffers[index].size(),
-                                   ImVec2(-1, ImGui::GetTextLineHeightWithSpacing() * 4),
-                                   ImGuiInputTextFlags_AllowTabInput)) {
-            test.actual_result.value = actual_result_buffers[index].data();
-        }
+        ImGui::Dummy(ImVec2(0, 2));
 
-        ImGui::Spacing();
-        ImGui::Text("Set Result:");
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
 
-        float button_width = std::min(80.0f, ImGui::GetContentRegionAvail().x / 6.0f);
+        float available_width = ImGui::GetContentRegionAvail().x - 12;
+        int buttons_per_row = 3; 
+        float button_width = (available_width / buttons_per_row) - 8;
 
-        std::unordered_map<ResultType, ImVec4> softened_colors;
-        softened_colors[ResultType::Todo] = ImVec4(0.5f, 0.5f, 0.7f, 0.7f);
-        softened_colors[ResultType::Passed] = ImVec4(0.0f, 0.6f, 0.0f, 0.7f);
-        softened_colors[ResultType::Failed] = ImVec4(0.7f, 0.0f, 0.0f, 0.7f);
-        softened_colors[ResultType::Blocked] = ImVec4(0.7f, 0.4f, 0.0f, 0.7f);
-        softened_colors[ResultType::Skipped] = ImVec4(0.5f, 0.5f, 0.5f, 0.7f);
-        softened_colors[ResultType::Acceptable] = ImVec4(0.7f, 0.6f, 0.0f, 0.7f);
+        std::unordered_map<ResultType, ImVec4> resultColors;
+        resultColors[ResultType::Todo] = ImVec4(0.4f, 0.4f, 0.7f, 0.7f);
+        resultColors[ResultType::Passed] = ImVec4(0.2f, 0.7f, 0.3f, 0.7f);
+        resultColors[ResultType::Failed] = ImVec4(0.7f, 0.2f, 0.2f, 0.7f);
+        resultColors[ResultType::Blocked] = ImVec4(0.7f, 0.4f, 0.1f, 0.7f);
+        resultColors[ResultType::Skipped] = ImVec4(0.4f, 0.4f, 0.4f, 0.7f);
+        resultColors[ResultType::Acceptable] = ImVec4(0.7f, 0.6f, 0.1f, 0.7f);
 
+        int current_button = 0;
         for (int i = 1; i < static_cast<int>(ResultType::Length); i++) {
             const ResultType result_type = static_cast<ResultType>(i);
             const std::string& name = get_test_result_string(result_type);
 
-            if (i > 0) ImGui::SameLine();
+            if (current_button > 0 && current_button % buttons_per_row == 0) {
+                ImGui::NewLine();
+            } else if (current_button > 0) {
+                ImGui::SameLine();
+            }
 
-            ImGui::PushStyleColor(ImGuiCol_Button, softened_colors[result_type]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                                ImVec4(softened_colors[result_type].x * 1.2f,
-                                       softened_colors[result_type].y * 1.2f,
-                                       softened_colors[result_type].z * 1.2f, 0.8f));
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // White text for contrast
+            current_button++;
+
+            bool is_current = test.is_executed && test.actual_result.type == result_type;
+            if (is_current) {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(
+                    resultColors[result_type].x * 1.2f,
+                    resultColors[result_type].y * 1.2f,
+                    resultColors[result_type].z * 1.2f,
+                    0.9f));
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Button, resultColors[result_type]);
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(
+                std::min(resultColors[result_type].x * 1.3f, 1.0f),
+                std::min(resultColors[result_type].y * 1.3f, 1.0f),
+                std::min(resultColors[result_type].z * 1.3f, 1.0f),
+                0.8f));
+
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
             if(ImGui::Button(name.c_str(), ImVec2(button_width, 0))) {
                 test.is_executed = true;
@@ -142,7 +254,13 @@ void TestViewer::render_single_test_case(int index)
             ImGui::PopStyleColor(3);
         }
 
+        ImGui::PopStyleVar(); 
+
+        ImGui::Unindent(12);
+        ImGui::Dummy(ImVec2(0, 8));
     }
+
+    ImGui::Dummy(ImVec2(0, 4));
 
     ImGui::PopID();
 }
@@ -172,36 +290,22 @@ void TestViewer::update_test_statistics()
     }
 }
 
-void TestViewer::render_test_list() 
-{
-    ImGui::Text("Test Cases:");
-    
-    ImGui::SetNextItemWidth(-1);
-    
-    ImGui::Separator();
-    
-    for (int i = 0; i < test_plan.test_cases.size(); i++) {
-        const auto& test = test_plan.test_cases[i];
-        
-        std::string label = "Test " + std::to_string(i + 1);
-        if (test.is_executed) {
-            label += " [" + get_test_result_string(test.actual_result.type) + "]";
-        }
-        
-        if (test.is_executed) {
-            ImGui::PushStyleColor(ImGuiCol_Text, get_test_result_color(test.actual_result.type));
-        }
-        
-        bool is_selected = (i == selected_test_index);
-        if (ImGui::Selectable(label.c_str(), is_selected)) {
-            selected_test_index = i;
-            log_info() << "Selected: " << i << std::endl;
-        }
-        
-        if (test.is_executed) {
-            ImGui::PopStyleColor();
+void TestViewer::render_test_list() {
+    ImGui::BeginChild("test_list", ImVec2(0, 0), true);
+
+    if (test_plan.test_cases.empty()) {
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test cases available.");
+    } else {
+        for (int i = 0; i < test_plan.test_cases.size(); i++) {
+            render_single_test_case(i);
+
+            if (i < test_plan.test_cases.size() - 1) {
+                ImGui::Separator();
+            }
         }
     }
+
+    ImGui::EndChild();
 }
 
 void TestViewer::render_test_details() 
@@ -259,35 +363,68 @@ void TestViewer::render_test_details()
     ImGui::InputTextMultiline("##notes", notes, sizeof(notes), ImVec2(-1, ImGui::GetContentRegionAvail().y), ImGuiInputTextFlags_AllowTabInput);
 }
 
-void TestViewer::render_test_summary() 
-{
-    ImGui::Text("Summary: %d/%d Tests Executed", tests_executed, (int)test_plan.test_cases.size());
-    
-    ImGui::Columns(5, "test_summary_columns", false);
-    
+void TestViewer::render_test_summary() {
+    ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 3.5f), true);
+
+    // Progress bar with percentage
+    float completion = (float)tests_executed / test_plan.test_cases.size();
+
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Progress:");
+    ImGui::SameLine();
+
+    float barWidth = ImGui::GetContentRegionAvail().x;
+    ImVec2 cursorPos = ImGui::GetCursorPos();
+
+    // Draw progress bar background
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.3f, 0.5f, 0.8f, 0.8f));
+    ImGui::ProgressBar(completion, ImVec2(barWidth, 14.0f), "");
+    ImGui::PopStyleColor(2);
+
+    // Place text over the progress bar
+    ImVec2 textPos = cursorPos;
+    textPos.x += barWidth * 0.5f - 20;
+    textPos.y += 0;
+    ImGui::SetCursorPos(textPos);
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f%%", completion * 100);
+
+    // Test statistics grid
+    ImGui::Columns(6, "test_stats_columns", false);
+    ImGui::SetColumnWidth(0, barWidth * 0.16f);
+    ImGui::SetColumnWidth(1, barWidth * 0.17f);
+    ImGui::SetColumnWidth(2, barWidth * 0.17f);
+    ImGui::SetColumnWidth(3, barWidth * 0.17f);
+    ImGui::SetColumnWidth(4, barWidth * 0.17f);
+    ImGui::SetColumnWidth(5, barWidth * 0.16f);
+
+    ImGui::Text("Total: %d", (int)test_plan.test_cases.size());
+    ImGui::NextColumn();
+
     ImGui::TextColored(ImVec4(0.0f, 0.8f, 0.0f, 1.0f), "Passed: %d", tests_passed);
     ImGui::NextColumn();
-    
+
     ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed: %d", tests_failed);
     ImGui::NextColumn();
-    
+
     ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Blocked: %d", tests_blocked);
     ImGui::NextColumn();
-    
+
     ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Skipped: %d", tests_skipped);
     ImGui::NextColumn();
-    
+
     ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Acceptable: %d", tests_acceptable);
     ImGui::NextColumn();
-    
+
     ImGui::Columns(1);
 
-    
+    // Pass rate calculation
     if (tests_executed > 0) {
-        float pass_percentage = (float)(tests_passed + tests_acceptable) / test_plan.test_cases.size() * 100.0f;
-        ImGui::ProgressBar((float)tests_executed / test_plan.test_cases.size(), ImVec2(-1, 10.0f), "");
-        ImGui::Text("%.1f%% Pass Rate (including acceptable issues)", pass_percentage);
+        float pass_percentage = (float)(tests_passed + tests_acceptable) / tests_executed * 100.0f;
+        ImGui::Text("Pass Rate: %.1f%%", pass_percentage);
     }
+
+    ImGui::EndChild();
 }
 
 void TestViewer::load_test_file(const std::string& file_path) 
