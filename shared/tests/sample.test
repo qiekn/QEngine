@@ -1,12 +1,11 @@
 Action,Expected Result
-"Launch the application and check if the main window appears.","The main window should appear with the title 'Zeytin Editor'."
-"Create a new entity by clicking on '+ Create New Entity' button and name it 'TestEntity'.","A new entity named 'TestEntity' should appear in the entity list."
-"Add 'Position' variant to the 'TestEntity'.","The 'Position' variant should be added to 'TestEntity' and show x and y properties."
-"Set the Position.x value to 100 and Position.y value to 200.","The Position variant should display x=100 and y=200."
-"Click the 'Play' button to enter play mode.","The engine should enter play mode and the 'Play' button should turn green."
-"Create a primitive cube entity with Collider variant.","A new entity with Collider variant should be created successfully."
-"Try to add a non-existent variant 'InvalidVariant'.","The system should show an error or warning message."
-"Create an entity with a long multi-line description spanning multiple lines to test text formatting.","The entity should be created successfully with the multi-line description.
-The UI should properly handle the line breaks in the description."
-"Add 'Ball' variant to an entity and check if required variants are auto-added.","Position, Velocity, Collider and Speed variants should be automatically added."
-"Save all entities and check if files are created in the filesystem.","Entity files should be created in the ../shared/entities/ directory."
+Launch the application and check if the main window appears,The main window should appear with the title Zeytin Editor
+Create a new entity by clicking on + Create New Entity button and name it TestEntity. Add Position variant to the TestEntity. Add Collider variant to the TestEntity ,A new entity named TestEntity should appear in the entity list
+Add Position variant to the TestEntity.","The 'Position' variant should be added to 'TestEntity' and show x and y properties."
+Set the Position.x value to 100 and Position.y value to 200.","The Position variant should display x=100 and y=200."
+Click the 'Play' button to enter play mode.","The engine should enter play mode and the 'Play' button should turn green."
+Create a primitive cube entity with Collider variant.","A new entity with Collider variant should be created successfully."
+Try to add a non-existent variant 'InvalidVariant'.","The system should show an error or warning message."
+Create an entity with a long multi-line description spanning multiple lines to test text formatting.","The entity should be created successfully with the multi-line description.
+Add 'Ball' variant to an entity and check if required variants are auto-added.","Position, Velocity, Collider and Speed variants should be automatically added."
+Save all entities and check if files are created in the filesystem.","Entity files should be created in the ../shared/entities/ directory."

@@ -18,19 +18,43 @@ TestViewer::~TestViewer()
 {
 }
 
-void TestViewer::render() {
-    ImGui::Begin("Test Viewer", nullptr, 0);
-
+void TestViewer::render()
+{
     if (!is_test_loaded()) {
-    } else {
-        render_toolbar();
-        render_test_summary();
-        ImGui::Separator();
-        render_test_list();
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test plan loaded.");
+        return;
     }
 
-    ImGui::End();
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.65f, 0.65f, 0.75f, 0.2));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 5.0f);
+
+    ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4), true);
+    render_toolbar();
+    render_test_summary();
+    ImGui::EndChild();
+
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
+
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.65f, 0.65f, 0.75f, 0.4));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+
+    ImGui::Separator();
+
+    ImGui::BeginChild("test_details_panel", ImVec2(0, 0), true);
+    for (int i = 0; i < test_plan.test_cases.size(); i++) {
+        render_single_test_case(i);
+
+        if (i < test_plan.test_cases.size() - 1) {
+            ImGui::Separator();
+        }
+    }
+    ImGui::EndChild();
+
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
 }
+
 
 void TestViewer::render_toolbar() {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
@@ -69,13 +93,14 @@ void TestViewer::render_single_test_case(int index)
     ImGui::PushID(index);
 
     ImVec4 headerColor = ImVec4(0.25f, 0.25f, 0.27f, 0.8f); 
-    if (test.is_executed) {
-        headerColor = get_test_result_color(test.actual_result.type);
 
-        headerColor.x *= 0.7f;
-        headerColor.y *= 0.7f;
-        headerColor.z *= 0.7f;
-        headerColor.w = 0.6f;
+    if (test.is_executed()) {
+      headerColor = get_test_result_color(test.actual_result.type);
+
+      headerColor.x *= 0.7f;
+      headerColor.y *= 0.7f;
+      headerColor.z *= 0.7f;
+      headerColor.w = 0.6f;
     }
 
     ImVec2 headerStart = ImGui::GetCursorScreenPos();
@@ -105,23 +130,26 @@ void TestViewer::render_single_test_case(int index)
     ImGui::Text(is_open ? "v" : ">");
     ImGui::SameLine();
 
-    if (ImGui::Selectable(header.c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+    ImGui::PopStyleColor();
+
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerColor); 
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, headerColor); 
+    ImGui::PushStyleColor(ImGuiCol_Header, headerColor);      
+
+    if (ImGui::Selectable(header.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
         expanded_tests[index] = !is_open;
         clicked = true;
     }
 
-    ImGui::PopStyleColor();
+    ImGui::PopStyleColor(3); 
+
 
     ImGui::SameLine(ImGui::GetWindowWidth() * 0.5f);
     ImGui::Text("Status: ");
     ImGui::SameLine();
 
-    if (test.is_executed) {
-        ImGui::TextColored(get_test_result_color(test.actual_result.type),
+    ImGui::TextColored(get_test_result_color(test.actual_result.type),
                          "%s", get_test_result_string(test.actual_result.type).c_str());
-    } else {
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Not Executed");
-    }
 
     ImGui::Unindent(5);
     ImGui::Dummy(ImVec2(0, 2));
@@ -226,7 +254,7 @@ void TestViewer::render_single_test_case(int index)
 
             current_button++;
 
-            bool is_current = test.is_executed && test.actual_result.type == result_type;
+            bool is_current = test.is_executed() && test.actual_result.type == result_type;
             if (is_current) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(
                     resultColors[result_type].x * 1.2f,
@@ -246,7 +274,7 @@ void TestViewer::render_single_test_case(int index)
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
             if(ImGui::Button(name.c_str(), ImVec2(button_width, 0))) {
-                test.is_executed = true;
+                //test.is_executed = true;
                 test.actual_result.type = result_type;
                 update_test_statistics();
             }
@@ -275,7 +303,7 @@ void TestViewer::update_test_statistics()
     tests_acceptable = 0;
 
     for (const auto& test : test_plan.test_cases) {
-        if (test.is_executed) {
+        if (test.is_executed()) {
             tests_executed++;
 
             switch (test.actual_result.type) {
@@ -323,7 +351,7 @@ void TestViewer::render_test_details()
     ImGui::Text("Status: ");
     ImGui::SameLine();
     
-    if (test.is_executed) {
+    if (test.is_executed()) {
         ImGui::TextColored(get_test_result_color(test.actual_result.type), "%s", get_test_result_string(test.actual_result.type).c_str());
     } else {
         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Not Executed");
@@ -352,7 +380,7 @@ void TestViewer::render_test_details()
         ImGui::SameLine();
         if(ImGui::Button(label.c_str())) {
             auto& current_case = test_plan.test_cases[selected_test_index];
-            current_case.is_executed = true;
+            //current_case.is_executed = true;
             current_case.actual_result.type = static_cast<ResultType>(i);
         }
     }
@@ -366,7 +394,6 @@ void TestViewer::render_test_details()
 void TestViewer::render_test_summary() {
     ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 3.5f), true);
 
-    // Progress bar with percentage
     float completion = (float)tests_executed / test_plan.test_cases.size();
 
     ImGui::AlignTextToFramePadding();
@@ -376,20 +403,17 @@ void TestViewer::render_test_summary() {
     float barWidth = ImGui::GetContentRegionAvail().x;
     ImVec2 cursorPos = ImGui::GetCursorPos();
 
-    // Draw progress bar background
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.3f, 0.5f, 0.8f, 0.8f));
     ImGui::ProgressBar(completion, ImVec2(barWidth, 14.0f), "");
     ImGui::PopStyleColor(2);
 
-    // Place text over the progress bar
     ImVec2 textPos = cursorPos;
     textPos.x += barWidth * 0.5f - 20;
     textPos.y += 0;
     ImGui::SetCursorPos(textPos);
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f%%", completion * 100);
 
-    // Test statistics grid
     ImGui::Columns(6, "test_stats_columns", false);
     ImGui::SetColumnWidth(0, barWidth * 0.16f);
     ImGui::SetColumnWidth(1, barWidth * 0.17f);
@@ -418,7 +442,6 @@ void TestViewer::render_test_summary() {
 
     ImGui::Columns(1);
 
-    // Pass rate calculation
     if (tests_executed > 0) {
         float pass_percentage = (float)(tests_passed + tests_acceptable) / tests_executed * 100.0f;
         ImGui::Text("Pass Rate: %.1f%%", pass_percentage);
@@ -452,6 +475,10 @@ void TestViewer::load_test_file(const std::string& file_path)
     catch (std::exception& e) {
         log_error() << "Exception while loading test file: " << e.what() << std::endl;
     }
+
+    for(auto& test_case : test_plan.test_cases) {
+        test_case.actual_result.type = ResultType::Todo;
+    }
 }
 
 void TestViewer::save_results(const std::string& file_path) 
@@ -463,13 +490,12 @@ void TestViewer::save_results(const std::string& file_path)
             return;
         }
         
-        file << "Test ID,Action,Expected Result,Actual Result,Status\n";
+        file << "Action,Expected Result,Actual Result\n";
         
         for (const auto& test : test_plan.test_cases) {
             auto escape_csv_field = [](const std::string& field) -> std::string {
                 if (field.find(',') != std::string::npos || field.find('"') != std::string::npos || field.find('\n') != std::string::npos) {
                     std::string escaped = field;
-                    // Replace " with ""
                     size_t start_pos = 0;
                     while ((start_pos = escaped.find("\"", start_pos)) != std::string::npos) {
                         escaped.replace(start_pos, 1, "\"\"");
@@ -484,12 +510,7 @@ void TestViewer::save_results(const std::string& file_path)
                  << escape_csv_field(test.action.value) << ","
                  << escape_csv_field(test.expected_result.value) << ",";
             
-            if (test.is_executed) {
-                file << escape_csv_field(test.actual_result.value) << ",";
-                file << get_test_result_string(test.actual_result.type);
-            } else {
-                file << "," << "Not Executed";
-            }
+            file << get_test_result_string(test.actual_result.type) << "," << escape_csv_field(test.actual_result.value) << ",";
             
             file << "\n";
         }
@@ -565,8 +586,7 @@ TestCase TestViewer::process_csv_line(const std::string& line)
 void TestViewer::reset_tests() 
 {
     for (auto& test : test_plan.test_cases) {
-        test.is_executed = false;
-        test.actual_result.type = ResultType::None;
+        test.actual_result.type = ResultType::Todo;
         test.actual_result.value.clear();
     }
 }

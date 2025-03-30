@@ -38,7 +38,7 @@ struct TestCase {
     Action action;
     ExpectedResult expected_result;
     ActualResult actual_result;
-    bool is_executed = false;
+    inline bool is_executed() const { return actual_result.type != ResultType::Todo; }
 };
 
 struct TestPlan { 
