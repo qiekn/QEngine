@@ -8,6 +8,8 @@
 namespace Test {
 
 TestViewer::TestViewer() 
+    : m_is_fetching(false),
+      m_fetch_succeeded(false)
 {
     for(auto& kv : expanded_tests) {
         kv.second = false;
@@ -20,8 +22,14 @@ TestViewer::~TestViewer()
 
 void TestViewer::render()
 {
+
+    check_fetch_status();
+
     if (!is_test_loaded()) {
         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test plan loaded.");
+        if (ImGui::Button("Fetch Manual Tests")) {
+            fetch_manual_tests();
+        }
         return;
     }
 
@@ -55,7 +63,6 @@ void TestViewer::render()
     ImGui::PopStyleColor();
 }
 
-
 void TestViewer::render_toolbar() {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
 
@@ -76,14 +83,9 @@ void TestViewer::render_toolbar() {
     }
 
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(200);
-    static char filter[64] = "";
-    ImGui::InputTextWithHint("##filter", "Filter tests...", filter, sizeof(filter));
-
-    ImGui::SameLine(ImGui::GetWindowWidth() - 120);
-    ImGui::Text("Plan: %s", test_plan.name.c_str());
-
-    ImGui::PopStyleVar();
+    if (ImGui::Button("Fetch Manual Tests")) {
+        fetch_manual_tests();
+    }
 }
 
 void TestViewer::render_single_test_case(int index)
@@ -639,5 +641,104 @@ ImVec4 TestViewer::get_test_result_color(ResultType result) const
         default: return ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // White
     }
 }
+
+void TestViewer::fetch_manual_tests()
+{
+    if (m_is_fetching) {
+        log_warning() << "Already fetching manual tests, please wait..." << std::endl;
+        return;
+    }
+
+    log_info() << "Starting fetch of manual tests in background..." << std::endl;
+    m_is_fetching = true;
+    m_fetch_message = "Fetching manual tests...";
+
+    m_fetch_future = std::async(std::launch::async, [this]() {
+            #ifdef _WIN32
+            int result = std::system("python ../scripts/fetch_manual_tests.py");
+            #else
+            int result = std::system("bash -c 'source ../../test/env/bin/activate && python3 ../../test/main.py export-all-plans ../shared/tests'");
+            #endif
+
+        m_is_fetching = false;
+        m_fetch_succeeded = true;
+    });
+}
+
+void TestViewer::check_fetch_status()
+{
+    if (m_is_fetching) {
+        ImGui::OpenPopup("Fetching Tests");
+    }
+
+    if (ImGui::BeginPopupModal("Fetching Tests", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        static float progress = 0.0f;
+        progress += ImGui::GetIO().DeltaTime * 0.1;
+        if (progress > 1.0f) progress = 0.0f;
+
+        ImGui::Text("Fetching manual tests...");
+        ImGui::ProgressBar(progress, ImVec2(250, 0));
+
+        if (!m_is_fetching) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    if (m_fetch_future.valid() &&
+        m_fetch_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+
+        m_fetch_future.get(); 
+
+        if (m_fetch_succeeded) {
+            std::string tests_path = "../shared/tests";
+            std::filesystem::path latest_file;
+            auto latest_time = std::filesystem::file_time_type::min();
+
+            if (std::filesystem::exists(tests_path)) {
+                for (const auto& entry : std::filesystem::directory_iterator(tests_path)) {
+                    if (entry.is_regular_file() && entry.path().extension() == ".test") {
+                        auto file_time = std::filesystem::last_write_time(entry.path());
+                        if (file_time > latest_time) {
+                            latest_time = file_time;
+                            latest_file = entry.path();
+                        }
+                    }
+                }
+
+                if (!latest_file.empty()) {
+                    log_info() << "Loading latest test file: " << latest_file << std::endl;
+                    load_test_file(latest_file.string());
+                    ImGui::OpenPopup("Fetch Complete");
+                }
+            }
+        } else {
+            ImGui::OpenPopup("Fetch Failed");
+        }
+    }
+
+    if (ImGui::BeginPopupModal("Fetch Complete", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(0.0f, 0.8f, 0.0f, 1.0f), "Manual tests fetched successfully!");
+        ImGui::Text("Tests have been loaded and are ready for execution.");
+
+        if (ImGui::Button("OK", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    if (ImGui::BeginPopupModal("Fetch Failed", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed to fetch manual tests!");
+        ImGui::Text("%s", m_fetch_message.c_str());
+
+        if (ImGui::Button("OK", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+}
+
 
 }
