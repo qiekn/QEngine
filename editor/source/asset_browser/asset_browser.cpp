@@ -99,7 +99,7 @@ AssetType AssetBrowser::determine_asset_type(const std::string& extension) {
         {".lua", AssetType::Script}, {".make", AssetType::Script},
         {".entity", AssetType::Entity}, {".scene", AssetType::Scene},
         {".variant", AssetType::Variant}, {".requires", AssetType::Requires},
-        {".test", AssetType::Test},
+        {".xtest", AssetType::Test},
     };
     auto it = extension_map.find(extension);
     return (it != extension_map.end()) ? it->second : AssetType::Other;

@@ -22,7 +22,6 @@ TestViewer::~TestViewer()
 
 void TestViewer::render()
 {
-
     check_fetch_status();
 
     if (!is_test_loaded()) {
@@ -66,12 +65,19 @@ void TestViewer::render()
 void TestViewer::render_toolbar() {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
 
-    if (ImGui::Button("Save Results")) {
+    if (ImGui::Button("Sent to Xray")) {
+        save_results(test_plan.name + ".xresult");
+        int result = std::system("bash -c 'source ../../test/env/bin/activate && python3 ../../test/main.py execute-plan XSP1-39 XSP1-39.xresult'");
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Save to disk")) {
         save_results(test_plan.name + "_results.csv");
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Reset All Tests")) {
+    if (ImGui::Button("Reset All")) {
         if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {
             reset_tests();
             update_test_statistics();
@@ -82,10 +88,7 @@ void TestViewer::render_toolbar() {
         }
     }
 
-    ImGui::SameLine();
-    if (ImGui::Button("Fetch Manual Tests")) {
-        fetch_manual_tests();
-    }
+    ImGui::PopStyleVar();
 }
 
 void TestViewer::render_single_test_case(int index)
@@ -156,7 +159,6 @@ void TestViewer::render_single_test_case(int index)
     ImGui::Dummy(ImVec2(0, 2));
 
     if (expanded_tests[index]) {
-        // Increase the size of the content area to accommodate more text
         float contentHeight = ImGui::GetFrameHeightWithSpacing() * 16 + 16; // Increased from 9 to 16
 
         ImVec2 contentStart = ImGui::GetCursorScreenPos();
@@ -183,7 +185,7 @@ void TestViewer::render_single_test_case(int index)
         ImGui::PopStyleColor();
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
-        // Increase the height of the action text area - changed from 3 to 6 lines
+
         ImGui::BeginChild(("action_text_" + std::to_string(index)).c_str(),
                         ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 6),
                         true);
@@ -198,7 +200,7 @@ void TestViewer::render_single_test_case(int index)
         ImGui::PopStyleColor();
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
-        // Increase the height of the expected result text area - changed from 3 to 6 lines
+
         ImGui::BeginChild(("expected_result_text_" + std::to_string(index)).c_str(),
                         ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 6),
                         true);
@@ -221,7 +223,7 @@ void TestViewer::render_single_test_case(int index)
 
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.12f, 0.12f, 0.15f, 0.8f));
             std::string buffer_id = "##actual_result_" + std::to_string(index);
-            // Also increase the actual result input area - changed from 4 to 6 lines
+
             if (ImGui::InputTextMultiline(buffer_id.c_str(),
                                       actual_result_buffers[index].data(),
                                       actual_result_buffers[index].size(),
@@ -386,7 +388,7 @@ void TestViewer::render_test_details()
         ImGui::SameLine();
         if(ImGui::Button(label.c_str())) {
             auto& current_case = test_plan.test_cases[selected_test_index];
-            //current_case.is_executed = true;
+
             current_case.actual_result.type = static_cast<ResultType>(i);
         }
     }
@@ -674,7 +676,7 @@ void TestViewer::check_fetch_status()
     if (ImGui::BeginPopupModal("Fetching Tests", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         static float progress = 0.0f;
-        progress += ImGui::GetIO().DeltaTime * 0.1;
+        progress += ImGui::GetIO().DeltaTime * (0.1 /2.5);
         if (progress > 1.0f) progress = 0.0f;
 
         ImGui::Text("Fetching manual tests...");
