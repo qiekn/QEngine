@@ -92,7 +92,7 @@ void TestViewer::render_single_test_case(int index)
 
     ImGui::PushID(index);
 
-    ImVec4 headerColor = ImVec4(0.25f, 0.25f, 0.27f, 0.8f); 
+    ImVec4 headerColor = ImVec4(0.25f, 0.25f, 0.27f, 0.8f);
 
     if (test.is_executed()) {
       headerColor = get_test_result_color(test.actual_result.type);
@@ -132,17 +132,16 @@ void TestViewer::render_single_test_case(int index)
 
     ImGui::PopStyleColor();
 
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerColor); 
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, headerColor); 
-    ImGui::PushStyleColor(ImGuiCol_Header, headerColor);      
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, headerColor);
+    ImGui::PushStyleColor(ImGuiCol_Header, headerColor);
 
     if (ImGui::Selectable(header.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
         expanded_tests[index] = !is_open;
         clicked = true;
     }
 
-    ImGui::PopStyleColor(3); 
-
+    ImGui::PopStyleColor(3);
 
     ImGui::SameLine(ImGui::GetWindowWidth() * 0.5f);
     ImGui::Text("Status: ");
@@ -155,10 +154,13 @@ void TestViewer::render_single_test_case(int index)
     ImGui::Dummy(ImVec2(0, 2));
 
     if (expanded_tests[index]) {
+        // Increase the size of the content area to accommodate more text
+        float contentHeight = ImGui::GetFrameHeightWithSpacing() * 16 + 16; // Increased from 9 to 16
+
         ImVec2 contentStart = ImGui::GetCursorScreenPos();
         ImVec2 contentEnd = ImVec2(
             contentStart.x + ImGui::GetContentRegionAvail().x,
-            contentStart.y + ImGui::GetFrameHeightWithSpacing() * 9 + 16 
+            contentStart.y + contentHeight
         );
 
         ImGui::GetWindowDrawList()->AddRectFilled(
@@ -179,8 +181,9 @@ void TestViewer::render_single_test_case(int index)
         ImGui::PopStyleColor();
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
+        // Increase the height of the action text area - changed from 3 to 6 lines
         ImGui::BeginChild(("action_text_" + std::to_string(index)).c_str(),
-                        ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 3),
+                        ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 6),
                         true);
         ImGui::TextWrapped("%s", test.action.value.c_str());
         ImGui::EndChild();
@@ -193,8 +196,9 @@ void TestViewer::render_single_test_case(int index)
         ImGui::PopStyleColor();
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
+        // Increase the height of the expected result text area - changed from 3 to 6 lines
         ImGui::BeginChild(("expected_result_text_" + std::to_string(index)).c_str(),
-                        ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 3),
+                        ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 6),
                         true);
         ImGui::TextWrapped("%s", test.expected_result.value.c_str());
         ImGui::EndChild();
@@ -215,10 +219,11 @@ void TestViewer::render_single_test_case(int index)
 
             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.12f, 0.12f, 0.15f, 0.8f));
             std::string buffer_id = "##actual_result_" + std::to_string(index);
+            // Also increase the actual result input area - changed from 4 to 6 lines
             if (ImGui::InputTextMultiline(buffer_id.c_str(),
                                       actual_result_buffers[index].data(),
                                       actual_result_buffers[index].size(),
-                                      ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 4),
+                                      ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 6),
                                       ImGuiInputTextFlags_AllowTabInput)) {
                 test.actual_result.value = actual_result_buffers[index].data();
             }
@@ -230,7 +235,7 @@ void TestViewer::render_single_test_case(int index)
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
 
         float available_width = ImGui::GetContentRegionAvail().x - 12;
-        int buttons_per_row = 3; 
+        int buttons_per_row = 3;
         float button_width = (available_width / buttons_per_row) - 8;
 
         std::unordered_map<ResultType, ImVec4> resultColors;
@@ -274,7 +279,6 @@ void TestViewer::render_single_test_case(int index)
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
             if(ImGui::Button(name.c_str(), ImVec2(button_width, 0))) {
-                //test.is_executed = true;
                 test.actual_result.type = result_type;
                 update_test_statistics();
             }
@@ -282,7 +286,7 @@ void TestViewer::render_single_test_case(int index)
             ImGui::PopStyleColor(3);
         }
 
-        ImGui::PopStyleVar(); 
+        ImGui::PopStyleVar();
 
         ImGui::Unindent(12);
         ImGui::Dummy(ImVec2(0, 8));
@@ -490,7 +494,6 @@ void TestViewer::save_results(const std::string& file_path)
             return;
         }
         
-        file << "Action,Expected Result,Actual Result\n";
         
         for (const auto& test : test_plan.test_cases) {
             auto escape_csv_field = [](const std::string& field) -> std::string {
@@ -506,11 +509,7 @@ void TestViewer::save_results(const std::string& file_path)
                 return field;
             };
             
-            file 
-                 << escape_csv_field(test.action.value) << ","
-                 << escape_csv_field(test.expected_result.value) << ",";
-            
-            file << get_test_result_string(test.actual_result.type) << "," << escape_csv_field(test.actual_result.value) << ",";
+            file << get_test_result_string(test.actual_result.type);
             
             file << "\n";
         }
@@ -523,65 +522,88 @@ void TestViewer::save_results(const std::string& file_path)
     }
 }
 
-void TestViewer::parse_csv(const std::string& content) 
+void TestViewer::parse_csv(const std::string& content)
 {
     std::istringstream stream(content);
     std::string line;
-    
-    if (std::getline(stream, line)) {
-        if (line.find("Action") != std::string::npos && line.find("Expected Result") != std::string::npos) {
-        } else {
-            process_csv_line(line);
-        }
-    }
-    
-    int test_id = 1;
+    std::vector<std::string> lines;
+
     while (std::getline(stream, line)) {
-        TestCase test_case = process_csv_line(line);
-        test_plan.test_cases.push_back(test_case);
+        lines.push_back(line);
     }
+
+    if (lines.empty()) {
+        return;
+    }
+
+    int action_col = -1;
+    int expected_result_col = -1;
+
+    std::vector<std::string> headers = split_csv_line(lines[0]);
+    for (int i = 0; i < headers.size(); i++) {
+        if (headers[i] == "Action") {
+            action_col = i;
+        } else if (headers[i] == "Expected Result") {
+            expected_result_col = i;
+        }
+    }
+
+    if (action_col == -1 || expected_result_col == -1) {
+        log_error() << "Could not find Action and/or Expected Result columns in CSV" << std::endl;
+        return;
+    }
+
+    for (size_t i = 1; i < lines.size(); i++) {
+        std::vector<std::string> row = split_csv_line(lines[i]);
+
+        if (row.size() <= std::max(action_col, expected_result_col)) {
+            continue; 
+        }
+
+        TestCase test_case;
+        test_case.action.value = row[action_col];
+        test_case.expected_result.value = row[expected_result_col];
+
+        if (!test_case.action.value.empty() || !test_case.expected_result.value.empty()) {
+            test_plan.test_cases.push_back(test_case);
+        }
+    }
+
+    update_test_statistics();
 }
 
-TestCase TestViewer::process_csv_line(const std::string& line) 
+std::vector<std::string> TestViewer::split_csv_line(const std::string& line)
 {
-    TestCase test_case;
-    
-    size_t comma_pos = line.find(',');
-    if (comma_pos != std::string::npos) {
-        test_case.action.value = line.substr(0, comma_pos);
-        test_case.expected_result.value = line.substr(comma_pos + 1);
-        
-        if (test_case.action.value.size() > 0 && test_case.action.value[0] == '"') {
-            size_t end_quote = 1;
-            while (end_quote < test_case.action.value.size()) {
-                if (test_case.action.value[end_quote] == '"') {
-                    if (end_quote + 1 < test_case.action.value.size() && test_case.action.value[end_quote + 1] == '"') {
-                        end_quote += 2; 
-                    } else {
-                        break; 
-                    }
-                } else {
-                    end_quote++;
-                }
+    std::vector<std::string> fields;
+    std::string field;
+    bool in_quotes = false;
+
+    for (size_t i = 0; i < line.length(); i++) {
+        char c = line[i];
+
+        if (c == '"') {
+            if (in_quotes && i + 1 < line.length() && line[i + 1] == '"') {
+                // Double quote inside a quoted field - add a single quote
+                field += '"';
+                i++; // Skip the next quote
+            } else {
+                // Toggle quote mode
+                in_quotes = !in_quotes;
             }
-            
-            if (end_quote < test_case.action.value.size()) {
-                test_case.action.value = test_case.action.value.substr(1, end_quote - 1);
-                size_t pos = 0;
-                while ((pos = test_case.action.value.find("\"\"", pos)) != std::string::npos) {
-                    test_case.action.value.replace(pos, 2, "\"");
-                    pos += 1;
-                }
-            }
-        }
-        
-        if (test_case.expected_result.value.size() > 0 && test_case.expected_result.value[0] == '"') {
+        } else if (c == ',' && !in_quotes) {
+            // End of field
+            fields.push_back(field);
+            field.clear();
+        } else {
+            field += c;
         }
     }
-    
-    return test_case;
-}
 
+    // Add the last field
+    fields.push_back(field);
+
+    return fields;
+}
 
 void TestViewer::reset_tests() 
 {

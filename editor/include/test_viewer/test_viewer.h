@@ -62,7 +62,8 @@ public:
     
 
 private:
-    void parse_csv(const std::string& content);
+    void parse_csv(const std::string&);
+    std::vector<std::string> split_csv_line(const std::string&);
     TestCase process_csv_line(const std::string& line);
     void render_test_list();
     void render_test_details();
