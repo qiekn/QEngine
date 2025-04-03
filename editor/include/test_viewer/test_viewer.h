@@ -67,7 +67,6 @@ private:
     void parse_csv(const std::string& content);
     TestCase process_csv_line(const std::string& line);
     void render_test_list();
-    void render_test_details();
     void render_test_summary();
     void render_toolbar();
     void check_fetch_status();
@@ -99,6 +98,15 @@ private:
     bool m_is_fetching = false;
     bool m_fetch_succeeded = false;
     std::string m_fetch_message;
+
+
+    std::future<void> m_xray_future;
+    bool m_is_sending_to_xray = false;
+    bool m_xray_succeeded = false;
+    std::string m_xray_message;
+
+    void send_to_xray();
+    void check_xray_status();
 };
 
 }

@@ -11,9 +11,6 @@ TestViewer::TestViewer()
     : m_is_fetching(false),
       m_fetch_succeeded(false)
 {
-    for(auto& kv : expanded_tests) {
-        kv.second = false;
-    }
 }
 
 TestViewer::~TestViewer() 
@@ -22,7 +19,8 @@ TestViewer::~TestViewer()
 
 void TestViewer::render()
 {
-    check_fetch_status();
+    //check_fetch_status();
+    //check_xray_status();
 
     if (!is_test_loaded()) {
         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No test plan loaded.");
@@ -32,16 +30,12 @@ void TestViewer::render()
         return;
     }
 
-    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.65f, 0.65f, 0.75f, 0.2));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 5.0f);
+
+    render_toolbar();
 
     ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4), true);
-    render_toolbar();
-    render_test_summary();
+        render_test_summary();
     ImGui::EndChild();
-
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor();
 
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.65f, 0.65f, 0.75f, 0.4));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
@@ -49,13 +43,7 @@ void TestViewer::render()
     ImGui::Separator();
 
     ImGui::BeginChild("test_details_panel", ImVec2(0, 0), true);
-    for (int i = 0; i < test_plan.test_cases.size(); i++) {
-        render_single_test_case(i);
-
-        if (i < test_plan.test_cases.size() - 1) {
-            ImGui::Separator();
-        }
-    }
+    render_test_list();
     ImGui::EndChild();
 
     ImGui::PopStyleVar();
@@ -66,8 +54,14 @@ void TestViewer::render_toolbar() {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
 
     if (ImGui::Button("Sent to Xray")) {
-        save_results(test_plan.name + ".xresult");
-        int result = std::system("bash -c 'source ../../test/env/bin/activate && python3 ../../test/main.py execute-plan XSP1-39 XSP1-39.xresult'");
+        if (!m_is_sending_to_xray) {
+            send_to_xray();
+        }
+    }
+
+    if (m_is_sending_to_xray) {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Sending to Xray...");
     }
 
     ImGui::SameLine();
@@ -77,15 +71,10 @@ void TestViewer::render_toolbar() {
     }
 
     ImGui::SameLine();
+
     if (ImGui::Button("Reset All")) {
-        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) {
-            reset_tests();
-            update_test_statistics();
-        } else {
-            if (ImGui::IsItemHovered()) {
-                ImGui::SetTooltip("Hold Ctrl and click to reset all tests");
-            }
-        }
+        reset_tests();
+        update_test_statistics();
     }
 
     ImGui::PopStyleVar();
@@ -102,10 +91,10 @@ void TestViewer::render_single_test_case(int index)
     if (test.is_executed()) {
       headerColor = get_test_result_color(test.actual_result.type);
 
-      headerColor.x *= 0.7f;
-      headerColor.y *= 0.7f;
-      headerColor.z *= 0.7f;
-      headerColor.w = 0.6f;
+      headerColor.x *= 0.6;
+      headerColor.y *= 0.6;
+      headerColor.z *= 0.6;
+      headerColor.w = 0.5;
     }
 
     ImVec2 headerStart = ImGui::GetCursorScreenPos();
@@ -118,32 +107,21 @@ void TestViewer::render_single_test_case(int index)
         headerStart, headerEnd, ImGui::ColorConvertFloat4ToU32(headerColor)
     );
 
-    ImGui::Dummy(ImVec2(0, 2));
+    ImGui::Dummy(ImVec2(0, 1.5f));
     ImGui::Indent(5);
 
-    std::string header = "Test " + std::to_string(index + 1);
-
-    if (expanded_tests.find(index) == expanded_tests.end()) {
-        expanded_tests[index] = false;
-    }
-
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-
     bool is_open = expanded_tests[index];
-    bool clicked = false;
 
-    ImGui::Text(is_open ? "v" : ">");
-    ImGui::SameLine();
-
-    ImGui::PopStyleColor();
+    std::string info = is_open ? "v Test " : "> Test ";
+    std::string header = info + std::to_string(index + 1);
 
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerColor);
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, headerColor);
     ImGui::PushStyleColor(ImGuiCol_Header, headerColor);
 
     if (ImGui::Selectable(header.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-        expanded_tests[index] = !is_open;
-        clicked = true;
+        is_open = !is_open;
+        expanded_tests[index] = is_open;
     }
 
     ImGui::PopStyleColor(3);
@@ -158,40 +136,18 @@ void TestViewer::render_single_test_case(int index)
     ImGui::Unindent(5);
     ImGui::Dummy(ImVec2(0, 2));
 
-    if (expanded_tests[index]) {
-        float contentHeight = ImGui::GetFrameHeightWithSpacing() * 16 + 16; // Increased from 9 to 16
-
-        ImVec2 contentStart = ImGui::GetCursorScreenPos();
-        ImVec2 contentEnd = ImVec2(
-            contentStart.x + ImGui::GetContentRegionAvail().x,
-            contentStart.y + contentHeight
-        );
-
-        ImGui::GetWindowDrawList()->AddRectFilled(
-            contentStart, contentEnd,
-            ImGui::ColorConvertFloat4ToU32(ImVec4(0.18f, 0.18f, 0.2f, 0.8f))
-        );
-
-        ImGui::GetWindowDrawList()->AddRect(
-            contentStart, contentEnd,
-            ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.3f, 0.35f, 0.5f))
-        );
-
-        ImGui::Dummy(ImVec2(0, 8));
+    if (is_open) {
         ImGui::Indent(12);
 
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.9f, 1.0f, 1.0f));
         ImGui::TextUnformatted("Action:");
         ImGui::PopStyleColor();
 
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
-
         ImGui::BeginChild(("action_text_" + std::to_string(index)).c_str(),
                         ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 6),
                         true);
         ImGui::TextWrapped("%s", test.action.value.c_str());
         ImGui::EndChild();
-        ImGui::PopStyleColor();
 
         ImGui::Dummy(ImVec2(0, 8));
 
@@ -199,14 +155,11 @@ void TestViewer::render_single_test_case(int index)
         ImGui::TextUnformatted("Expected Result:");
         ImGui::PopStyleColor();
 
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.17f, 0.8f));
-
         ImGui::BeginChild(("expected_result_text_" + std::to_string(index)).c_str(),
                         ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 6),
                         true);
         ImGui::TextWrapped("%s", test.expected_result.value.c_str());
         ImGui::EndChild();
-        ImGui::PopStyleColor();
 
         ImGui::Dummy(ImVec2(0, 8));
 
@@ -242,13 +195,13 @@ void TestViewer::render_single_test_case(int index)
         int buttons_per_row = 3;
         float button_width = (available_width / buttons_per_row) - 8;
 
-        std::unordered_map<ResultType, ImVec4> resultColors;
-        resultColors[ResultType::Todo] = ImVec4(0.4f, 0.4f, 0.7f, 0.7f);
-        resultColors[ResultType::Passed] = ImVec4(0.2f, 0.7f, 0.3f, 0.7f);
-        resultColors[ResultType::Failed] = ImVec4(0.7f, 0.2f, 0.2f, 0.7f);
-        resultColors[ResultType::Blocked] = ImVec4(0.7f, 0.4f, 0.1f, 0.7f);
-        resultColors[ResultType::Skipped] = ImVec4(0.4f, 0.4f, 0.4f, 0.7f);
-        resultColors[ResultType::Acceptable] = ImVec4(0.7f, 0.6f, 0.1f, 0.7f);
+        static std::unordered_map<ResultType, ImVec4> result_colors;
+        result_colors[ResultType::Todo] = ImVec4(0.4f, 0.4f, 0.7f, 0.7f);
+        result_colors[ResultType::Passed] = ImVec4(0.2f, 0.7f, 0.3f, 0.7f);
+        result_colors[ResultType::Failed] = ImVec4(0.7f, 0.2f, 0.2f, 0.7f);
+        result_colors[ResultType::Blocked] = ImVec4(0.7f, 0.4f, 0.1f, 0.7f);
+        result_colors[ResultType::Skipped] = ImVec4(0.4f, 0.4f, 0.4f, 0.7f);
+        result_colors[ResultType::Acceptable] = ImVec4(0.7f, 0.6f, 0.1f, 0.7f);
 
         int current_button = 0;
         for (int i = 1; i < static_cast<int>(ResultType::Length); i++) {
@@ -266,18 +219,18 @@ void TestViewer::render_single_test_case(int index)
             bool is_current = test.is_executed() && test.actual_result.type == result_type;
             if (is_current) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(
-                    resultColors[result_type].x * 1.2f,
-                    resultColors[result_type].y * 1.2f,
-                    resultColors[result_type].z * 1.2f,
+                    result_colors[result_type].x * 1.2f,
+                    result_colors[result_type].y * 1.2f,
+                    result_colors[result_type].z * 1.2f,
                     0.9f));
             } else {
-                ImGui::PushStyleColor(ImGuiCol_Button, resultColors[result_type]);
+                ImGui::PushStyleColor(ImGuiCol_Button, result_colors[result_type]);
             }
 
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(
-                std::min(resultColors[result_type].x * 1.3f, 1.0f),
-                std::min(resultColors[result_type].y * 1.3f, 1.0f),
-                std::min(resultColors[result_type].z * 1.3f, 1.0f),
+                std::min(result_colors[result_type].x * 1.3f, 1.0f),
+                std::min(result_colors[result_type].y * 1.3f, 1.0f),
+                std::min(result_colors[result_type].z * 1.3f, 1.0f),
                 0.8f));
 
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -342,61 +295,6 @@ void TestViewer::render_test_list() {
     }
 
     ImGui::EndChild();
-}
-
-void TestViewer::render_test_details() 
-{
-    if (selected_test_index < 0 || selected_test_index >= test_plan.test_cases.size()) {
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Select a test to view details.");
-        return;
-    }
-    
-    const auto& test = test_plan.test_cases[selected_test_index];
-    
-    ImGui::Text("Test %d Details:", selected_test_index + 1);
-    ImGui::Separator();
-    
-    ImGui::Text("Status: ");
-    ImGui::SameLine();
-    
-    if (test.is_executed()) {
-        ImGui::TextColored(get_test_result_color(test.actual_result.type), "%s", get_test_result_string(test.actual_result.type).c_str());
-    } else {
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Not Executed");
-    }
-    
-    ImGui::Separator();
-
-    if (ImGui::CollapsingHeader("Action", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::BeginChild("action_text", ImVec2(0, ImGui::GetContentRegionAvail().y * 0.25f), true);
-        ImGui::TextWrapped("%s", test.action.value.c_str());
-        ImGui::EndChild();
-    }
-    
-    if (ImGui::CollapsingHeader("Expected Result", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::BeginChild("expected_result_text", ImVec2(0, ImGui::GetContentRegionAvail().y * 0.25f), true);
-        ImGui::TextWrapped("%s", test.expected_result.value.c_str());
-        ImGui::EndChild();
-    }
-    
-    ImGui::Separator();
-
-    for(int i = 1; i < static_cast<int>(ResultType::Length); ++i) {
-        const std::string& name = get_test_result_string(static_cast<ResultType>(i));
-        const std::string& label = "Mark as " + name;
-
-        ImGui::SameLine();
-        if(ImGui::Button(label.c_str())) {
-            auto& current_case = test_plan.test_cases[selected_test_index];
-
-            current_case.actual_result.type = static_cast<ResultType>(i);
-        }
-    }
-    
-    static char notes[4096] = "";
-    ImGui::Separator();
-    ImGui::Text("Notes:");
-    ImGui::InputTextMultiline("##notes", notes, sizeof(notes), ImVec2(-1, ImGui::GetContentRegionAvail().y), ImGuiInputTextFlags_AllowTabInput);
 }
 
 void TestViewer::render_test_summary() {
@@ -659,7 +557,7 @@ void TestViewer::fetch_manual_tests()
             #ifdef _WIN32
             int result = std::system("python ../scripts/fetch_manual_tests.py");
             #else
-            int result = std::system("bash -c 'source ../../test/env/bin/activate && python3 ../../test/main.py export-all-plans ../shared/tests'");
+            int result = std::system("bash -c 'source ../../test/env/bin/activate && python3 ../../test/main.py export-plan XSP1-39 ../shared/tests/XSP1-39.xtest'");
             #endif
 
         m_is_fetching = false;
@@ -667,8 +565,10 @@ void TestViewer::fetch_manual_tests()
     });
 }
 
+
 void TestViewer::check_fetch_status()
 {
+    // Show fetching progress popup
     if (m_is_fetching) {
         ImGui::OpenPopup("Fetching Tests");
     }
@@ -676,7 +576,7 @@ void TestViewer::check_fetch_status()
     if (ImGui::BeginPopupModal("Fetching Tests", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         static float progress = 0.0f;
-        progress += ImGui::GetIO().DeltaTime * (0.1 /2.5);
+        progress += ImGui::GetIO().DeltaTime * 0.2;
         if (progress > 1.0f) progress = 0.0f;
 
         ImGui::Text("Fetching manual tests...");
@@ -692,55 +592,148 @@ void TestViewer::check_fetch_status()
     if (m_fetch_future.valid() &&
         m_fetch_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
 
-        m_fetch_future.get(); 
+        try {
+            m_fetch_future.get();
 
-        if (m_fetch_succeeded) {
-            std::string tests_path = "../shared/tests";
-            std::filesystem::path latest_file;
-            auto latest_time = std::filesystem::file_time_type::min();
+            std::filesystem::path latest_file = "../shared/tests/XSP1-39.xtest";
 
-            if (std::filesystem::exists(tests_path)) {
-                for (const auto& entry : std::filesystem::directory_iterator(tests_path)) {
-                    if (entry.is_regular_file() && entry.path().extension() == ".test") {
-                        auto file_time = std::filesystem::last_write_time(entry.path());
-                        if (file_time > latest_time) {
-                            latest_time = file_time;
-                            latest_file = entry.path();
-                        }
-                    }
-                }
+            log_info() << "Loading latest test file: " << latest_file << std::endl;
+            load_test_file(latest_file.string());
 
-                if (!latest_file.empty()) {
-                    log_info() << "Loading latest test file: " << latest_file << std::endl;
-                    load_test_file(latest_file.string());
-                    ImGui::OpenPopup("Fetch Complete");
-                }
-            }
-        } else {
-            ImGui::OpenPopup("Fetch Failed");
+            ImGui::OpenPopup("Tests Loaded Successfully");
+        }
+        catch (const std::exception& e) {
+            m_fetch_message = e.what();
+            ImGui::OpenPopup("Test Fetch Failed");
         }
     }
 
-    if (ImGui::BeginPopupModal("Fetch Complete", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal("Tests Loaded Successfully", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextColored(ImVec4(0.0f, 0.8f, 0.0f, 1.0f), "Manual tests fetched successfully!");
-        ImGui::Text("Tests have been loaded and are ready for execution.");
+
+        if (is_test_loaded()) {
+            ImGui::Text("Loaded test plan: %s", test_plan.name.c_str());
+            ImGui::Text("Number of test cases: %zu", test_plan.test_cases.size());
+
+            ImGui::Separator();
+            ImGui::Text("Test Case Preview:");
+
+            const int preview_count = std::min(5, static_cast<int>(test_plan.test_cases.size()));
+
+            ImGui::BeginChild("TestCasePreview", ImVec2(500, 200), true);
+            for (int i = 0; i < preview_count; i++) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.2f, 1.0f));
+                ImGui::Text("Test %d:", i+1);
+                ImGui::PopStyleColor();
+
+                ImGui::TextWrapped("%s", test_plan.test_cases[i].action.value.c_str());
+
+                if (i < preview_count - 1) {
+                    ImGui::Separator();
+                }
+            }
+
+            if (preview_count < test_plan.test_cases.size()) {
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f),
+                    "... and %zu more test cases", test_plan.test_cases.size() - preview_count);
+            }
+            ImGui::EndChild();
+        } else {
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f),
+                "No test plans were loaded. Check the test directory.");
+        }
 
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
         }
+
         ImGui::EndPopup();
     }
 
-    if (ImGui::BeginPopupModal("Fetch Failed", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+  
+    if (ImGui::BeginPopupModal("Test Fetch Failed", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed to fetch manual tests!");
         ImGui::Text("%s", m_fetch_message.c_str());
 
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
         }
+
+        ImGui::EndPopup();
+    }
+}
+
+void TestViewer::send_to_xray() {
+    if (m_is_sending_to_xray) {
+        log_warning() << "Already sending test results to Xray, please wait..." << std::endl;
+        return;
+    }
+
+    log_info() << "Starting send to Xray in background..." << std::endl;
+    m_is_sending_to_xray = true;
+    m_xray_message = "Sending test results to Xray...";
+
+    m_xray_future = std::async(std::launch::async, [this]() {
+        //save_results(test_plan.name + ".xresult");
+
+        #ifdef _WIN32
+        int result = std::system("python ../scripts/send_to_xray.py");
+        #else
+        int result = std::system("bash -c 'source ../../test/env/bin/activate && python3 ../../test/main.py execute-plan XSP1-39 XSP1-39.xresult'");
+        #endif
+
+        m_is_sending_to_xray = false;
+        m_xray_succeeded = (result == 0);
+    });
+}
+
+void TestViewer::check_xray_status() {
+    // Check if Xray sending operation completed
+    if (m_xray_future.valid() &&
+        m_xray_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+
+        try {
+            m_xray_future.get();
+
+            if (m_xray_succeeded) {
+                ImGui::OpenPopup("Xray Upload Successful");
+            } else {
+                m_xray_message = "Failed to send results to Xray";
+                ImGui::OpenPopup("Xray Upload Failed");
+            }
+        }
+        catch (const std::exception& e) {
+            m_xray_message = e.what();
+            ImGui::OpenPopup("Xray Upload Failed");
+        }
+    }
+
+    // Xray Success popup
+    if (ImGui::BeginPopupModal("Xray Upload Successful", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(0.0f, 0.8f, 0.0f, 1.0f), "Test results successfully uploaded to Xray!");
+        ImGui::Text("Test plan: %s", test_plan.name.c_str());
+
+        if (ImGui::Button("OK", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    // Xray Error popup
+    if (ImGui::BeginPopupModal("Xray Upload Failed", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Failed to upload test results to Xray!");
+        ImGui::Text("%s", m_xray_message.c_str());
+
+        if (ImGui::Button("OK", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+        }
+
         ImGui::EndPopup();
     }
 }
 
 
+
 }
+
