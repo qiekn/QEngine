@@ -1,112 +1,90 @@
 #pragma once
 
 #include <string>
-#include <filesystem>
 #include <vector>
 #include <unordered_map>
-#include <functional>
-#include <future>
-
 #include <imgui.h>
 
 namespace Test {
 
-enum class ResultType { 
-    None = 0,
-    Todo,
-    Passed,
-    Blocked,
-    Skipped,
-    Acceptable,
-    Failed,
-    Length,
+enum class Status { 
+    NONE = 0,
+    TODO,
+    PASSED,
+    BLOCKED,
+    SKIPPED,
+    ACCEPTABLE,
+    FAILED,
+    LENGTH,
 };
 
-struct Action { 
-    std::string value;
+struct TestStep {
+    std::string id;
+    std::string action;
+    std::string data;
+    std::string result;
+    Status status = Status::TODO;
+    std::string actual_result;
+    std::string comment;
+    std::vector<std::string> defects;
+    std::vector<std::string> historical_defects;
 };
 
-struct ExpectedResult { 
-    std::string value;
+struct TestRun {
+    std::string id;
+    std::string test_key;
+    std::string test_summary;
+    std::vector<TestStep> steps;
+    Status status = Status::TODO;
+    bool is_executed() const {
+        if (status != Status::TODO) return true;
+        for (const auto& step : steps) {
+            if (step.status != Status::TODO) return true;
+        }
+        return false;
+    }
 };
 
-struct ActualResult {
-    std::string value;
-    ResultType type = ResultType::Todo;
-};
-
-struct TestCase { 
-    Action action;
-    ExpectedResult expected_result;
-    ActualResult actual_result;
-    inline bool is_executed() const { return actual_result.type != ResultType::Todo; }
-};
-
-struct TestPlan { 
-    std::vector<TestCase> test_cases;
-    std::string name;
+struct TestExecution { 
+    std::string key;
+    std::string summary;
     std::string description;
+    std::vector<TestRun> test_runs;
 };
 
-class TestViewer { 
+struct TestStatistics {
+    int executed_runs = 0;
+    int passed_runs = 0;
+    int failed_runs = 0;
+    int blocked_runs = 0;
+    int skipped_runs = 0;
+    int acceptable_runs = 0;
+};
+
+class TestViewer {
 public:
     TestViewer();
     ~TestViewer();
 
     void render();
-    void load_test_file(const std::string& file_path);
-    void save_results(const std::string& file_path);
-    void reset_tests();
-    void fetch_manual_tests();
-    std::vector<std::string> split_csv_line(const std::string&);
-    
-    inline bool is_test_loaded() const { return !test_plan.test_cases.empty(); }
-    inline const TestPlan& get_test_plan() const { return test_plan; }
+    void reset_all_tests();
     
 private:
-    void parse_csv(const std::string& content);
-    TestCase process_csv_line(const std::string& line);
-    void render_test_list();
-    void render_test_summary();
+    void create_mockup_data();
     void render_toolbar();
-    void check_fetch_status();
+    void render_summary();
+    void render_test_runs();
+    void render_test_run(int index);
+    void render_test_step(TestRun& run, int step_idx);
     
-    std::string get_test_result_string(ResultType result_type) const;
-    ImVec4 get_test_result_color(ResultType result_type) const;
+    template<typename T>
+    void render_status_buttons(T& item, float button_width);
     
-    TestPlan test_plan;
-    int selected_test_index = -1;
-    
-    char filter_buffer[256] = "";
-    
-    int tests_passed = 0;
-    int tests_failed = 0;
-    int tests_blocked = 0;
-    int tests_skipped = 0;
-    int tests_acceptable = 0;
-    int tests_executed = 0;
+    void update_statistics();
 
-    bool m_open = false;
-
-    void render_single_test_case(int index);
-    void update_test_statistics();
-    std::unordered_map<int, std::vector<char>> actual_result_buffers;
-
-    std::unordered_map<int, bool> expanded_tests;
-    
-    std::future<void> m_fetch_future;
-    bool m_is_fetching = false;
-    bool m_fetch_succeeded = false;
-    std::string m_fetch_message;
-
-
-    std::future<void> m_xray_future;
-    bool m_is_sending_to_xray = false;
-    bool m_xray_succeeded = false;
-    std::string m_xray_message;
-
-    void send_to_xray();
-    void check_xray_status();
+    TestExecution m_test_execution;
+    std::unordered_map<std::string, std::vector<char>> m_actual_result_buffers;
+    TestStatistics m_stats;
 };
 
-}
+} 
