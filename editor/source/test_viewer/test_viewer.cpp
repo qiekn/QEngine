@@ -28,15 +28,13 @@ ImVec4 get_status_color(Status status) {
     }
 }
 
-// Get a lighter version of the status color for backgrounds to ensure text readability
 ImVec4 get_status_bg_color(Status status) {
     ImVec4 color = get_status_color(status);
-    // Make the color lighter and more transparent for better text readability
     return ImVec4(
-        color.x * 0.5f + 0.5f, // Lighten
+        color.x * 0.5f + 0.5f, 
         color.y * 0.5f + 0.5f,
         color.z * 0.5f + 0.5f,
-        0.3f // More transparent
+        0.3f 
     );
 }
 
@@ -124,18 +122,11 @@ void TestViewer::create_mockup_data() {
 }
 
 void TestViewer::render() {
-    // Display test execution info
-    ImGui::Text("Test Execution: %s - %s", m_test_execution.key.c_str(), m_test_execution.summary.c_str());
-    
-    if (!m_test_execution.description.empty()) {
-        ImGui::TextWrapped("%s", m_test_execution.description.c_str());
-    }
-    
-    ImGui::Separator();
-    
     render_toolbar();
-    
-    ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4), true);
+
+    ImGui::Separator();
+
+    ImGui::BeginChild("test_summary", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5), true);
     render_summary();
     ImGui::EndChild();
     
@@ -149,9 +140,7 @@ void TestViewer::render() {
 void TestViewer::render_toolbar() {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 3));
     
-    if (ImGui::Button("Save Results")) {
-        log_info() << "Saving test results..." << std::endl;
-    }
+    if (ImGui::Button("Save Results")) {}
     
     ImGui::SameLine();
     
@@ -162,15 +151,18 @@ void TestViewer::render_toolbar() {
     
     ImGui::SameLine();
     
-    if (ImGui::Button("Export to Jira")) {
-        log_info() << "Exporting to Jira..." << std::endl;
-    }
+    if (ImGui::Button("Export to Jira")) {}
     
     ImGui::PopStyleVar();
 }
 
 void TestViewer::render_summary() {
-    // Calculate progress
+
+    ImGui::Text("Test Execution: %s - %s", m_test_execution.key.c_str(), m_test_execution.summary.c_str());
+    if (!m_test_execution.description.empty()) {
+        ImGui::TextWrapped("%s", m_test_execution.description.c_str());
+    }
+
     float completion = m_test_execution.test_runs.empty() ? 0.0f : 
         (float)m_stats.executed_runs / m_test_execution.test_runs.size();
     
@@ -191,7 +183,6 @@ void TestViewer::render_summary() {
     ImGui::SetCursorPos(textPos);
     ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f%%", completion * 100);
     
-    // Display statistics in columns
     ImGui::Columns(6, "test_stats_columns", false);
     
     ImGui::Text("Total: %d", (int)m_test_execution.test_runs.size());
@@ -235,10 +226,8 @@ void TestViewer::render_test_run(int index) {
 
     ImGui::PushID(index);
 
-    // Store position before header for right-click detection
     ImVec2 header_start_pos = ImGui::GetCursorScreenPos();
 
-    // Create a header with a better background color for readability
     ImGui::PushStyleColor(ImGuiCol_Header, get_status_bg_color(run.status));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, get_status_bg_color(run.status));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, get_status_bg_color(run.status));
@@ -246,11 +235,10 @@ void TestViewer::render_test_run(int index) {
     bool is_open = ImGui::CollapsingHeader((run.test_key + ": " + run.test_summary).c_str(),
                                          ImGuiTreeNodeFlags_DefaultOpen);
 
-    // Get position after header for right-click detection
     ImVec2 header_end_pos = ImGui::GetCursorScreenPos();
-    // Calculate header height
+
     float header_height = header_end_pos.y - header_start_pos.y;
-    // Adjust end position to match header width and height
+
     header_end_pos.x = header_start_pos.x + ImGui::GetContentRegionAvail().x;
     header_end_pos.y = header_start_pos.y + header_height;
 
@@ -311,52 +299,91 @@ void TestViewer::render_test_run(int index) {
 
 void TestViewer::render_test_step(TestRun& run, int step_idx) {
     TestStep& step = run.steps[step_idx];
-    
+
     ImGui::PushID(step_idx);
-    
+
+    // Store position for right-click detection
+    ImVec2 header_start_pos = ImGui::GetCursorScreenPos();
+
     // Create a similar header style to the test runs but with a lighter color
     ImGui::PushStyleColor(ImGuiCol_Header, get_status_bg_color(step.status));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, get_status_bg_color(step.status));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, get_status_bg_color(step.status));
-    
+
     bool is_open = ImGui::CollapsingHeader(("Step " + std::to_string(step_idx + 1)).c_str());
-    
+
+    // Get position after header for right-click detection
+    ImVec2 header_end_pos = ImGui::GetCursorScreenPos();
+    float header_height = header_end_pos.y - header_start_pos.y;
+    header_end_pos.x = header_start_pos.x + ImGui::GetContentRegionAvail().x;
+    header_end_pos.y = header_start_pos.y + header_height;
+
     ImGui::PopStyleColor(3);
-    
+
     // Always show the status, not just when collapsed
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - 100);
     ImGui::TextColored(get_status_color(step.status), "%s", get_status_string(step.status).c_str());
-    
+
+    // Check if right-clicked on the entire header area
+    bool is_header_hovered = ImGui::IsMouseHoveringRect(header_start_pos, header_end_pos);
+    if (is_header_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+        ImGui::OpenPopup(("test_step_context_menu_" + step.id).c_str());
+    }
+
+    // Context menu for setting test step status
+    if (ImGui::BeginPopup(("test_step_context_menu_" + step.id).c_str())) {
+        ImGui::Text("Set Step Status:");
+        ImGui::Separator();
+
+        for (int i = 1; i < static_cast<int>(Status::LENGTH); i++) {
+            const Status status = static_cast<Status>(i);
+            const std::string& name = get_status_string(status);
+
+            ImVec4 color = get_status_color(status);
+            ImGui::PushStyleColor(ImGuiCol_Text, color);
+
+            bool is_selected = (step.status == status);
+            if (ImGui::MenuItem(name.c_str(), nullptr, is_selected)) {
+                step.status = status;
+                update_statistics();
+            }
+
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::EndPopup();
+    }
+
     if (is_open) {
         ImGui::Indent(8);
-        
+
         // Action
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.9f, 1.0f, 1.0f));
         ImGui::TextUnformatted("Action:");
         ImGui::PopStyleColor();
-        
+
         ImGui::BeginChild(("action_text_" + step.id).c_str(),
                         ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 3),
                         true);
         ImGui::TextWrapped("%s", step.action.c_str());
         ImGui::EndChild();
-        
+
         // Expected result
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.9f, 1.0f, 1.0f));
         ImGui::TextUnformatted("Expected Result:");
         ImGui::PopStyleColor();
-        
+
         ImGui::BeginChild(("expected_result_text_" + step.id).c_str(),
                         ImVec2(ImGui::GetContentRegionAvail().x - 8, ImGui::GetTextLineHeightWithSpacing() * 3),
                         true);
         ImGui::TextWrapped("%s", step.result.c_str());
         ImGui::EndChild();
-        
+
         // Actual result
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.9f, 1.0f, 1.0f));
         ImGui::TextUnformatted("Actual Result:");
         ImGui::PopStyleColor();
-        
+
         // Get or create the buffer for this step
         auto& buffer = m_actual_result_buffers[step.id];
         if (buffer.empty()) {
@@ -365,9 +392,9 @@ void TestViewer::render_test_step(TestRun& run, int step_idx) {
                 strncpy(buffer.data(), step.actual_result.c_str(), buffer.size() - 1);
             }
         }
-        
+
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.12f, 0.12f, 0.15f, 0.8f));
-        
+
         if (ImGui::InputTextMultiline(("##actual_result_" + step.id).c_str(),
                                   buffer.data(),
                                   buffer.size(),
@@ -375,22 +402,13 @@ void TestViewer::render_test_step(TestRun& run, int step_idx) {
                                   ImGuiInputTextFlags_AllowTabInput)) {
             step.actual_result = buffer.data();
         }
-        
+
         ImGui::PopStyleColor();
-        
-        // Step status buttons
-        ImGui::Dummy(ImVec2(0, 4));
-        ImGui::Text("Step Result:");
-        
-        float available_width = ImGui::GetContentRegionAvail().x - 12;
-        int buttons_per_row = 5;
-        float button_width = (available_width / buttons_per_row) - 4;
-        
-        render_status_buttons(step, button_width);
-        
+
+
         ImGui::Unindent(8);
     }
-    
+
     ImGui::PopID();
 }
 
