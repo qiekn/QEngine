@@ -249,6 +249,36 @@ void TestViewer::render_test_run(int index) {
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - 100);
     ImGui::TextColored(get_status_color(run.status), "%s", get_status_string(run.status).c_str());
 
+    // Check if right-clicked to show context menu for setting status
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Right) || 
+        (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))) {
+        ImGui::OpenPopup(("test_run_context_menu_" + run.id).c_str());
+    }
+
+    // Context menu for setting test run status
+    if (ImGui::BeginPopup(("test_run_context_menu_" + run.id).c_str())) {
+        ImGui::Text("Set Test Status:");
+        ImGui::Separator();
+
+        for (int i = 1; i < static_cast<int>(Status::LENGTH); i++) {
+            const Status status = static_cast<Status>(i);
+            const std::string& name = get_status_string(status);
+            
+            ImVec4 color = get_status_color(status);
+            ImGui::PushStyleColor(ImGuiCol_Text, color);
+            
+            bool is_selected = (run.status == status);
+            if (ImGui::MenuItem(name.c_str(), nullptr, is_selected)) {
+                run.status = status;
+                update_statistics();
+            }
+            
+            ImGui::PopStyleColor();
+        }
+        
+        ImGui::EndPopup();
+    }
+
     if (is_open) {
         ImGui::Indent(12);
 
@@ -260,17 +290,6 @@ void TestViewer::render_test_run(int index) {
                 ImGui::Separator();
             }
         }
-
-        ImGui::Dummy(ImVec2(0, 8));
-
-        // Test run status buttons
-        ImGui::Text("Set overall test status:");
-
-        float available_width = ImGui::GetContentRegionAvail().x - 12;
-        int buttons_per_row = 5;
-        float button_width = (available_width / buttons_per_row) - 4;
-
-        render_status_buttons(run, button_width);
 
         ImGui::Unindent(12);
     }
