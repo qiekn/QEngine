@@ -235,6 +235,9 @@ void TestViewer::render_test_run(int index) {
 
     ImGui::PushID(index);
 
+    // Store position before header for right-click detection
+    ImVec2 header_start_pos = ImGui::GetCursorScreenPos();
+
     // Create a header with a better background color for readability
     ImGui::PushStyleColor(ImGuiCol_Header, get_status_bg_color(run.status));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, get_status_bg_color(run.status));
@@ -243,15 +246,23 @@ void TestViewer::render_test_run(int index) {
     bool is_open = ImGui::CollapsingHeader((run.test_key + ": " + run.test_summary).c_str(),
                                          ImGuiTreeNodeFlags_DefaultOpen);
 
+    // Get position after header for right-click detection
+    ImVec2 header_end_pos = ImGui::GetCursorScreenPos();
+    // Calculate header height
+    float header_height = header_end_pos.y - header_start_pos.y;
+    // Adjust end position to match header width and height
+    header_end_pos.x = header_start_pos.x + ImGui::GetContentRegionAvail().x;
+    header_end_pos.y = header_start_pos.y + header_height;
+
     ImGui::PopStyleColor(3);
 
     // Show status indicator
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - 100);
     ImGui::TextColored(get_status_color(run.status), "%s", get_status_string(run.status).c_str());
 
-    // Check if right-clicked to show context menu for setting status
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Right) || 
-        (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))) {
+    // Check if right-clicked on the entire header area
+    bool is_header_hovered = ImGui::IsMouseHoveringRect(header_start_pos, header_end_pos);
+    if ((is_header_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))) {
         ImGui::OpenPopup(("test_run_context_menu_" + run.id).c_str());
     }
 
@@ -263,19 +274,19 @@ void TestViewer::render_test_run(int index) {
         for (int i = 1; i < static_cast<int>(Status::LENGTH); i++) {
             const Status status = static_cast<Status>(i);
             const std::string& name = get_status_string(status);
-            
+
             ImVec4 color = get_status_color(status);
             ImGui::PushStyleColor(ImGuiCol_Text, color);
-            
+
             bool is_selected = (run.status == status);
             if (ImGui::MenuItem(name.c_str(), nullptr, is_selected)) {
                 run.status = status;
                 update_statistics();
             }
-            
+
             ImGui::PopStyleColor();
         }
-        
+
         ImGui::EndPopup();
     }
 
