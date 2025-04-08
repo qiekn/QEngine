@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
         AssetBrowser::get().render();
     });
 
-    Test::TestViewer test_viewer;
+    TestViewer test_viewer;
 
     window_manager.set_test_viewer_render_func([&]() {
             test_viewer.render();
