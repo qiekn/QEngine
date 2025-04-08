@@ -1,12 +1,9 @@
 #include "test_viewer/test_viewer.h"
 #include "imgui.h"
 #include "logger.h"
-#include <fstream>
-#include <sstream>
 
 namespace Test {
 
-// Helper functions
 std::string get_status_string(Status status) {
     switch (status) {
         case Status::NONE: return "None";
@@ -38,12 +35,10 @@ TestViewer::TestViewer() {
 TestViewer::~TestViewer() {}
 
 void TestViewer::create_mockup_data() {
-    // Create mockup test execution
     m_test_execution.key = "XSP1-123";
     m_test_execution.summary = "Browser Compatibility Test Plan";
     m_test_execution.description = "Testing the application across different browsers and platforms";
     
-    // Create mockup test runs
     TestRun run1;
     run1.id = "RUN-001";
     run1.test_key = "TEST-001";
@@ -225,100 +220,53 @@ void TestViewer::render_test_runs() {
 
 void TestViewer::render_test_run(int index) {
     TestRun& run = m_test_execution.test_runs[index];
-    
+
     ImGui::PushID(index);
-    
-    // Header background
-    ImVec4 headerColor = run.is_executed() ? get_status_color(run.status) : ImVec4(0.25f, 0.25f, 0.27f, 0.8f);
-    headerColor.x *= 0.6f;
-    headerColor.y *= 0.6f;
-    headerColor.z *= 0.6f;
-    headerColor.w = 0.5f;
-    
-    ImVec2 headerStart = ImGui::GetCursorScreenPos();
-    ImVec2 headerEnd = ImVec2(
-        headerStart.x + ImGui::GetContentRegionAvail().x,
-        headerStart.y + ImGui::GetFrameHeight() + 4
-    );
-    
-    ImGui::GetWindowDrawList()->AddRectFilled(
-        headerStart, headerEnd, ImGui::ColorConvertFloat4ToU32(headerColor)
-    );
-    
-    ImGui::Dummy(ImVec2(0, 1.5f));
-    ImGui::Indent(5);
-    
-    // Test title with rich header
-    if (ImGui::CollapsingHeader((run.test_key + ": " + run.test_summary).c_str())) {
-        // Display status
-        ImGui::SameLine(ImGui::GetWindowWidth() * 0.8f);
-        ImGui::Text("Status: ");
-        ImGui::SameLine();
-        
-        Status displayStatus = run.status;
-        if (displayStatus == Status::TODO && run.is_executed()) {
-            // If test run has TODO status but some steps are executed, derive status
-            bool allPassed = true;
-            bool anyFailed = false;
-            bool anyBlocked = false;
-            
-            for (const auto& step : run.steps) {
-                if (step.status == Status::TODO) continue;
-                
-                if (step.status == Status::FAILED) {
-                    anyFailed = true;
-                    allPassed = false;
-                } else if (step.status == Status::BLOCKED) {
-                    anyBlocked = true;
-                    allPassed = false;
-                } else if (step.status != Status::PASSED && step.status != Status::ACCEPTABLE) {
-                    allPassed = false;
-                }
-            }
-            
-            if (anyFailed) displayStatus = Status::FAILED;
-            else if (anyBlocked) displayStatus = Status::BLOCKED;
-            else if (allPassed) displayStatus = Status::PASSED;
-        }
-        
-        ImGui::TextColored(get_status_color(displayStatus), "%s", get_status_string(displayStatus).c_str());
-        
+
+    // Create a more distinct header with proper spacing
+    ImGui::PushStyleColor(ImGuiCol_Header, get_status_color(run.status));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, get_status_color(run.status));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, get_status_color(run.status));
+
+    // Use an actual header instead of drawing custom rectangles
+    bool is_open = ImGui::CollapsingHeader((run.test_key + ": " + run.test_summary).c_str(),
+                                           ImGuiTreeNodeFlags_DefaultOpen);
+
+    ImGui::PopStyleColor(3);
+
+    // Show status indicator
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 100);
+    ImGui::TextColored(get_status_color(run.status), "%s", get_status_string(run.status).c_str());
+
+    if (is_open) {
         ImGui::Indent(12);
-        
+
         // Render steps
         for (int step_idx = 0; step_idx < run.steps.size(); step_idx++) {
             render_test_step(run, step_idx);
-            
+
             if (step_idx < run.steps.size() - 1) {
                 ImGui::Separator();
             }
         }
-        
+
         ImGui::Dummy(ImVec2(0, 8));
-        
+
         // Test run status buttons
         ImGui::Text("Set overall test status:");
-        
+
         float available_width = ImGui::GetContentRegionAvail().x - 12;
         int buttons_per_row = 5;
         float button_width = (available_width / buttons_per_row) - 4;
-        
+
         render_status_buttons(run, button_width);
-        
+
         ImGui::Unindent(12);
-    } else {
-        // Show compact status when collapsed
-        ImGui::SameLine(ImGui::GetWindowWidth() * 0.8f);
-        ImGui::Text("Status: ");
-        ImGui::SameLine();
-        ImGui::TextColored(get_status_color(run.status), "%s", get_status_string(run.status).c_str());
     }
-    
-    ImGui::Unindent(5);
+
     ImGui::Dummy(ImVec2(0, 4));
     ImGui::PopID();
 }
-
 void TestViewer::render_test_step(TestRun& run, int step_idx) {
     TestStep& step = run.steps[step_idx];
     
