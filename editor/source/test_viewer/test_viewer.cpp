@@ -28,6 +28,18 @@ ImVec4 get_status_color(Status status) {
     }
 }
 
+// Get a lighter version of the status color for backgrounds to ensure text readability
+ImVec4 get_status_bg_color(Status status) {
+    ImVec4 color = get_status_color(status);
+    // Make the color lighter and more transparent for better text readability
+    return ImVec4(
+        color.x * 0.5f + 0.5f, // Lighten
+        color.y * 0.5f + 0.5f,
+        color.z * 0.5f + 0.5f,
+        0.3f // More transparent
+    );
+}
+
 TestViewer::TestViewer() {
     create_mockup_data();
 }
@@ -223,14 +235,13 @@ void TestViewer::render_test_run(int index) {
 
     ImGui::PushID(index);
 
-    // Create a more distinct header with proper spacing
-    ImGui::PushStyleColor(ImGuiCol_Header, get_status_color(run.status));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, get_status_color(run.status));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, get_status_color(run.status));
+    // Create a header with a better background color for readability
+    ImGui::PushStyleColor(ImGuiCol_Header, get_status_bg_color(run.status));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, get_status_bg_color(run.status));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, get_status_bg_color(run.status));
 
-    // Use an actual header instead of drawing custom rectangles
     bool is_open = ImGui::CollapsingHeader((run.test_key + ": " + run.test_summary).c_str(),
-                                           ImGuiTreeNodeFlags_DefaultOpen);
+                                         ImGuiTreeNodeFlags_DefaultOpen);
 
     ImGui::PopStyleColor(3);
 
@@ -267,12 +278,26 @@ void TestViewer::render_test_run(int index) {
     ImGui::Dummy(ImVec2(0, 4));
     ImGui::PopID();
 }
+
 void TestViewer::render_test_step(TestRun& run, int step_idx) {
     TestStep& step = run.steps[step_idx];
     
     ImGui::PushID(step_idx);
     
-    if (ImGui::CollapsingHeader(("Step " + std::to_string(step_idx + 1)).c_str())) {
+    // Create a similar header style to the test runs but with a lighter color
+    ImGui::PushStyleColor(ImGuiCol_Header, get_status_bg_color(step.status));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, get_status_bg_color(step.status));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, get_status_bg_color(step.status));
+    
+    bool is_open = ImGui::CollapsingHeader(("Step " + std::to_string(step_idx + 1)).c_str());
+    
+    ImGui::PopStyleColor(3);
+    
+    // Always show the status, not just when collapsed
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 100);
+    ImGui::TextColored(get_status_color(step.status), "%s", get_status_string(step.status).c_str());
+    
+    if (is_open) {
         ImGui::Indent(8);
         
         // Action
@@ -334,12 +359,6 @@ void TestViewer::render_test_step(TestRun& run, int step_idx) {
         render_status_buttons(step, button_width);
         
         ImGui::Unindent(8);
-    } else {
-        // Show compact status when collapsed
-        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 100);
-        if (step.status != Status::TODO) {
-            ImGui::TextColored(get_status_color(step.status), "%s", get_status_string(step.status).c_str());
-        }
     }
     
     ImGui::PopID();
