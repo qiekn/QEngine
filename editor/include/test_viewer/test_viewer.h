@@ -71,6 +71,14 @@ struct TestExecution {
     }
 };
 
+struct TestPlanOverview {
+    std::string key;
+    std::string summary;
+    int test_count;
+    std::vector<std::string> test_keys;
+    std::vector<std::string> test_summaries;
+};
+
 class TestViewer {
 public:
     TestViewer();
