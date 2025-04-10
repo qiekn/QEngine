@@ -1,24 +1,12 @@
 #include "window/window_manager.h"
 #include "raylib.h"
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-
 #include "engine/engine_event.h"
 
 WindowManager::WindowManager() 
     : m_hierarchy_render_func([]() {}),  
       m_console_render_func([](float, float, float) {}),
       m_asset_browser_render_func([]() {}) {
-
-
-    EngineEventBus::get().subscribe<bool>(
-        EngineEvent::EngineStarted,
-        [this](bool) {
-                sync_engine_window();
-            }
-    );
-
 }
 
 void WindowManager::render() {
@@ -57,14 +45,7 @@ void WindowManager::render() {
         m_asset_browser_render_func();
         ImGui::End();
     }
-
-    m_sync_timer += ImGui::GetIO().DeltaTime;
     
-    if (m_sync_timer >= m_sync_interval) {
-        sync_engine_window();
-        m_sync_timer = 0.0f;
-    }
-
     float console_y = menu_bar_height + main_content_height;
     const float console_resize_height = 16.0f;
     ImVec2 console_resize_start(0, console_y - console_resize_height / 2);
@@ -97,20 +78,3 @@ void WindowManager::render() {
         m_test_viewer_render_func();
     }
 }
-
-
-void WindowManager::sync_engine_window() {
-    rapidjson::Document document;
-    document.SetObject();
-    auto& allocator = document.GetAllocator();
-
-    document.AddMember("type", "window_state", allocator);
-    document.AddMember("is_minimize", IsWindowMinimized(), allocator);
-    
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    document.Accept(writer);
-    
-    EngineEventBus::get().publish<const std::string&>(EngineEvent::WindowStateChanged, buffer.GetString());
-}
-

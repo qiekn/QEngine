@@ -33,10 +33,11 @@ EngineControls::EngineControls()
     EngineEventBus::get().subscribe<bool>(
         EngineEvent::EngineStopped,
         [this](auto _) {
+            if(m_is_play_mode) {
+                exit_play_mode();
+            }
             m_is_running = false;
             m_is_engine_starting = false;
-            m_is_play_mode = false;
-            m_is_paused = false;
         }
     );
     
@@ -400,5 +401,7 @@ void EngineControls::enter_play_mode() {
 }
 
 void EngineControls::exit_play_mode() {
+    m_is_play_mode = false;
+    m_is_paused = false;
     EngineEventBus::get().publish<bool>(EngineEvent::ExitPlayMode, true);
 }

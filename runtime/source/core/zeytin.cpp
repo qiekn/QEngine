@@ -139,7 +139,7 @@ void Zeytin::run_frame() {
         play_start_variants();
         play_update_variants();
 #ifdef EDITOR_MODE
-        sync_editor();
+        //sync_editor(); this causing crashes because of race conditions with hierarchy update in editor side. commented out until I came up with a solution
 #endif
     }
 

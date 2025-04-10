@@ -200,7 +200,7 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
 
     ImVec2 header_min = ImGui::GetCursorScreenPos();
     float header_height = ImGui::GetFrameHeight();
-    bool is_open = ImGui::CollapsingHeader(name, ImGuiTreeNodeFlags_DefaultOpen);
+    bool is_open = ImGui::CollapsingHeader(name);
     ImVec2 header_max = ImVec2(
         ImGui::GetWindowContentRegionMax().x + ImGui::GetWindowPos().x,
         header_min.y + header_height

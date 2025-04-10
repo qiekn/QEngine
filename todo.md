@@ -1,19 +1,20 @@
-* make engine and editor stable
+* [EDITOR] change show each window renders itself (window manager)
+
 * add proper deinitialization to engine
 
-* register raylib types
-* implement world camera system
 * think about animation
 * investigate shaders
-* add dependency check
 * implement .scene
 * implement a way to refer other entities (using ids)
 * support double type
 * Implement adding elements to array
 * investigate enums
-* open in vim?
 
 -----------------------------------------
+* [DONE] add dependency check
+* [DONE] implement world camera system
+* [DONE] raylib types
+* [DONE] make engine and editor stable
 * [DONE] implement engine stopped event
 * [DONE] embed engine window
 * [DONE] implement engine logging to editor
