@@ -36,3 +36,5 @@
 .clangd
 bin/
 build/
+todo.md
+imgui.ini

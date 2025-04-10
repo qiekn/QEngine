@@ -29,7 +29,6 @@ struct TestStep {
 };
 
 struct TestRun {
-    std::string id;
     std::string test_key;
     std::string test_summary;
     std::vector<TestStep> steps;
@@ -89,12 +88,18 @@ public:
     
 private:
     void create_mockup_data();
+    void render_plan_selection();
+    void render_test_execution_view();
     void render_toolbar();
     void render_summary();
     void render_test_execution();
     void render_test_run(int index);
     void render_test_step(TestRun&, int step_idx);
+    void load_tests_for_plan(const TestPlanOverview& plan);
 
     TestExecution m_test_execution;
+    std::vector<TestPlanOverview> m_test_plans;
+    bool m_plan_selected = false;
+    int m_current_plan_index = 0;
     std::unordered_map<std::string, std::vector<char>> m_actual_result_buffers;
 };

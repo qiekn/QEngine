@@ -12,14 +12,64 @@ TestViewer::TestViewer() {
 TestViewer::~TestViewer() {}
 
 void TestViewer::render() {
+    if (!m_plan_selected) {
+        render_plan_selection();
+    } else {
+        if (ImGui::Button("<- Back to Plan Selection")) {
+            m_plan_selected = false;
+        } else {
+            render_test_execution_view();
+        }
+    }
+}
+
+void TestViewer::render_plan_selection() {
+    ImGui::Text("Available Test Plans");
+    ImGui::Separator();
+
+    if (ImGui::BeginTable("test_plans_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("Test Plan Key", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+        ImGui::TableSetupColumn("Summary", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Test Count", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+        ImGui::TableHeadersRow();
+
+        for (int i = 0; i < m_test_plans.size(); i++) {
+            const auto& plan = m_test_plans[i];
+            
+            ImGui::PushID(i);
+            ImGui::TableNextRow();
+            
+            ImGui::TableNextColumn();
+            if (ImGui::Selectable(plan.key.c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                m_plan_selected = true;
+                m_current_plan_index = i;
+                load_tests_for_plan(plan);
+            }
+            
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", plan.summary.c_str());
+            
+            ImGui::TableNextColumn();
+            ImGui::Text("%d", plan.test_count);
+            
+            ImGui::PopID();
+        }
+        
+        ImGui::EndTable();
+    }
+}
+
+void TestViewer::render_test_execution_view() {
     render_toolbar();
 
     ImGui::Separator();
 
-    ImGui::Text("Test Execution: %s - %s", m_test_execution.key.c_str(), m_test_execution.summary.c_str());
-        if (!m_test_execution.description.empty()) {
-            ImGui::TextWrapped("%s", m_test_execution.description.c_str());
-        }
+    // Simplified header section with test plan info in a more compact format
+    ImGui::BeginGroup();
+    ImGui::Text("Test Plan: %s", m_test_plans[m_current_plan_index].key.c_str());
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "| %s", m_test_plans[m_current_plan_index].summary.c_str());
+    ImGui::EndGroup();
 
     ImGui::Separator();
 
@@ -117,10 +167,10 @@ void TestViewer::render_test_run(int index) {
 
     bool is_header_hovered = ImGui::IsMouseHoveringRect(header_start_pos, header_end_pos);
     if ((is_header_hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))) {
-        ImGui::OpenPopup(("test_run_context_menu_" + run.id).c_str());
+        ImGui::OpenPopup(("test_run_context_menu_" + run.test_key).c_str());
     }
 
-    if (ImGui::BeginPopup(("test_run_context_menu_" + run.id).c_str())) {
+    if (ImGui::BeginPopup(("test_run_context_menu_" + run.test_key).c_str())) {
         ImGui::Text("Set Test Status:");
         ImGui::Separator();
 
@@ -257,7 +307,6 @@ void TestViewer::render_test_step(TestRun& run, int step_idx) {
 
         ImGui::PopStyleColor();
 
-
         ImGui::Unindent(8);
     }
 
@@ -279,13 +328,62 @@ void TestViewer::reset_all_tests() {
     m_actual_result_buffers.clear();
 }
 
+void TestViewer::load_tests_for_plan(const TestPlanOverview& plan) {
+    // In a real application, this would load tests from a database or file
+    // For now, we'll just use our existing test execution
+    
+    // Update the execution key and summary to match the selected plan
+    m_test_execution.key = plan.key + "-EXEC";
+    m_test_execution.summary = plan.summary;
+    m_test_execution.description = "Test execution for " + plan.summary;
+
+    // For demonstration, we'll keep the test runs we already have
+    // In a real app, you'd load the tests associated with the plan
+    // m_test_execution.test_runs = [...];
+}
+
 void TestViewer::create_mockup_data() {
+    // Create sample test plans
+    TestPlanOverview plan1;
+    plan1.key = "TESTPLAN-101";
+    plan1.summary = "Browser Compatibility Test Plan";
+    plan1.test_count = 3;
+    plan1.test_keys = {"TEST-001", "TEST-002", "TEST-003"};
+    plan1.test_summaries = {
+        "Verify main menu navigation",
+        "Test file saving functionality",
+        "Verify entity creation and deletion"
+    };
+    m_test_plans.push_back(plan1);
+    
+    TestPlanOverview plan2;
+    plan2.key = "TESTPLAN-102";
+    plan2.summary = "Performance Test Plan";
+    plan2.test_count = 2;
+    plan2.test_keys = {"TEST-004", "TEST-005"};
+    plan2.test_summaries = {
+        "Verify application startup time",
+        "Test large file loading performance"
+    };
+    m_test_plans.push_back(plan2);
+    
+    TestPlanOverview plan3;
+    plan3.key = "TESTPLAN-103";
+    plan3.summary = "Security Testing";
+    plan3.test_count = 2;
+    plan3.test_keys = {"TEST-006", "TEST-007"};
+    plan3.test_summaries = {
+        "Test input validation and sanitization",
+        "Verify file permissions handling"
+    };
+    m_test_plans.push_back(plan3);
+    
+    // Set up default test execution (matching plan1)
     m_test_execution.key = "TESTEX-111";
     m_test_execution.summary = "Browser Compatibility Test Plan";
     m_test_execution.description = "Testing the application across different browsers and platforms";
     
     TestRun run1;
-    run1.id = "RUN-001";
     run1.test_key = "TEST-001";
     run1.test_summary = "Verify main menu navigation";
     
@@ -304,7 +402,6 @@ void TestViewer::create_mockup_data() {
     m_test_execution.test_runs.push_back(run1);
     
     TestRun run2;
-    run2.id = "RUN-002";
     run2.test_key = "TEST-002";
     run2.test_summary = "Test file saving functionality";
     
@@ -329,7 +426,6 @@ void TestViewer::create_mockup_data() {
     m_test_execution.test_runs.push_back(run2);
     
     TestRun run3;
-    run3.id = "RUN-003";
     run3.test_key = "TEST-003";
     run3.test_summary = "Verify entity creation and deletion";
     
