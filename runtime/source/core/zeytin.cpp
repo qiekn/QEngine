@@ -135,7 +135,7 @@ void Zeytin::run_frame() {
         }
     }
 
-    if(m_is_play_mode) {
+    if(m_is_play_mode && !m_is_pause_play_mode) {
         play_start_variants();
         play_update_variants();
 #ifdef EDITOR_MODE
