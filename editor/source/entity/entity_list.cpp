@@ -68,6 +68,7 @@ void EntityList::register_event_handlers() {
         [this](bool) {
             m_is_play_mode = false;
             load_entities(BACKUP_DIR);
+            clean_backup_entities();
         }
     );
 
@@ -212,6 +213,10 @@ void EntityList::backup_entities() {
 
         entity.save_to_file(backupPath);
     }
+}
+
+void EntityList::clean_backup_entities() {
+    std::filesystem::remove_all(BACKUP_DIR);;
 }
 
 void EntityList::load_entities(const std::filesystem::path& path) {
