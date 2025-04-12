@@ -71,15 +71,21 @@ EngineControls::~EngineControls() {
 void EngineControls::render() {
     check_build_status();
 
+    float total_width = ImGui::GetWindowWidth();
+    float center_width = total_width * 0.2;
+    float center_pos = (total_width - center_width) * 0.5f;
+    float right_pos = total_width - 400; 
+
+    ImGui::SetCursorPosX(center_pos);
     render_engine_controls();
-    ImGui::SameLine(ImGui::GetWindowWidth() * 0.7f);
+
+    ImGui::SetCursorPosX(right_pos);
     render_play_controls();
 
     if (m_build_status == BuildStatus::Running || m_build_status == BuildStatus::Failed) {
         render_build_status();
     }
 }
-
 
 void EngineControls::render_engine_controls() {
     if (ImGui::Button("Kill Engine")) {

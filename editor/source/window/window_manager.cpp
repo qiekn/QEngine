@@ -87,24 +87,28 @@ void WindowManager::render() {
     }
 
     if(ImGui::BeginMainMenuBar()) {
+        bool hasMenuItems = false;
         for(auto& menu : m_menus) {
-            const bool no_category = menu.category.empty();
-            const bool no_name = menu.name.empty();
-
-            if(no_category && !no_name) {
-                ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
-            }
-            else if(!no_category && !no_name) {
+            if(!menu.category.empty() && !menu.name.empty()) {
+                
                 if(ImGui::BeginMenu(menu.category.c_str())) {
-                    ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
+                    ImGui::MenuItem(menu.name.c_str(), nullptr);
                     ImGui::EndMenu();
                 }
             }
-            else {
-                menu.render_func();
+            else if(menu.category.empty() && !menu.name.empty()) {
+                ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
             }
-
         }
+        
+        for(auto& menu : m_menus) {
+            if(menu.category.empty() && menu.name.empty()) {
+                menu.render_func();
+                break;
+            }
+        }
+
+        
         ImGui::EndMainMenuBar();
     }
 
@@ -115,5 +119,4 @@ void WindowManager::render() {
             }
         }
     }
-
 }

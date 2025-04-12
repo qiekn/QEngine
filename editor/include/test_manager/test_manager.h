@@ -14,7 +14,7 @@ public:
     
 private:
     void register_all_tests();
-    bool m_window_visible;
+    bool m_window_visible = true;
 
     ImGuiTestEngine* m_test_engine = nullptr;
 };

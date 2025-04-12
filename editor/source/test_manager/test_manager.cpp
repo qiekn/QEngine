@@ -18,7 +18,7 @@ TestManager::TestManager() {
 }
 
 void TestManager::update() {
-    if (m_test_engine) {
+    if (m_test_engine && m_window_visible) {
         ImGuiTestEngine_ShowTestEngineWindows(m_test_engine, &m_window_visible);
         ImGuiTestEngine_PostSwap(m_test_engine);
     }

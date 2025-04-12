@@ -66,7 +66,6 @@ int main(int argc, char* argv[])
             test_manager.update();
     });
 
-
     while (!WindowShouldClose())
     {
         if(IsKeyPressed(KEY_H)) {
