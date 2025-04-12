@@ -22,7 +22,9 @@ private:
     float m_hierarchy_width = 460.0f;
     float m_console_height = 490.0f;
     float m_asset_browser_width = 810.0f;
+
     bool m_test_viewer_selected = false;
+    bool m_automated_tests_selected = false;
 
     std::function<void()> m_hierarchy_render_func;
     std::function<void(float, float, float)> m_console_render_func;

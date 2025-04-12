@@ -1,5 +1,4 @@
 #include "raylib.h"
-#include "imgui.h"
 #include "rlImGui.h"
 
 #include "entity/entity_list.h"
@@ -12,12 +11,11 @@
 #include "engine/engine_communication.h"
 
 #include "console/console.h"
-#include "window/window_manager.h"
 #include "asset_browser/asset_browser.h"
+#include "test_viewer/test_viewer.h"
+#include "test_manager/test_manager.h"
+#include "window/window_manager.h"
 
-#include "imgui_test_engine/imgui_te_engine.h"
-#include "imgui_test_engine/imgui_te_context.h"
-#include "imgui_test_engine/imgui_te_ui.h"
 
 void RegisterEditorTests(ImGuiTestEngine* test_engine);
 
@@ -60,15 +58,22 @@ int main(int argc, char* argv[])
     });
 
 
-    ImGuiTestEngine* engine = ImGuiTestEngine_CreateContext();
-    ImGuiTestEngineIO& test_io = ImGuiTestEngine_GetIO(engine);
-    test_io.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
-    test_io.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
-    test_io.ConfigRunSpeed = ImGuiTestRunSpeed_Cinematic; 
+    TestViewer test_viwer;
 
-    ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
-    ImGuiTestEngine_InstallDefaultCrashHandler();
-    RegisterEditorTests(engine); 
+    window_manager.set_test_viewer_render_func([&test_viwer]() {
+            test_viwer.render();
+    });
+
+
+    //ImGuiTestEngine* engine = ImGuiTestEngine_CreateContext();
+    //ImGuiTestEngineIO& test_io = ImGuiTestEngine_GetIO(engine);
+    //test_io.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
+    //test_io.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
+    //test_io.ConfigRunSpeed = ImGuiTestRunSpeed_Cinematic; 
+
+    //ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
+    //ImGuiTestEngine_InstallDefaultCrashHandler();
+    //RegisterEditorTests(engine); 
 
     bool started = false;
 
@@ -93,17 +98,17 @@ int main(int argc, char* argv[])
         engine_controls.render_main_menu_controls();
         window_manager.render();
 
-        ImGuiTestEngine_ShowTestEngineWindows(engine, nullptr);
+        //ImGuiTestEngine_ShowTestEngineWindows(engine, nullptr);
 
         rlImGuiEnd();
         EndDrawing();
 
-        ImGuiTestEngine_PostSwap(engine);
+        //ImGuiTestEngine_PostSwap(engine);
     }
 
     engine_controls.kill_engine();
 
-    ImGuiTestEngine_Stop(engine);
+    //ImGuiTestEngine_Stop(engine);
     rlImGuiShutdown();
     CloseWindow();
 

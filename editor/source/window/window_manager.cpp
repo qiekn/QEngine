@@ -65,16 +65,20 @@ void WindowManager::render() {
 
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("Tools")) {
-            if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected)) {
+            if(ImGui::MenuItem("Automated Tests", nullptr, &m_automated_tests_selected)) {
 
             }
+
+            if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected)) {
+            }
+
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
 
-
     if(m_test_viewer_selected) {
         m_test_viewer_render_func();
     }
+
 }
