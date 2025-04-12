@@ -95,8 +95,8 @@ int main(int argc, char* argv[])
 
         rlImGuiBegin();
 
-        engine_controls.render_main_menu_controls();
         window_manager.render();
+        engine_controls.render_main_menu_controls();
 
         //ImGuiTestEngine_ShowTestEngineWindows(engine, nullptr);
 

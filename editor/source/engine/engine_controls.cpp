@@ -68,14 +68,10 @@ EngineControls::~EngineControls() {
     kill_engine();
 }
 
-void EngineControls::render_main_menu_controls() {
+void EngineControls::render() {
     check_build_status();
     
     if (ImGui::BeginMainMenuBar()) {
-        render_file_menu();
-        render_edit_menu();
-        
-        ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
         render_engine_controls();
         
         ImGui::SameLine(ImGui::GetWindowWidth() * 0.7f);
@@ -86,21 +82,6 @@ void EngineControls::render_main_menu_controls() {
     
     if (m_build_status == BuildStatus::Running || m_build_status == BuildStatus::Failed) {
         render_build_status();
-    }
-}
-
-void EngineControls::render_file_menu() {
-    if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("Open", "Ctrl+O")) {}
-        if (ImGui::MenuItem("Save", "Ctrl+S")) {}
-        if (ImGui::MenuItem("Exit", "Alt+F4")) {}
-        ImGui::EndMenu();
-    }
-}
-
-void EngineControls::render_edit_menu() {
-    if (ImGui::BeginMenu("Edit")) {
-        ImGui::EndMenu();
     }
 }
 

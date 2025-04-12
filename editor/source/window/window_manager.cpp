@@ -15,6 +15,34 @@ void WindowManager::render() {
     
     float main_content_height = window_size.y - menu_bar_height - m_console_height;
 
+     if(ImGui::BeginMainMenuBar()) {
+        if(ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+            if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+            if (ImGui::MenuItem("Exit", "Alt+F4")) {}
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu("Edit")) {
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu("Tools")) {
+            if(ImGui::BeginMenu("Tests")) {
+                if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected)) {
+                }
+
+                if(ImGui::MenuItem("Automated Tests", nullptr, &m_automated_tests_selected)) {
+                }
+
+                ImGui::EndMenu(); 
+            }
+            ImGui::EndMenu(); 
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+
     ImVec2 hierarchy_pos = ImVec2(0, menu_bar_height);
     ImVec2 hierarchy_size = ImVec2(m_hierarchy_width, main_content_height);
     ImVec2 asset_browser_pos = ImVec2(window_size.x - m_asset_browser_width, menu_bar_height);
@@ -63,22 +91,19 @@ void WindowManager::render() {
         ImGui::End();
     }
 
-    if(ImGui::BeginMainMenuBar()) {
-        if(ImGui::BeginMenu("Tools")) {
-            if(ImGui::MenuItem("Automated Tests", nullptr, &m_automated_tests_selected)) {
-
-            }
-
-            if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected)) {
-            }
-
-            ImGui::EndMenu();
-        }
-        ImGui::EndMainMenuBar();
-    }
 
     if(m_test_viewer_selected) {
-        m_test_viewer_render_func();
+        float centerX = m_hierarchy_width + (window_size.x - m_hierarchy_width - m_asset_browser_width) * 0.5f;
+        float centerY = menu_bar_height + main_content_height * 0.5f;
+
+        ImGui::SetNextWindowPos(ImVec2(centerX - 300, centerY - 400), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(600, 800), ImGuiCond_FirstUseEver);
+
+        if(ImGui::Begin("Test Viewer", &m_test_viewer_selected)) {
+            m_test_viewer_render_func();
+            ImGui::End();
+        }
     }
+
 
 }

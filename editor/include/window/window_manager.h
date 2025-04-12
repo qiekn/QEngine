@@ -30,4 +30,5 @@ private:
     std::function<void(float, float, float)> m_console_render_func;
     std::function<void()> m_asset_browser_render_func;
     std::function<void()> m_test_viewer_render_func;
+    std::function<void()> m_automated_tests_render_func;
 };

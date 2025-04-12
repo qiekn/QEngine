@@ -8,7 +8,7 @@ public:
     EngineControls();
     ~EngineControls();
 
-    void render_main_menu_controls();
+    void render();
     void start_engine();
     void kill_engine();
 
@@ -20,8 +20,6 @@ public:
     };
 
 private:
-    void render_file_menu();
-    void render_edit_menu();
     void render_engine_controls();
     void render_play_controls();
     void render_build_status();
