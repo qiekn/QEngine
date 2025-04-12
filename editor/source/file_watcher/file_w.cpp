@@ -1,7 +1,15 @@
 #include "file_watcher/file_w.h"
+#include "logger.h"
 
 FileW::FileW(const std::string& path_to_watch, std::chrono::duration<int, std::milli> polling_interval)
     : m_path_to_watch(path_to_watch), m_polling_interval(polling_interval), m_running(false) {
+
+    const bool directory = std::filesystem::exists(path_to_watch);
+    if(!directory) {
+        log_error() << "Directory passed to file watcher does not exists:" << path_to_watch << std::endl;
+        return;
+    }
+
     for(auto& file : fs::recursive_directory_iterator(m_path_to_watch)) {
         if (fs::is_regular_file(file)) {
             m_paths[file.path().string()] = fs::last_write_time(file);
@@ -77,6 +85,12 @@ void FileW::stop() {
 
 void FileW::watch_loop() {
     while (m_running) {
+
+        const bool directory_exists = std::filesystem::exists(m_path_to_watch); // waiting until the directory we are looking is created
+        if(!directory_exists) {
+            continue;
+        }
+
         auto it = m_paths.begin();
         while (it != m_paths.end()) {
             if (!fs::exists(it->first)) {

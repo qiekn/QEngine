@@ -1,16 +1,19 @@
-* [EDITOR] change show each window renders itself (window manager)
++ [EDITOR] change show each window renders itself (window manager)
++ [EDITOR] implement imgui_test_engine for automated editor tests.
++ [EDITOR] Implement adding elements to array
++ [EDITOR] implement .scene
+* [EDITOR]investigate enums
 
-* add proper deinitialization to engine
-
-* think about animation
-* investigate shaders
-* implement .scene
-* implement a way to refer other entities (using ids)
-* support double type
-* Implement adding elements to array
-* investigate enums
++ [ENGINE] test standalone builds
++ [ENGINE] create a packaged asset file for standalone builds
++ [ENGINE] implement a path wrapper (primitive resouce manager)
++ [ENGINE] implement raylib automated testing to runtime
++ [ENGINE] add proper deinitialization to engine
++ [ENGINE] think about animation
++ [ENGINE]investigate shaders
 
 -----------------------------------------
+* [DONE] implement a way to refer other entities (using ids)
 * [DONE] add dependency check
 * [DONE] implement world camera system
 * [DONE] raylib types

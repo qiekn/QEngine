@@ -5,6 +5,8 @@
 #include "file_watcher/file_w.h"
 #include "logger.h"
 
+#define PATH_TO_VARIANTS "../shared/variants"
+
 VariantList::VariantList() : m_variant_watcher("../shared/variants/", std::chrono::milliseconds(500)) {
     load_variants();
     start_watching();
@@ -12,6 +14,22 @@ VariantList::VariantList() : m_variant_watcher("../shared/variants/", std::chron
 
 void VariantList::load_variants() {
     m_variants.clear();
+
+    std::error_code ec;
+    if (!std::filesystem::exists(PATH_TO_VARIANTS, ec)) {
+        if (ec) {
+            log_error() << "Error checking if path exists: " << PATH_TO_VARIANTS << ", error: " << ec.message() << std::endl;
+            return;
+        }
+
+        log_error() << "Path does not exist: " << PATH_TO_VARIANTS << std::endl;
+        return;
+    }
+
+    if(!std::filesystem::is_directory(PATH_TO_VARIANTS)) {
+        log_error() << "Cannot find variants folder at: " << PATH_TO_VARIANTS << std::endl;
+        return;
+    }
 
     for(const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(VARIANT_FOLDER)) {
         if(!entry.is_regular_file() || entry.path().extension() != ".variant") {
