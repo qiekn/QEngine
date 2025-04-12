@@ -72,7 +72,6 @@ void EngineControls::render() {
     check_build_status();
 
     render_engine_controls();
-
     ImGui::SameLine(ImGui::GetWindowWidth() * 0.7f);
     render_play_controls();
 

@@ -29,22 +29,30 @@ bool WindowManager::is_window_visible(const std::string& name) const {
     return false;
 }
 
+void WindowManager::add_menu_item(const std::string& category, const std::string& name, std::function<void()> render_func) {
+    MenuInfo info;
+    info.category = category;
+    info.name = name;
+    info.render_func = render_func;
+    m_menus.push_back(info);
+}
+
 void WindowManager::render() {
     const auto& layout = LayoutConfig::get();
     
-    float menu_bar_height = ImGui::GetFrameHeight();
-    ImVec2 window_size = ImVec2(GetScreenWidth(), GetScreenHeight());
+    const float menu_bar_height = ImGui::GetFrameHeight();
+    const ImVec2 window_size = ImVec2(GetScreenWidth(), GetScreenHeight());
     
-    float main_content_height = window_size.y - menu_bar_height - layout.console_height;
+    const float main_content_height = window_size.y - menu_bar_height - layout.console_height;
 
-    ImVec2 hierarchy_pos = ImVec2(0, menu_bar_height);
-    ImVec2 hierarchy_size = ImVec2(layout.hierarchy_width, main_content_height);
+    const ImVec2 hierarchy_pos = ImVec2(0, menu_bar_height);
+    const ImVec2 hierarchy_size = ImVec2(layout.hierarchy_width, main_content_height);
     
-    ImVec2 asset_browser_pos = ImVec2(window_size.x - layout.asset_browser_width, menu_bar_height);
-    ImVec2 asset_browser_size = ImVec2(layout.asset_browser_width, main_content_height);
+    const ImVec2 asset_browser_pos = ImVec2(window_size.x - layout.asset_browser_width, menu_bar_height);
+    const ImVec2 asset_browser_size = ImVec2(layout.asset_browser_width, main_content_height);
     
-    ImVec2 console_pos = ImVec2(0, menu_bar_height + main_content_height);
-    ImVec2 console_size = ImVec2(window_size.x, layout.console_height);
+    const ImVec2 console_pos = ImVec2(0, menu_bar_height + main_content_height);
+    const ImVec2 console_size = ImVec2(window_size.x, layout.console_height);
 
     for (auto& window : m_windows) {
         if (!window.is_visible || !window.is_open)
@@ -54,7 +62,6 @@ void WindowManager::render() {
                                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | 
                                  ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize;
         
-        // main windows
         if (window.name == "Hierarchy") {
             window.position = hierarchy_pos;
             window.size = hierarchy_size;
@@ -79,42 +86,25 @@ void WindowManager::render() {
         }
     }
 
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Tools")) {
-            for (auto& window : m_windows) {
-                if (window.name != "Hierarchy" && window.name != "Console" && window.name != "Asset Browser") {
-                    if (ImGui::MenuItem(window.name.c_str(), nullptr, &window.is_visible)) {
-                    }
-                }
+
+    if(ImGui::BeginMainMenuBar()) {
+        for(auto& menu : m_menus) {
+            if(menu.category.empty()) {
+                ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
+                continue;
             }
-            ImGui::EndMenu();
+            if(ImGui::BeginMenu(menu.category.c_str())) {
+                ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
+                ImGui::EndMenu();
+            }
         }
         ImGui::EndMainMenuBar();
     }
-    
-    for (auto& window : m_windows) {
-        if (window.name != "Hierarchy" && window.name != "Console" && window.name != "Asset Browser" && 
-            window.is_visible && window.is_open) {
-            
-            ImGuiWindowFlags flags = ImGuiWindowFlags_None;
-            
-            if (!window.position.x && !window.position.y) {
-                ImGui::SetNextWindowPos(ImVec2(window_size.x * 0.5f, window_size.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
-            }
-            
-            if (window.size.x > 0 && window.size.y > 0) {
-                ImGui::SetNextWindowSize(window.size, ImGuiCond_FirstUseEver);
-            }
-            
-            if (ImGui::Begin(window.name.c_str(), &window.is_open)) {
-                if (window.render_func) {
-                    window.render_func(ImGui::GetWindowPos(), ImGui::GetWindowSize());
-                }
-                ImGui::End();
-            }
-            
-            window.position = ImGui::GetWindowPos();
-            window.size = ImGui::GetWindowSize();
+
+    for(auto& menu : m_menus) {
+        if(menu.is_open) {
+            menu.render_func();
         }
     }
+
 }

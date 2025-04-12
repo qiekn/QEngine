@@ -6,6 +6,7 @@
 #include <string>
 #include "imgui.h"
 
+
 // TODO: Read this from .ini
 struct LayoutConfig {
     float hierarchy_width = 460.0f;
@@ -27,6 +28,13 @@ struct WindowInfo {
     std::function<void(const ImVec2&, const ImVec2&)> render_func;
 };
 
+struct MenuInfo {
+    std::string name;
+    std::string category;
+    std::function<void()> render_func;
+    bool is_open = false;
+};
+
 class WindowManager {
 public:
     WindowManager();
@@ -34,6 +42,8 @@ public:
 
     void render();
     
+    void add_menu_item(const std::string& category, const std::string& name, std::function<void()> render_func);
+
     void add_window(const std::string& name, 
                   std::function<void(const ImVec2&, const ImVec2&)> render_func,
                   ImVec2 default_size = ImVec2(0, 0),
@@ -43,4 +53,5 @@ public:
 
 private:
     std::vector<WindowInfo> m_windows;
+    std::vector<MenuInfo> m_menus;
 };

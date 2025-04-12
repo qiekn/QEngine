@@ -6,20 +6,15 @@
 
 class TestManager {
 public:
-    static TestManager& get() {
-        static TestManager instance;
-        return instance;
-    }
+    TestManager();
+    ~TestManager();
 
-    void initialize();
     void update();
     void shutdown();
     
 private:
-    TestManager() = default;
-    ~TestManager() = default;
-
     void register_all_tests();
+    bool m_window_visible;
 
     ImGuiTestEngine* m_test_engine = nullptr;
 };

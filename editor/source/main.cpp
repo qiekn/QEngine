@@ -25,16 +25,12 @@ int main(int argc, char* argv[])
     EngineControls engine_controls;
     EngineCommunication engine_communication;
 
-    int screen_width = GetScreenWidth();
-    int screen_height = GetScreenHeight();
-
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_ALWAYS_RUN);
-    InitWindow(screen_width, screen_height, "ZeytinEditor");
+    InitWindow(GetScreenWidth(), GetScreenHeight(), "ZeytinEditor");
     MaximizeWindow();
     SetTargetFPS(144);
     SetExitKey(0);
     rlImGuiSetup(true);
-
     SetEditorTheme();
 
     EntityList entity_list{};
@@ -59,12 +55,17 @@ int main(int argc, char* argv[])
         [](const ImVec2&, const ImVec2&) {
             AssetBrowser::get().render();
         });
-    
-    window_manager.add_window("Test Viewer", 
-        [&test_viewer](const ImVec2&, const ImVec2&) {
-            test_viewer.render();
-        }, 
-        ImVec2(600, 400), false);
+
+    window_manager.add_menu_item("EngineControls", "EngineControlrs", [&engine_controls] {
+            engine_controls.render();
+        });
+
+    TestManager test_manager;
+
+    window_manager.add_menu_item("Tests", "Automated Tests", [&test_manager] {
+            test_manager.update();
+    });
+
 
     while (!WindowShouldClose())
     {
@@ -83,7 +84,6 @@ int main(int argc, char* argv[])
 
         rlImGuiBegin();
 
-        //engine_controls.render_main_menu_controls();
         window_manager.render();
 
         rlImGuiEnd();

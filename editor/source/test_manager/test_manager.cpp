@@ -1,28 +1,30 @@
 #include "test_manager/test_manager.h"
 
 #include "imgui_test_engine/imgui_te_ui.h"
+#include "logger.h"
 
-void TestManager::initialize() {
+TestManager::TestManager() {
     m_test_engine = ImGuiTestEngine_CreateContext();
     ImGuiTestEngineIO& test_io = ImGuiTestEngine_GetIO(m_test_engine);
     test_io.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
     test_io.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
-    test_io.ConfigRunSpeed = ImGuiTestRunSpeed_Cinematic;
+    test_io.ConfigRunSpeed = ImGuiTestRunSpeed_Fast;
+    test_io.ConfigMouseDrawCursor = true;
 
     ImGuiTestEngine_Start(m_test_engine, ImGui::GetCurrentContext());
-    ImGuiTestEngine_InstallDefaultCrashHandler();
+    //ImGuiTestEngine_InstallDefaultCrashHandler(); // not very useful
 
     register_all_tests();
 }
 
 void TestManager::update() {
     if (m_test_engine) {
-        ImGuiTestEngine_ShowTestEngineWindows(m_test_engine, nullptr);
+        ImGuiTestEngine_ShowTestEngineWindows(m_test_engine, &m_window_visible);
         ImGuiTestEngine_PostSwap(m_test_engine);
     }
 }
 
-void TestManager::shutdown() {
+TestManager::~TestManager() {
     if (m_test_engine) {
         ImGuiTestEngine_Stop(m_test_engine);
         ImGuiTestEngine_DestroyContext(m_test_engine);
@@ -31,7 +33,9 @@ void TestManager::shutdown() {
 }
 
 void TestManager::register_all_tests() {
-    ImGuiTest* hierarchy_create_entity = IM_REGISTER_TEST(m_test_engine, "Hierarchy" , "CreateEntity");
+    // ideally start engine before 
+
+    ImGuiTest* hierarchy_create_entity = IM_REGISTER_TEST(m_test_engine, "Hierarchy" , "Create Entity");
     hierarchy_create_entity->TestFunc = [](ImGuiTestContext* ctx) {
         ctx->SetRef("Hierarchy");
         ctx->ItemClick("+ Create New Entity");
@@ -40,23 +44,58 @@ void TestManager::register_all_tests() {
         ctx->KeyCharsAppend("TestEntity");
         ctx->SetRef("New Entity");
         ctx->ItemClick("Create");
+        ctx->SetRef("Hierarchy");
+        bool item_exists = ctx->ItemExists("**/TestEntity");
+        IM_CHECK(item_exists);
     };
 
-    // Add more tests here as needed
-    ImGuiTest* addVariantTest = IM_REGISTER_TEST(m_test_engine, "Hierarchy", "AddVariant");
-    addVariantTest->TestFunc = [](ImGuiTestContext* ctx) {
-        // First make sure we have an entity
+    ImGuiTest* hierarcy_cancel_create_entity = IM_REGISTER_TEST(m_test_engine, "Hierarchy" , "Cancel Create Entity");
+    hierarcy_cancel_create_entity->TestFunc = [](ImGuiTestContext* ctx) {
         ctx->SetRef("Hierarchy");
         ctx->ItemClick("+ Create New Entity");
         ctx->SetRef("New Entity");
-        ctx->KeyCharsAppend("VariantEntity");
+        ctx->ItemClick("##EntityName");
+        ctx->KeyCharsAppend("WillCancelThis");
         ctx->SetRef("New Entity");
-        ctx->ItemClick("Create");
+        ctx->ItemClick("Cancel");
+        bool item_exists = ctx->ItemExists("**/WillCancelThis");
+        IM_CHECK(!item_exists);
+    };
 
-        // Now add a variant to it
+    ImGuiTest* add_position = IM_REGISTER_TEST(m_test_engine, "Hierarchy", "Add Position To Entity");
+    add_position->TestFunc = [](ImGuiTestContext* ctx) {
+        IM_CHECK(ctx->ItemExists("Hierarchy"));
         ctx->SetRef("Hierarchy");
-        //ctx->ItemContextClick("VariantEntity");
-        ctx->MenuClick("Add Variant");
-        // Complete with your specific UI flow for adding variants
+        ctx->MouseMove("**/TestEntity");
+        ctx->MouseClick(0);
+        ctx->MouseClick(1);
+        ctx->MouseMove("**/Add Variant");
+        ctx->MouseMove("**/Position");
+        ctx->MouseClick(0);
+        bool item_exists = ctx->ItemExists("**/Position");
+        IM_CHECK(item_exists);
+    };
+
+    ImGuiTest* re_add_position = IM_REGISTER_TEST(m_test_engine, "Hierarchy", "Re Add Position To Entity");
+    add_position->TestFunc = [](ImGuiTestContext* ctx) {
+        IM_CHECK(ctx->ItemExists("Hierarchy"));
+        ctx->SetRef("Hierarchy");
+        ctx->MouseMove("**/TestEntity");
+        ctx->MouseClick(0);
+        ctx->MouseClick(1);
+        ctx->MouseMove("**/Add Variant");
+        ctx->MouseMove("**/Position");
+        ctx->MouseClick(0);
+        bool item_exists = ctx->ItemExists("**/Position");
+        IM_CHECK(item_exists);
+    };
+
+    ImGuiTest* edit_position = IM_REGISTER_TEST(m_test_engine, "Hierarchy", "Edit Position");
+    edit_position->TestFunc = [](ImGuiTestContext* ctx) {
+        IM_CHECK(ctx->ItemExists("Hierarchy"));
+        ctx->SetRef("Hierarchy");
+        ctx->ItemClick("**/Position");
+        ctx->SetRef("**/Position");
+        ctx->TableOpenContextMenu("**/x");
     };
 }
