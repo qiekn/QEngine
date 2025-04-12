@@ -90,11 +90,50 @@ void TestManager::register_all_tests() {
         IM_CHECK(item_exists);
     };
 
-    ImGuiTest* save_entity_test = IM_REGISTER_TEST(m_test_engine, "Hierarchy", "Save Entity");
-    save_entity_test->TestFunc = [](ImGuiTestContext* ctx) {
-        ctx->SetRef("Hierarchy");
-        IM_CHECK(ctx->ItemExists("Save All"));
-        ctx->ItemClick("Save All");
+    ImGuiTest* console_visibility = IM_REGISTER_TEST(m_test_engine, "Console", "Console Visibility");
+    console_visibility->TestFunc = [](ImGuiTestContext* ctx) {
+        IM_CHECK(ctx->ItemExists("Console"));
+
+        ctx->SetRef("Console");
+
+        ctx->ItemClick("Clear");
+        ctx->ItemClick("Auto-scroll");
+        ctx->ItemClick("Editor");
+        ctx->ItemClick("Engine");
+        ctx->ItemClick("Trace");
+        ctx->ItemClick("Info");
+        ctx->ItemClick("Warning");
+        ctx->ItemClick("Error");
+
+
+        ctx->ItemClick("Error");
+        ctx->ItemClick("Warning");
+        ctx->ItemClick("Info");
+        ctx->ItemClick("Trace");
+        ctx->ItemClick("Engine");
+        ctx->ItemClick("Editor");
+        ctx->ItemClick("Auto-scroll");
+        ctx->ItemClick("Clear");
     };
 
+    ImGuiTest* asset_browser_visibility = IM_REGISTER_TEST(m_test_engine, "Asset Browser", "Browser Visibility");
+    asset_browser_visibility->TestFunc = [](ImGuiTestContext* ctx) {
+        IM_CHECK(ctx->ItemExists("Asset Browser"));
+
+        ctx->SetRef("Asset Browser");
+        IM_CHECK(ctx->ItemExists("Refresh"));
+        IM_CHECK(ctx->ItemExists("Show Previews"));
+    };
+
+    ImGuiTest* asset_browser_navigation = IM_REGISTER_TEST(m_test_engine, "Asset Browser", "Directory Navigation");
+    asset_browser_navigation->TestFunc = [](ImGuiTestContext* ctx) {
+        ctx->SetRef("Asset Browser");
+
+        ctx->ItemClick("Refresh");
+        ctx->ItemClick("Show Previews");
+        ctx->ItemClick("Show Previews");
+
+        IM_CHECK(ctx->ItemExists("DirectoryTree"));
+        IM_CHECK(ctx->ItemExists("ContentView"));
+    };
 }
