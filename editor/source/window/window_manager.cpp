@@ -86,25 +86,35 @@ void WindowManager::render() {
         }
     }
 
-
-    if(ImGui::BeginMainMenuBar()) {
-        for(auto& menu : m_menus) {
-            if(menu.category.empty()) {
-                ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
-                continue;
-            }
+    // In window_manager.cpp - modify the render() method
+if(ImGui::BeginMainMenuBar()) {
+    for(auto& menu : m_menus) {
+        if(menu.category.empty() && menu.name.empty()) {
+            // This is a special case - render directly in main menu bar
+            menu.render_func();
+        }
+        else if(menu.category.empty()) {
+            // Regular menu items without category
+            ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
+        }
+        else {
+            // Dropdown menus
             if(ImGui::BeginMenu(menu.category.c_str())) {
                 ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
                 ImGui::EndMenu();
             }
         }
-        ImGui::EndMainMenuBar();
     }
+    ImGui::EndMainMenuBar();
+}
 
-    for(auto& menu : m_menus) {
+// Then process menu items that should open windows
+for(auto& menu : m_menus) {
+    if(!menu.category.empty() || !menu.name.empty()) { // Skip direct render components
         if(menu.is_open) {
             menu.render_func();
         }
     }
+}
 
 }

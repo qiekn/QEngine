@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
             AssetBrowser::get().render();
         });
 
-    window_manager.add_menu_item("EngineControls", "EngineControlrs", [&engine_controls] {
+    window_manager.add_menu_item("", "", [&engine_controls] {
             engine_controls.render();
         });
 
