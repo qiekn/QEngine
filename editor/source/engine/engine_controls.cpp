@@ -70,20 +70,17 @@ EngineControls::~EngineControls() {
 
 void EngineControls::render() {
     check_build_status();
-    
-    if (ImGui::BeginMainMenuBar()) {
-        render_engine_controls();
-        
-        ImGui::SameLine(ImGui::GetWindowWidth() * 0.7f);
-        render_play_controls();
-        
-        ImGui::EndMainMenuBar();
-    }
-    
+
+    render_engine_controls();
+
+    ImGui::SameLine(ImGui::GetWindowWidth() * 0.7f);
+    render_play_controls();
+
     if (m_build_status == BuildStatus::Running || m_build_status == BuildStatus::Failed) {
         render_build_status();
     }
 }
+
 
 void EngineControls::render_engine_controls() {
     if (ImGui::Button("Kill Engine")) {
