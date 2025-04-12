@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
 
         rlImGuiEnd();
         EndDrawing();
+
+        test_manager.post_swap(); // required to have it for now
     }
 
     engine_controls.kill_engine();

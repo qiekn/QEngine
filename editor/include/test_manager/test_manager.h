@@ -11,6 +11,7 @@ public:
 
     void update();
     void shutdown();
+    void post_swap();
     
 private:
     void register_all_tests();

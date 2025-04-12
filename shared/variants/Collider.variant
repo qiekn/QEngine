@@ -1,0 +1,12 @@
+{
+    "type": "Collider",
+    "value": {
+        "m_collider_type": 0,
+        "m_is_trigger": false,
+        "m_width": 0.0,
+        "m_height": 0.0,
+        "m_radius": 0.0,
+        "m_static": false,
+        "m_draw_debug": false
+    }
+}

@@ -92,7 +92,7 @@ void WindowManager::render() {
             if(!menu.category.empty() && !menu.name.empty()) {
                 
                 if(ImGui::BeginMenu(menu.category.c_str())) {
-                    ImGui::MenuItem(menu.name.c_str(), nullptr);
+                    ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
                     ImGui::EndMenu();
                 }
             }

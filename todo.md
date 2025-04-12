@@ -2,6 +2,7 @@
 + [EDITOR] implement imgui_test_engine for automated editor tests.
 + [EDITOR] Implement adding elements to array
 + [EDITOR] implement .scene
++ [EDITOR] move imgui to thirdparty
 * [EDITOR]investigate enums
 
 + [ENGINE] test standalone builds
