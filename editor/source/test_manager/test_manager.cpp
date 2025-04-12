@@ -90,12 +90,11 @@ void TestManager::register_all_tests() {
         IM_CHECK(item_exists);
     };
 
-    ImGuiTest* edit_position = IM_REGISTER_TEST(m_test_engine, "Hierarchy", "Edit Position");
-    edit_position->TestFunc = [](ImGuiTestContext* ctx) {
-        IM_CHECK(ctx->ItemExists("Hierarchy"));
+    ImGuiTest* save_entity_test = IM_REGISTER_TEST(m_test_engine, "Hierarchy", "Save Entity");
+    save_entity_test->TestFunc = [](ImGuiTestContext* ctx) {
         ctx->SetRef("Hierarchy");
-        ctx->ItemClick("**/Position");
-        ctx->SetRef("**/Position");
-        ctx->TableOpenContextMenu("**/x");
+        IM_CHECK(ctx->ItemExists("Save All"));
+        ctx->ItemClick("Save All");
     };
+
 }
