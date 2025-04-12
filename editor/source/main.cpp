@@ -17,6 +17,9 @@
 
 #include "imgui_test_engine/imgui_te_engine.h"
 #include "imgui_test_engine/imgui_te_context.h"
+#include "imgui_test_engine/imgui_te_ui.h"
+
+void RegisterEditorTests(ImGuiTestEngine* test_engine);
 
 int main(int argc, char* argv[])
 {
@@ -33,7 +36,7 @@ int main(int argc, char* argv[])
     MaximizeWindow();
     SetTargetFPS(144);
     SetExitKey(0);
-    rlImGuiSetup(false);
+    rlImGuiSetup(true);
 
     SetEditorTheme();
 
@@ -61,12 +64,13 @@ int main(int argc, char* argv[])
     ImGuiTestEngineIO& test_io = ImGuiTestEngine_GetIO(engine);
     test_io.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
     test_io.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
+    test_io.ConfigRunSpeed = ImGuiTestRunSpeed_Cinematic; 
 
-    //RegisterMyTests(engine); // will call IM_REGISTER_TEST() etc.
+    ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
+    ImGuiTestEngine_InstallDefaultCrashHandler();
+    RegisterEditorTests(engine); 
 
-    //ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
-
-    //ImGuiTestEngine_InstallCrashHandler();
+    bool started = false;
 
     while (!WindowShouldClose())
     {
@@ -83,19 +87,39 @@ int main(int argc, char* argv[])
         BeginDrawing();
         ClearBackground(BLACK);
 
+
         rlImGuiBegin();
 
         engine_controls.render_main_menu_controls();
         window_manager.render();
 
+        ImGuiTestEngine_ShowTestEngineWindows(engine, nullptr);
+
         rlImGuiEnd();
         EndDrawing();
+
+        ImGuiTestEngine_PostSwap(engine);
     }
 
     engine_controls.kill_engine();
 
+    ImGuiTestEngine_Stop(engine);
     rlImGuiShutdown();
     CloseWindow();
 
     return 0;
 }
+
+void RegisterEditorTests(ImGuiTestEngine* test_engine)
+{
+    ImGuiTest* hierarchyTest = IM_REGISTER_TEST(test_engine, "Hierarchy" , "CreateEntity");
+    hierarchyTest->TestFunc = [](ImGuiTestContext* ctx) {
+        ctx->SetRef("Hierarchy");
+        ctx->ItemClick("+ Create New Entity");
+        ctx->SetRef("New Entity");
+        ctx->ItemClick("EntityName");
+        //ctx->ItemClick("Create");
+    };
+}
+
+
