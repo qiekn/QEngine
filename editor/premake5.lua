@@ -44,9 +44,32 @@ workspace "ZeytinEditor"
         symbols "On"
         optimize "Off"  
 
-        files { "source/**.cpp" }
+        files { 
+            "source/**.cpp",
+            "3rdparty/imgui_test_engine/imgui_test_engine/**.cpp",
+            "3rdparty/imgui_test_engine/imgui_test_engine/**.h"
+        }
 
         filter "configurations:Debug"
-            defines {"DEBUG=1"}
+            defines {
+                "DEBUG=1",
+                "IMGUI_ENABLE_TEST_ENGINE",
+                "IMGUI_TEST_ENGINE_ENABLE_COROUTINE_STDTHREAD_IMPL=1",
+            }
+
+            includedirs {
+                "3rdparty/imgui_test_engine",
+            }
+
             symbols "On"
             optimize "Off"  
+
+
+
+
+
+
+
+
+
+

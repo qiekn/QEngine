@@ -14,7 +14,9 @@
 #include "console/console.h"
 #include "window/window_manager.h"
 #include "asset_browser/asset_browser.h"
-#include "test_viewer/test_viewer.h"
+
+#include "imgui_test_engine/imgui_te_engine.h"
+#include "imgui_test_engine/imgui_te_context.h"
 
 int main(int argc, char* argv[])
 {
@@ -54,17 +56,17 @@ int main(int argc, char* argv[])
         AssetBrowser::get().render();
     });
 
-    TestViewer test_viewer;
 
-    window_manager.set_test_viewer_render_func([&]() {
-            test_viewer.render();
-    });
+    ImGuiTestEngine* engine = ImGuiTestEngine_CreateContext();
+    ImGuiTestEngineIO& test_io = ImGuiTestEngine_GetIO(engine);
+    test_io.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
+    test_io.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
 
-    AssetBrowser::get().set_on_asset_activated([&test_viewer, &window_manager](const AssetItem& item) {
-        if (item.type == AssetType::Test) {
-            //test_viewer.load_test_file(item.path);
-        }
-    });
+    //RegisterMyTests(engine); // will call IM_REGISTER_TEST() etc.
+
+    //ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
+
+    //ImGuiTestEngine_InstallCrashHandler();
 
     while (!WindowShouldClose())
     {
