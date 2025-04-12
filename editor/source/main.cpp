@@ -117,8 +117,10 @@ void RegisterEditorTests(ImGuiTestEngine* test_engine)
         ctx->SetRef("Hierarchy");
         ctx->ItemClick("+ Create New Entity");
         ctx->SetRef("New Entity");
-        ctx->ItemClick("EntityName");
-        //ctx->ItemClick("Create");
+        ctx->ItemClick("##EntityName");
+        ctx->KeyCharsAppend("TestEntity");
+        ctx->SetRef("New Entity");
+        ctx->ItemClick("Create");
     };
 }
 
