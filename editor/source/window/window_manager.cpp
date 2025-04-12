@@ -3,107 +3,118 @@
 
 #include "engine/engine_event.h"
 
-WindowManager::WindowManager() 
-    : m_hierarchy_render_func([]() {}),  
-      m_console_render_func([](float, float, float) {}),
-      m_asset_browser_render_func([]() {}) {
+WindowManager::WindowManager() {}
+
+void WindowManager::add_window(const std::string& name, 
+                             std::function<void(const ImVec2&, const ImVec2&)> render_func,
+                             ImVec2 default_size,
+                             bool is_visible) {
+    WindowInfo window;
+    window.name = name;
+    window.position = ImVec2(0, 0); 
+    window.size = default_size;
+    window.is_open = true;
+    window.is_visible = is_visible;
+    window.render_func = render_func;
+    
+    m_windows.push_back(window);
+}
+
+bool WindowManager::is_window_visible(const std::string& name) const {
+    for (const auto& window : m_windows) {
+        if (window.name == name) {
+            return window.is_visible;
+        }
+    }
+    return false;
 }
 
 void WindowManager::render() {
+    const auto& layout = LayoutConfig::get();
+    
     float menu_bar_height = ImGui::GetFrameHeight();
     ImVec2 window_size = ImVec2(GetScreenWidth(), GetScreenHeight());
     
-    float main_content_height = window_size.y - menu_bar_height - m_console_height;
-
-     if(ImGui::BeginMainMenuBar()) {
-        if(ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open", "Ctrl+O")) {}
-            if (ImGui::MenuItem("Save", "Ctrl+S")) {}
-            if (ImGui::MenuItem("Exit", "Alt+F4")) {}
-            ImGui::EndMenu();
-        }
-
-        if(ImGui::BeginMenu("Edit")) {
-            ImGui::EndMenu();
-        }
-
-        if(ImGui::BeginMenu("Tools")) {
-            if(ImGui::BeginMenu("Tests")) {
-                if(ImGui::MenuItem("Test Viewer", nullptr, &m_test_viewer_selected)) {
-                }
-
-                if(ImGui::MenuItem("Automated Tests", nullptr, &m_automated_tests_selected)) {
-                }
-
-                ImGui::EndMenu(); 
-            }
-            ImGui::EndMenu(); 
-        }
-
-        ImGui::EndMainMenuBar();
-    }
+    float main_content_height = window_size.y - menu_bar_height - layout.console_height;
 
     ImVec2 hierarchy_pos = ImVec2(0, menu_bar_height);
-    ImVec2 hierarchy_size = ImVec2(m_hierarchy_width, main_content_height);
-    ImVec2 asset_browser_pos = ImVec2(window_size.x - m_asset_browser_width, menu_bar_height);
-    ImVec2 asset_browser_size = ImVec2(m_asset_browser_width, main_content_height);
-
-    ImGui::SetNextWindowPos(hierarchy_pos);
-    ImGui::SetNextWindowSize(hierarchy_size);
-    ImGuiWindowFlags hierarchy_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | 
-                                       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | 
-                                       ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize;
+    ImVec2 hierarchy_size = ImVec2(layout.hierarchy_width, main_content_height);
     
-
-    if (ImGui::Begin("Hierarchy", nullptr, hierarchy_flags)) {
-        ImGui::Separator();
-        ImGui::Text("Hierarchy");
-
-        m_hierarchy_render_func();
-        ImGui::End();
-    }
-
-    ImGui::SetNextWindowPos(asset_browser_pos);
-    ImGui::SetNextWindowSize(asset_browser_size);
-    ImGuiWindowFlags asset_browser_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | 
-                                            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | 
-                                            ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize;
+    ImVec2 asset_browser_pos = ImVec2(window_size.x - layout.asset_browser_width, menu_bar_height);
+    ImVec2 asset_browser_size = ImVec2(layout.asset_browser_width, main_content_height);
     
-    if (ImGui::Begin("Asset Browser", nullptr, asset_browser_flags)) {
-        m_asset_browser_render_func();
-        ImGui::End();
-    }
-    
-    float console_y = menu_bar_height + main_content_height;
-    const float console_resize_height = 16.0f;
-    ImVec2 console_resize_start(0, console_y - console_resize_height / 2);
-    ImVec2 console_resize_end(window_size.x, console_y + console_resize_height / 2);
+    ImVec2 console_pos = ImVec2(0, menu_bar_height + main_content_height);
+    ImVec2 console_size = ImVec2(window_size.x, layout.console_height);
 
-    ImGui::SetNextWindowPos(ImVec2(0, console_y));
-    ImGui::SetNextWindowSize(ImVec2(window_size.x, m_console_height));
-    ImGuiWindowFlags console_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-                                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
-
-    if (ImGui::Begin("Console", nullptr, console_flags)) {
-        ImGui::Text("Console Window");
-
-        m_console_render_func(console_y, window_size.x, m_console_height);
-        ImGui::End();
-    }
-
-
-    if(m_test_viewer_selected) {
-        float centerX = m_hierarchy_width + (window_size.x - m_hierarchy_width - m_asset_browser_width) * 0.5f;
-        float centerY = menu_bar_height + main_content_height * 0.5f;
-
-        ImGui::SetNextWindowPos(ImVec2(centerX - 300, centerY - 400), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowSize(ImVec2(600, 800), ImGuiCond_FirstUseEver);
-
-        if(ImGui::Begin("Test Viewer", &m_test_viewer_selected)) {
-            m_test_viewer_render_func();
+    for (auto& window : m_windows) {
+        if (!window.is_visible || !window.is_open)
+            continue;
+            
+        ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | 
+                                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | 
+                                 ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize;
+        
+        // main windows
+        if (window.name == "Hierarchy") {
+            window.position = hierarchy_pos;
+            window.size = hierarchy_size;
+        }
+        else if (window.name == "Asset Browser") {
+            window.position = asset_browser_pos;
+            window.size = asset_browser_size;
+        }
+        else if (window.name == "Console") {
+            window.position = console_pos;
+            window.size = console_size;
+        }
+        
+        ImGui::SetNextWindowPos(window.position);
+        ImGui::SetNextWindowSize(window.size);
+        
+        if (ImGui::Begin(window.name.c_str(), &window.is_open, flags)) {
+            if (window.render_func) {
+                window.render_func(window.position, window.size);
+            }
             ImGui::End();
         }
     }
 
-
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("Tools")) {
+            for (auto& window : m_windows) {
+                if (window.name != "Hierarchy" && window.name != "Console" && window.name != "Asset Browser") {
+                    if (ImGui::MenuItem(window.name.c_str(), nullptr, &window.is_visible)) {
+                    }
+                }
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+    
+    for (auto& window : m_windows) {
+        if (window.name != "Hierarchy" && window.name != "Console" && window.name != "Asset Browser" && 
+            window.is_visible && window.is_open) {
+            
+            ImGuiWindowFlags flags = ImGuiWindowFlags_None;
+            
+            if (!window.position.x && !window.position.y) {
+                ImGui::SetNextWindowPos(ImVec2(window_size.x * 0.5f, window_size.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+            }
+            
+            if (window.size.x > 0 && window.size.y > 0) {
+                ImGui::SetNextWindowSize(window.size, ImGuiCond_FirstUseEver);
+            }
+            
+            if (ImGui::Begin(window.name.c_str(), &window.is_open)) {
+                if (window.render_func) {
+                    window.render_func(ImGui::GetWindowPos(), ImGui::GetWindowSize());
+                }
+                ImGui::End();
+            }
+            
+            window.position = ImGui::GetWindowPos();
+            window.size = ImGui::GetWindowSize();
+        }
+    }
 }

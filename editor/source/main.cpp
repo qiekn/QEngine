@@ -16,7 +16,6 @@
 #include "test_manager/test_manager.h"
 #include "window/window_manager.h"
 
-
 void RegisterEditorTests(ImGuiTestEngine* test_engine);
 
 int main(int argc, char* argv[])
@@ -42,40 +41,30 @@ int main(int argc, char* argv[])
     VariantList variant_list{};
 
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
+    TestViewer test_viewer;
 
     WindowManager window_manager;
     
-    window_manager.set_hierarchy_render_func([&hierarchy]() {
-        hierarchy.update();
-    });
+    window_manager.add_window("Hierarchy", 
+        [&hierarchy](const ImVec2&, const ImVec2&) {
+            hierarchy.update();
+        });
     
-    window_manager.set_console_render_func([](float y_position, float width, float height) {
-        ConsoleWindow::get().render(y_position, width, height);
-    });
-
-    window_manager.set_asset_browser_render_func([]() {
-        AssetBrowser::get().render();
-    });
-
-
-    TestViewer test_viwer;
-
-    window_manager.set_test_viewer_render_func([&test_viwer]() {
-            test_viwer.render();
-    });
-
-
-    //ImGuiTestEngine* engine = ImGuiTestEngine_CreateContext();
-    //ImGuiTestEngineIO& test_io = ImGuiTestEngine_GetIO(engine);
-    //test_io.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
-    //test_io.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
-    //test_io.ConfigRunSpeed = ImGuiTestRunSpeed_Cinematic; 
-
-    //ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
-    //ImGuiTestEngine_InstallDefaultCrashHandler();
-    //RegisterEditorTests(engine); 
-
-    bool started = false;
+    window_manager.add_window("Console", 
+        [](const ImVec2& pos, const ImVec2& size) {
+            ConsoleWindow::get().render(pos.y, size.x, size.y);
+        });
+    
+    window_manager.add_window("Asset Browser", 
+        [](const ImVec2&, const ImVec2&) {
+            AssetBrowser::get().render();
+        });
+    
+    window_manager.add_window("Test Viewer", 
+        [&test_viewer](const ImVec2&, const ImVec2&) {
+            test_viewer.render();
+        }, 
+        ImVec2(600, 400), false);
 
     while (!WindowShouldClose())
     {
@@ -92,41 +81,19 @@ int main(int argc, char* argv[])
         BeginDrawing();
         ClearBackground(BLACK);
 
-
         rlImGuiBegin();
 
+        //engine_controls.render_main_menu_controls();
         window_manager.render();
-        engine_controls.render_main_menu_controls();
-
-        //ImGuiTestEngine_ShowTestEngineWindows(engine, nullptr);
 
         rlImGuiEnd();
         EndDrawing();
-
-        //ImGuiTestEngine_PostSwap(engine);
     }
 
     engine_controls.kill_engine();
 
-    //ImGuiTestEngine_Stop(engine);
     rlImGuiShutdown();
     CloseWindow();
 
     return 0;
 }
-
-void RegisterEditorTests(ImGuiTestEngine* test_engine)
-{
-    ImGuiTest* hierarchyTest = IM_REGISTER_TEST(test_engine, "Hierarchy" , "CreateEntity");
-    hierarchyTest->TestFunc = [](ImGuiTestContext* ctx) {
-        ctx->SetRef("Hierarchy");
-        ctx->ItemClick("+ Create New Entity");
-        ctx->SetRef("New Entity");
-        ctx->ItemClick("##EntityName");
-        ctx->KeyCharsAppend("TestEntity");
-        ctx->SetRef("New Entity");
-        ctx->ItemClick("Create");
-    };
-}
-
-
