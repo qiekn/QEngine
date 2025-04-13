@@ -1,77 +1,68 @@
 workspace "ZeytinEditor"
     configurations { "Debug" }
-
     location "build"
-    toolset "clang"
     targetdir "bin/%{cfg.buildcfg}"
+    toolset "clang"
 
+   
     includedirs {
-        "include", 
+        "include",
         "include/imgui",
-        "3rdparty/raylib/src", 
-        "3rdparty/rapidjson/include", 
+        "3rdparty/raylib/src",
+        "3rdparty/rapidjson/include"
     }
 
-    libdirs { 
-        "3rdparty/raylib/src", 
+    
+    libdirs {
+        "3rdparty/raylib/src"
     }
 
-    links { 
-        "raylib", 
-        "m", 
-        "pthread", 
-        "dl", 
-        "rt", 
-        "X11", 
-        "asound", 
-        "stdc++", 
+    links {
+        "raylib",
+        "m",
+        "pthread",
+        "dl",
+        "rt",
+        "X11",
+        "asound",
+        "stdc++",
         "zmq"
     }
 
-    buildoptions { 
-        "-w",              
-        "-std=c++17",     
-        "-stdlib=libstdc++", 
-        "-ferror-limit=0",
+  
+    buildoptions {
+        "-w",
+        "-std=c++17",
+        "-stdlib=libstdc++",
+        "-ferror-limit=0"
     }
 
     filter "action:gmake"
-        buildoptions { "-fPIC" }  
+        buildoptions { "-fPIC" }
 
+   
     project "ZeytinEditor"
         kind "ConsoleApp"
         language "C++"
         symbols "On"
-        optimize "Off"  
+        optimize "Off"
 
-        files { 
+        
+        files {
             "3rdparty/rlimgui/**.cpp",
             "3rdparty/imgui/**.cpp",
             "3rdparty/imgui_test_engine/imgui_test_engine/**.cpp",
             "3rdparty/imgui_test_engine/imgui_test_engine/**.h",
-            "source/**.cpp",
+            "source/**.cpp"
         }
 
         filter "configurations:Debug"
             defines {
                 "DEBUG=1",
                 "IMGUI_ENABLE_TEST_ENGINE",
-                "IMGUI_TEST_ENGINE_ENABLE_COROUTINE_STDTHREAD_IMPL=1",
+                "IMGUI_TEST_ENGINE_ENABLE_COROUTINE_STDTHREAD_IMPL=1"
             }
 
             includedirs {
-                "3rdparty/imgui_test_engine",
+                "3rdparty/imgui_test_engine"
             }
-
-            symbols "On"
-            optimize "Off"  
-
-
-
-
-
-
-
-
-
-

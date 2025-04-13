@@ -1,6 +1,5 @@
 workspace "Zeytin"
     configurations {"EDITOR_MODE", "STANDALONE"}
-
     location "build"
     toolset "clang"
     targetdir "bin/%{cfg.buildcfg}"
@@ -9,12 +8,12 @@ workspace "Zeytin"
         "include", 
         "3rdparty/raylib/src", 
         "3rdparty/rttr/build/install/include", 
-        "3rdparty/rapidjson/include", 
+        "3rdparty/rapidjson/include"
     }
 
     libdirs { 
         "3rdparty/raylib/src", 
-        "3rdparty/rttr/build/install/lib", 
+        "3rdparty/rttr/build/install/lib"
     }
 
     links { 
@@ -27,8 +26,9 @@ workspace "Zeytin"
         "asound", 
         "stdc++", 
         "rttr_core",
-        "zmq",
+        "zmq"
     }
+
 
     buildoptions { 
         "-w",              
@@ -36,7 +36,7 @@ workspace "Zeytin"
         "-stdlib=libstdc++", 
         "-g3",            
         "-fno-omit-frame-pointer",
-        "-rdynamic",
+        "-rdynamic"
     }
 
     filter "action:gmake"
@@ -45,11 +45,9 @@ workspace "Zeytin"
     project "Zeytin"
         kind "ConsoleApp"
         language "C++"
-
         files { "source/**.cpp" }
 
         filter "configurations:EDITOR_MODE"
             defines {"DEBUG=1", "EDITOR_MODE=1"}
             symbols "On"
             optimize "Off"
-
