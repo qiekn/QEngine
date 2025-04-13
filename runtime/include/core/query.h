@@ -13,6 +13,67 @@
 namespace Query {
 
 template<typename T>
+T& acquire(entity_id id) {
+    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
+    auto& variants = get_zeytin().get_variants(id);
+
+    for (auto& variant : variants) {
+        if (variant.get_type() == rttr::type::get<T>()) {
+            return variant.get_value<T&>();
+        }
+    }
+
+    throw std::runtime_error("Component not found despite waits() check");
+}
+
+template<typename T>
+T& acquire(const VariantBase* base) {
+    return acquire<T>(base->entity_id);
+}
+
+template<typename... Ts>
+std::tuple<Ts&...> acquire_all(entity_id id) {
+    return std::tie(acquire<Ts>(id)...);
+}
+
+template<typename... Ts>
+std::tuple<Ts&...> acquire_all(const VariantBase* base) {
+    return acquire_all<Ts...>(base->entity_id);
+}
+
+template<typename... Ts>
+bool has(entity_id id) {
+    // TODO
+}
+
+template<typename... Ts>
+bool has(const VariantBase* base) {
+    // TODO
+}
+
+template<typename T, typename... Rest>
+bool has_types(const std::vector<rttr::variant>& variants) {
+    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
+    bool has_t = false;
+    for (const auto& variant : variants) {
+        if (variant.get_type() == rttr::type::get<T>()) {
+            has_t = true;
+            break;
+        }
+    }
+    
+    if (!has_t) {
+        return false;
+    }
+    
+    if constexpr (sizeof...(Rest) > 0) {
+        return has_types<Rest...>(variants);
+    }
+    
+    return true;
+}
+
+template<typename T>
 std::optional<std::reference_wrapper<T>> find_first() {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     const rttr::type& type = rttr::type::get<T>();
@@ -46,27 +107,7 @@ std::vector<T&> find_all() {
     return results;
 }
 
-template<typename T, typename... Rest>
-bool has_types(const std::vector<rttr::variant>& variants) {
-    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
-    bool has_t = false;
-    for (const auto& variant : variants) {
-        if (variant.get_type() == rttr::type::get<T>()) {
-            has_t = true;
-            break;
-        }
-    }
-    
-    if (!has_t) {
-        return false;
-    }
-    
-    if constexpr (sizeof...(Rest) > 0) {
-        return has_types<Rest...>(variants);
-    }
-    
-    return true;
-}
+
 
 template<typename T, typename... Rest>
 std::vector<entity_id> find_all_with() {
@@ -164,47 +205,7 @@ void remove_variant_from(const VariantBase* base) {
     get_zeytin().remove_variant(base->entity_id, rttr::type::get<T>());
 }
 
-template<typename T>
-T& acquire(entity_id id) {
-    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
-    auto& variants = get_zeytin().get_variants(id);
 
-    for (auto& variant : variants) {
-        if (variant.get_type() == rttr::type::get<T>()) {
-            return variant.get_value<T&>();
-        }
-    }
-
-    throw std::runtime_error("Component not found despite waits() check");
-}
-
-template<typename T>
-T& acquire(const VariantBase* base) {
-    return acquire<T>(base->entity_id);
-}
-
-template<typename... Ts>
-std::tuple<Ts&...> acquire_all(entity_id id) {
-    return std::tie(acquire<Ts>(id)...);
-}
-
-template<typename... Ts>
-std::tuple<Ts&...> acquire_all(const VariantBase* base) {
-    return acquire_all<Ts...>(base->entity_id);
-}
-
-template<typename... Ts>
-bool has(const VariantBase* base) {
-    return has<Ts...>(base->entity_id);
-}
-
-template<typename... Ts>
-bool has(entity_id id) {
-    static_assert((std::is_base_of<VariantBase, Ts>::value && ...),
-                  "All types must derive from VariantBase");
-
-    return (has_types<Ts>(id) && ...);
-}
 } 
 
 
