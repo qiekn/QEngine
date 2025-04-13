@@ -10,6 +10,8 @@
 #include "raylib.h"
 #include "file_watcher/file_w.h"
 
+#include "constants/paths.h"
+
 enum class AssetType {
     Unknown,
     Image,
@@ -43,7 +45,7 @@ public:
     inline const std::string& get_selected_path() const { return m_selected_path; }
 
     static AssetBrowser& get() {
-        static AssetBrowser instance("../shared");
+        static AssetBrowser instance(DIRECTORY_ASSET_BROWSER_ROOT);
         return instance;
     }
 
