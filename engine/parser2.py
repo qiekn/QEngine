@@ -210,7 +210,7 @@ def main(headers_dir="."):
     print(f"Output written to {output_path}")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    requires_dir = os.path.normpath(os.path.join(script_dir, "../shared/variants/requires"))
+    requires_dir = os.path.normpath(os.path.join(script_dir, "../shared_resources/variants/requires"))
     
     os.makedirs(requires_dir, exist_ok=True)
     generate_requires_files(classes_info, requires_dir)

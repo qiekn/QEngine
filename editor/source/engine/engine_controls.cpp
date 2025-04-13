@@ -41,9 +41,9 @@ EngineControls::EngineControls()
         }
     );
     
-    std::filesystem::create_directories("../runtime/build_status");
+    std::filesystem::create_directories("../engine/build_status");
     
-    std::string status_file = "../runtime/build_status/build_status.json";
+    std::string status_file = "../engine/build_status/build_status.json";
     if (std::filesystem::exists(status_file)) {
         try {
             std::ofstream file(status_file);
@@ -212,7 +212,7 @@ void EngineControls::render_build_status() {
 }
 
 void EngineControls::check_build_status() {
-    std::string status_file = "../runtime/build_status/build_status.json";
+    std::string status_file = "../engine/build_status/build_status.json";
     
     if (!std::filesystem::exists(status_file)) {
         return;
@@ -247,7 +247,7 @@ void EngineControls::check_build_status() {
             m_build_status = BuildStatus::Running;
             log_info() << "Build status: RUNNING - " << message << std::endl;
             
-            static std::string build_log_path = "../runtime/build_status/build_output.log";
+            static std::string build_log_path = "../engine/build_status/build_output.log";
             if (std::filesystem::exists(build_log_path)) {
                 static std::ifstream log_file(build_log_path);
                 if (log_file.is_open()) {
@@ -296,7 +296,7 @@ void EngineControls::start_engine() {
     m_build_message.clear();
     m_build_details.clear();
     
-    std::filesystem::create_directories("../runtime/build_status");
+    std::filesystem::create_directories("../engine/build_status");
     
     monitor_build();
 }
@@ -311,27 +311,27 @@ void EngineControls::monitor_build() {
     log_info() << "Starting build process..." << std::endl;
     
     m_build_monitor_future = std::async(std::launch::async, [this]() {
-        std::filesystem::remove_all("../runtime/build_status");
-        std::filesystem::create_directory("../runtime/build_status");
+        std::filesystem::remove_all("../engine/build_status");
+        std::filesystem::create_directory("../engine/build_status");
         
         #ifdef _WIN32
-        log_info() << "Executing: cd ../runtime && build_wrapper.sh build_status/build_status.json" << std::endl;
-        int result = std::system("cd ../runtime && build_wrapper.sh build_status/build_status.json");
+        log_info() << "Executing: cd ../engine && build_wrapper.sh build_status/build_status.json" << std::endl;
+        int result = std::system("cd ../engine && build_wrapper.sh build_status/build_status.json");
         #else
-        log_info() << "Executing: cd ../runtime && ./build_wrapper.sh build_status/build_status.json" << std::endl;
-        int result = std::system("cd ../runtime && ./build_wrapper.sh build_status/build_status.json");
+        log_info() << "Executing: cd ../engine && ./build_wrapper.sh build_status/build_status.json" << std::endl;
+        int result = std::system("cd ../engine && ./build_wrapper.sh build_status/build_status.json");
         #endif
         
         if (result != 0) {
             log_error() << "Build command failed with exit code: " << result << std::endl;
-            std::ofstream status_file("../runtime/build_status/build_status.json");
+            std::ofstream status_file("../engine/build_status/build_status.json");
             if (status_file.is_open()) {
                 status_file << "{\"status\":\"failed\",\"message\":\"Build process failed with code " << result << "\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
                 status_file.close();
             }
             
             try {
-                std::ifstream log_file("../runtime/build_status/build_output.log");
+                std::ifstream log_file("../engine/build_status/build_output.log");
                 if (log_file.is_open()) {
                     std::string line;
                     std::vector<std::string> last_lines;
@@ -352,7 +352,7 @@ void EngineControls::monitor_build() {
                 log_error() << "Failed to read build log: " << e.what() << std::endl;
             }
         } else {
-            std::ofstream status_file("../runtime/build_status/build_status.json");
+            std::ofstream status_file("../engine/build_status/build_status.json");
             if (status_file.is_open()) {
                 status_file << "{\"status\":\"success\",\"message\":\"Build completed successfully\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
                 status_file.close();
@@ -360,9 +360,9 @@ void EngineControls::monitor_build() {
             
             log_info() << "Launching engine..." << std::endl;
             #ifdef _WIN32
-            std::system("cd ../runtime && run.sh");
+            std::system("cd ../engine && run.sh");
             #else
-            std::system("cd ../runtime && ./run.sh");
+            std::system("cd ../engine && ./run.sh");
             #endif
         }
     });

@@ -458,7 +458,7 @@ void create_dummy(const rttr::type& type) {
     }
     
     try {
-        std::filesystem::path variants_dir = "../shared/variants";
+        std::filesystem::path variants_dir = "../shared_resources/variants";
         std::filesystem::create_directories(variants_dir);
         
         

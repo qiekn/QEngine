@@ -4,7 +4,8 @@
 #include <filesystem>
 #include <rapidjson/document.h>
 
-#define ENTITY_FOLDER  "../shared/entities"
+#include "constants/paths.h"
+
 
 class EntityDocument final {
 

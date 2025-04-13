@@ -4,7 +4,8 @@
 #include <filesystem>
 #include <rapidjson/document.h>
 
-#define VARIANT_FOLDER  "../shared/variants"
+#include "constants/paths.h"
+
 
 class VariantDocument final {
 

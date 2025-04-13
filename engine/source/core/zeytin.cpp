@@ -22,6 +22,8 @@
 #include "remote_logger/remote_logger.h"
 #include "game/rttr_registration.h"
 
+#include "constants/paths.h"
+
 namespace {
     template<typename T>
     void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, 
@@ -293,7 +295,7 @@ void Zeytin::deserialize_entities() {
         int file_count = 0;
         int entity_count = 0;
 
-        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator("../shared/entities")) {
+        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(ENTITY_FOLDER)) {
             file_count++;
 
             if (!entry.is_regular_file() || entry.path().extension() != ".entity") {
@@ -623,7 +625,7 @@ void Zeytin::sync_editor() {
 
 
 void Zeytin::generate_variants() {
-    for(const auto& entry : std::filesystem::directory_iterator("../shared/variants")) {
+    for(const auto& entry : std::filesystem::directory_iterator(VARIANT_FOLDER)) {
         if(entry.is_regular_file() && entry.path().extension() == ".variant") {
             std::filesystem::remove(entry.path());
         }
