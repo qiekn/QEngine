@@ -45,9 +45,11 @@ workspace "ZeytinEditor"
         optimize "Off"  
 
         files { 
-            "source/**.cpp",
+            "3rdparty/rlimgui/**.cpp",
+            "3rdparty/imgui/**.cpp",
             "3rdparty/imgui_test_engine/imgui_test_engine/**.cpp",
-            "3rdparty/imgui_test_engine/imgui_test_engine/**.h"
+            "3rdparty/imgui_test_engine/imgui_test_engine/**.h",
+            "source/**.cpp",
         }
 
         filter "configurations:Debug"
