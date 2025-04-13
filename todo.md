@@ -5,6 +5,10 @@
 + [EDITOR] move imgui to thirdparty
 * [EDITOR]investigate enums
 
+
++ [EDITOR-ENGINE] rename shared to resources
++ [EDITOR-ENGINE] add registering only types using macros
+
 + [ENGINE] test standalone builds
 + [ENGINE] create a packaged asset file for standalone builds
 + [ENGINE] implement a path wrapper (primitive resouce manager)

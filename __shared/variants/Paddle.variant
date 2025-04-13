@@ -1,8 +1,0 @@
-{
-    "type": "Paddle",
-    "value": {
-        "width": 100.0,
-        "height": 20.0,
-        "speed": 400.0
-    }
-}

@@ -36,5 +36,6 @@
 .clangd
 bin/
 build/
+build_status/
 todo.md
 imgui.ini

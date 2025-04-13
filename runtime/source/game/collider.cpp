@@ -25,6 +25,7 @@ void Collider::check_collisions() {
         return;
     }
 
+
     if(!Query::has<Position>(this)) {
         return;
     }

@@ -14,12 +14,7 @@ void Sprite::on_init() {
 void Sprite::on_update() {
     if(!m_texture_loaded) return;
 
-    auto components = Query::get_components<Position, Scale>(this);
-    if(!components) return;
-
-    auto& [position_ref, scale_ref]  = *components;
-    auto& position = position_ref.get();
-    auto& scale = scale_ref.get();
+    auto [position, scale] = Query::acquire_all<Position, Scale>(this);
 
     float width = texture.width * scale.x;
     float height = texture.height * scale.y;
