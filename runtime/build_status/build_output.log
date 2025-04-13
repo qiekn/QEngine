@@ -1,4 +1,4 @@
-Generated RTTR registration code for 12 classes.
+Generated RTTR registration code for 11 classes.
 Output written to include/game/rttr_registration.h
 Generated requirements file: /home/redgrain/Dev/Zeytin/shared/variants/requires/Paddle.requires
 Generated requirements file: /home/redgrain/Dev/Zeytin/shared/variants/requires/Ball.requires
@@ -8,7 +8,26 @@ Generated requirements file: /home/redgrain/Dev/Zeytin/shared/variants/requires/
 Requirements files written to /home/redgrain/Dev/Zeytin/shared/variants/requires
 Building configurations...
 Running action 'gmake'...
-Done (19ms).
+Done (32ms).
 ==== Building Zeytin (editor_mode) ====
 zeytin.cpp
-Linking Zeytin
+ball.cpp
+In file included from ../source/game/ball.cpp:6:
+../include/core/query.h:206:13: error: no matching function for call to 'has_types'
+    return (has_types<Ts>(id) && ...);
+            ^~~~~~~~~~~~~
+../source/game/ball.cpp:25:23: note: in instantiation of function template specialization 'Query::has<Collider, Position>' requested here
+            if(Query::has<Collider,Position>(paddle.get_id())) {
+                      ^
+../include/core/query.h:50:6: note: candidate function template not viable: no known conversion from 'entity_id' (aka 'unsigned long') to 'const std::vector<rttr::variant>' for 1st argument
+bool has_types(const std::vector<rttr::variant>& variants) {
+     ^
+../include/core/query.h:206:13: error: no matching function for call to 'has_types'
+    return (has_types<Ts>(id) && ...);
+            ^~~~~~~~~~~~~
+../include/core/query.h:50:6: note: candidate function template not viable: no known conversion from 'entity_id' (aka 'unsigned long') to 'const std::vector<rttr::variant>' for 1st argument
+bool has_types(const std::vector<rttr::variant>& variants) {
+     ^
+2 errors generated.
+make[1]: *** [Zeytin.make:184: obj/EDITOR_MODE/ball.o] Error 1
+make: *** [Makefile:27: Zeytin] Error 2

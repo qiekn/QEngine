@@ -6,10 +6,7 @@
 void Paddle::on_init() {}
 
 void Paddle::on_update() {
-    auto position_ref = Query::get_component<Position>(this);
-    if (!position_ref) return;
-    
-    auto& position = position_ref->get();
+    auto& position = Query::acquire<Position>(this);
     
     draw_rectangle(
         position.x - width / 2,
@@ -24,10 +21,7 @@ void Paddle::on_play_update() {
 }
 
 void Paddle::handle_input() {
-    auto position_ref = Query::get_component<Position>(this);
-    if (!position_ref) return;
-    
-    auto& position = position_ref->get();
+    auto& position = Query::acquire<Position>(this);
     
     float delta_time = GetFrameTime();
     

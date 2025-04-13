@@ -184,13 +184,7 @@ bool Collider::intersects(const Collider& other) const {
 }
 
 Rectangle Collider::get_rectangle() const {
-    auto position_ref = Query::get_component<Position>(this);
-
-    if(!position_ref) {
-        return Rectangle{0, 0, 0, 0};
-    }
-
-    const auto& position = position_ref->get();
+    const auto& position = Query::acquire<Position>(this);
 
     return Rectangle{
         position.x - m_width / 2, 
@@ -201,13 +195,7 @@ Rectangle Collider::get_rectangle() const {
 }
 
 Vector2 Collider::get_circle_center() const {
-    auto position_ref = Query::get_component<Position>(this);
-
-    if(!position_ref) {
-        return Vector2{0, 0};
-    }
-
-    const auto& position = position_ref->get();
+    const auto& position = Query::acquire<Position>(this);
 
     return Vector2{
         position.x,
@@ -220,13 +208,7 @@ void Collider::debug_draw() {
         return;
     }
 
-    auto position_ref = Query::get_component<Position>(this);
-
-    if(!position_ref) {
-        return;
-    }
-
-    const auto& position = position_ref->get();
+    const auto& position = Query::acquire<Position>(this);
     Color color = m_is_trigger ? YELLOW : BLUE;
 
     switch (m_collider_type) {

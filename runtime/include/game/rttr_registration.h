@@ -3,7 +3,6 @@
 #include "game/camera2d.h"
 #include "game/collider.h"
 #include "game/paddle.h"
-#include "game/player.h"
 #include "game/position.h"
 #include "game/scale.h"
 #include "game/speed.h"
@@ -116,11 +115,6 @@ RTTR_REGISTRATION
     rttr::registration::class_<Ball>("Ball")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
-
-    rttr::registration::class_<Player>("Player")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("name", &Player::name);
 
     rttr::registration::class_<Brick>("Brick")
         .constructor<>()(rttr::policy::ctor::as_object)
