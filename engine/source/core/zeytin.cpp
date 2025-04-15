@@ -334,16 +334,28 @@ void Zeytin::post_init_variants() {
 }
 
 void Zeytin::update_variants() {
+#ifdef EDITOR_MODE
+    ZoneScoped; 
+#endif
+    
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if (!base.is_dead) {
 #ifdef EDITOR_MODE
                 if(!base.check_dependencies("update_variants")) {
-                    return;
+                    continue;
                 }
 #endif
-                base.on_update();
+                {
+#ifdef EDITOR_MODE
+                    ZoneScoped;
+                    ZoneText(base.get_type().get_name().to_string().c_str(), 
+                             base.get_type().get_name().to_string().size());
+                    ZoneValue(pair.first);
+#endif
+                    base.on_update();
+                }
             }
         }
     }
