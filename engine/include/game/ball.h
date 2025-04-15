@@ -9,7 +9,6 @@
 
 class Ball : public VariantBase {
     VARIANT(Ball);
-    REQUIRES(Collider, Position, Velocity, Speed);
 
 public:
     void on_init() override;

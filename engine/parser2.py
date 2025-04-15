@@ -18,6 +18,10 @@ class ClassParser:
         
         self.regular_property_pattern = re.compile(r'^\s*(?:public|private|protected)?:?\s*(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)\s*;')
         
+        self.query_get_pattern = re.compile(r'Query::get<([\w,\s]+)>\(this\)')
+        self.query_read_pattern = re.compile(r'Query::read<([\w,\s]+)>\(this\)')
+        self.query_try_get_pattern = re.compile(r'Query::try_get<([\w,\s]+)>\(this\)')
+        
         self.skip_classes = ["VariantCreateInfo", "VariantBase"]
 
     def clean_content(self, content: str) -> str:
@@ -39,7 +43,6 @@ class ClassParser:
         return content
 
     def find_class_block(self, content: str, class_match: re.Match) -> str:
-        """Extract the content of a class or struct block."""
         class_start = class_match.start()
         class_block = content[class_start:]
         
@@ -90,7 +93,6 @@ class ClassParser:
         }
 
     def parse_regular_class(self, class_block: str, class_name: str, base_class: str) -> Optional[Dict[str, Any]]:
-        """Parse a regular class or struct."""
         properties = []
         
         for line in class_block.split('\n'):
@@ -167,6 +169,44 @@ class ClassParser:
                     results.append(regular_info)
         
         return results
+    
+    def find_cpp_file(self, header_path: str, source_root: str) -> Optional[str]:
+        header_rel_path = os.path.relpath(header_path, 'include')
+        cpp_rel_path = os.path.splitext(header_rel_path)[0] + ".cpp"
+        potential_cpp_path = os.path.join(source_root, cpp_rel_path)
+        
+        if os.path.exists(potential_cpp_path):
+            return potential_cpp_path
+        
+        cpp_filename = os.path.basename(os.path.splitext(header_path)[0]) + ".cpp"
+        for root, _, files in os.walk(os.path.join(source_root, 'game')):
+            if cpp_filename in files:
+                return os.path.join(root, cpp_filename)
+        
+        return None
+    
+    def extract_query_dependencies(self, cpp_content: str) -> Set[str]:
+        """Parse cpp content to extract query dependencies."""
+        dependencies = set()
+        
+        cpp_content = self.clean_content(cpp_content)
+        
+        for match in self.query_get_pattern.finditer(cpp_content):
+            template_params = match.group(1)
+            variants = [param.strip() for param in template_params.split(',')]
+            dependencies.update(variants)
+        
+        for match in self.query_read_pattern.finditer(cpp_content):
+            template_params = match.group(1)
+            variants = [param.strip() for param in template_params.split(',')]
+            dependencies.update(variants)
+        
+        for match in self.query_try_get_pattern.finditer(cpp_content):
+            template_params = match.group(1)
+            variants = [param.strip() for param in template_params.split(',')]
+            dependencies.update(variants)
+        
+        return dependencies
 
 
 class CodeGenerator:
@@ -329,6 +369,32 @@ class RTTRGenerator:
                     self.classes_info.append(class_info)
                     self.includes.add(f'#include "{relative_path}"')
 
+    def analyze_implementation_files(self, source_root: str) -> None:
+        """Analyze cpp files to find required dependencies not specified in headers."""
+        for class_info in self.classes_info:
+            if not class_info['is_variant']:
+                continue
+                
+            class_name = class_info['class_name']
+            
+            for header_file in glob.glob(os.path.join(self.headers_dir, "**/*.h"), recursive=True):
+                if os.path.basename(header_file) == f"{class_name}.h":
+                    cpp_file = self.parser.find_cpp_file(header_file, source_root)
+                    if cpp_file:
+                        try:
+                            with open(cpp_file, 'r') as f:
+                                cpp_content = f.read()
+                            
+                            dependencies = self.parser.extract_query_dependencies(cpp_content)
+                            
+                            for dep in dependencies:
+                                if dep not in class_info['required_variants'] and dep != class_name:
+                                    class_info['required_variants'].append(dep)
+                                    print(f"Added auto-detected dependency: {class_name} requires {dep}")
+                        except Exception as e:
+                            print(f"Error analyzing cpp file {cpp_file}: {e}")
+                    break
+
     def generate_rttr_header(self, output_path: str) -> None:
         includes_code = "\n".join(sorted(self.includes)) + "\n\n"
         registration_code = CodeGenerator.generate_full_registration(self.classes_info)
@@ -361,8 +427,9 @@ class RTTRGenerator:
         
         print(f"Requirements files written to {requires_dir}")
 
-    def run(self) -> None:
+    def run(self, source_root: str) -> None:
         self.process_headers()
+        self.analyze_implementation_files(source_root)
         
         output_path = os.path.join(self.headers_dir, "rttr_registration.h")
         self.generate_rttr_header(output_path)
@@ -376,11 +443,13 @@ def main():
     parser = argparse.ArgumentParser(description='Generate RTTR registration code for Zeytin engine.')
     parser.add_argument('headers_dir', nargs='?', default=".", 
                         help='Directory containing header files to parse')
+    parser.add_argument('--source-root', default="source", 
+                        help='Root directory containing implementation files')
     
     args = parser.parse_args()
     
     generator = RTTRGenerator(args.headers_dir)
-    generator.run()
+    generator.run(args.source_root)
 
 
 if __name__ == "__main__":
