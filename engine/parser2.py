@@ -77,14 +77,14 @@ def generate_raylib_registrations():
         .constructor<>()(rttr::policy::ctor::as_object)
         .property("x", &Vector2::x)
         .property("y", &Vector2::y)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Vector3>("Vector3")
         .constructor<>()(rttr::policy::ctor::as_object)
         .property("x", &Vector3::x)
         .property("y", &Vector3::y)
         .property("z", &Vector3::z)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Rectangle>("Rectangle")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -92,7 +92,7 @@ def generate_raylib_registrations():
         .property("y", &Rectangle::y)
         .property("width", &Rectangle::width)
         .property("height", &Rectangle::height)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Color>("Color")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -100,7 +100,7 @@ def generate_raylib_registrations():
         .property("g", &Color::g)
         .property("b", &Color::b)
         .property("a", &Color::a)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Camera2D>("Camera2D")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -108,7 +108,7 @@ def generate_raylib_registrations():
         .property("target", &Camera2D::target)
         .property("rotation", &Camera2D::rotation)
         .property("zoom", &Camera2D::zoom)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Texture2D>("Texture2D")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -117,7 +117,7 @@ def generate_raylib_registrations():
         .property("height", &Texture2D::height)
         .property("mipmaps", &Texture2D::mipmaps)
         .property("format", &Texture2D::format)
-        (rttr::metadata("RAYLIB", true));\n\n"""
+        (rttr::metadata("NO_VARIANT", true));\n\n"""
 
     return raylib_code
 
