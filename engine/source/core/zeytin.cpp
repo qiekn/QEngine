@@ -74,6 +74,12 @@ namespace {
     }
 }
 
+Zeytin::~Zeytin() {
+#ifdef EDITOR_MODE
+    exit_play_mode(); // to clear temp files
+#endif
+}
+
 void Zeytin::init() {
     m_render_texture = load_render_texture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
     float scaleX = (float)get_screen_width() / VIRTUAL_WIDTH;
@@ -142,7 +148,7 @@ void Zeytin::run_frame() {
         play_start_variants();
         play_update_variants();
 #ifdef EDITOR_MODE
-        //sync_editor(); this causing crashes because of race conditions with hierarchy update in editor side. commented out until I came up with a solution
+        //sync_editor(); 
 #endif
     }
 
@@ -317,15 +323,24 @@ void Zeytin::deserialize_entities() {
 }
 
 void Zeytin::post_init_variants() {
+#ifdef EDITOR_MODE
+    ZoneScopedN("Zeytin::post_init_variants()");
+#endif
+
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
-            if (!base.is_dead && !base.post_inited) {
-                base.post_inited = true;
+            if(base.is_dead || base.post_inited) continue;
+            base.post_inited = true;
 #ifdef EDITOR_MODE
-                if(!base.check_dependencies("post_init_variants")) {
-                    return;
-                }
+            if(!base.check_dependencies("Zeytin::post_init_variants")) continue;
+#endif
+            {
+#ifdef EDITOR_MODE
+                ZoneScopedN("VariantBase::post_init_variants()");
+                ZoneText(base.get_type().get_name().to_string().c_str(),
+                            base.get_type().get_name().to_string().size());
+                ZoneValue(pair.first);
 #endif
                 base.on_post_init();
             }
@@ -335,60 +350,74 @@ void Zeytin::post_init_variants() {
 
 void Zeytin::update_variants() {
 #ifdef EDITOR_MODE
-    ZoneScoped; 
+    ZoneScopedN("Zeytin::update_variants()");
 #endif
-    
+
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
-            if (!base.is_dead) {
+            if(base.is_dead) continue;
 #ifdef EDITOR_MODE
-                if(!base.check_dependencies("update_variants")) {
-                    continue;
-                }
+            if(!base.check_dependencies("Zeytin::update_variants()")) continue;
 #endif
-                {
+            {
 #ifdef EDITOR_MODE
-                    ZoneScoped;
-                    ZoneText(base.get_type().get_name().to_string().c_str(), 
-                             base.get_type().get_name().to_string().size());
-                    ZoneValue(pair.first);
+                ZoneScopedN("VariantBase::on_update()");
+                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZoneValue(pair.first);
 #endif
-                    base.on_update();
-                }
+                base.on_update();
+
             }
         }
     }
 }
 
 void Zeytin::play_update_variants() {
+#ifdef EDITOR_MODE
+    ZoneScopedN("Zeytin::play_update_variants()");
+#endif
+
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
-            if (!base.is_dead) {
+            if(base.is_dead) continue;
 #ifdef EDITOR_MODE
-                if(!base.check_dependencies("play_update_variants")) {
-                    return;
-                }
+            if(!base.check_dependencies("Zeytin::play_update_variants()")) continue;
+#endif
+            {
+#ifdef EDITOR_MODE
+                ZoneScopedN("VariantBase::on_play_update()");
+                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZoneValue(pair.first);
 #endif
                 base.on_play_update();
+                
             }
         }
     }
 }
 
 void Zeytin::play_start_variants() {
-    if (m_started) { return; }
+#ifdef EDITOR_MODE
+    ZoneScopedN("Zeytin::play_start_variants()");
+#endif
+
+    if (m_started) return;
     m_started = true;
 
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
-            if (!base.is_dead) {
+            if(base.is_dead) continue;
 #ifdef EDITOR_MODE
-                if(!base.check_dependencies("play_start_variants")) {
-                    return;
-                }
+            if(!base.check_dependencies("Zeytin::play_start_variants()")) continue;
+#endif
+            {
+#ifdef EDITOR_MODE
+                ZoneScopedN("VariantBase::on_play_update()");
+                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZoneValue(pair.first);
 #endif
                 base.on_play_start();
             }
@@ -624,7 +653,7 @@ void Zeytin::initial_sync_editor() {
 
 void Zeytin::sync_editor() {
     static float sync_timer = 0.0f;
-    static const float SYNC_INTERVAL = 1.0f;
+    static const float SYNC_INTERVAL = 0.1f;
     
     sync_timer += get_frame_time(); 
     

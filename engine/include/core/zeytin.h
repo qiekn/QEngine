@@ -82,7 +82,7 @@ public:
 
 private:
     Zeytin() = default;
-    ~Zeytin() = default;
+    ~Zeytin();
     
     void initialize_camera();
     void update_camera();

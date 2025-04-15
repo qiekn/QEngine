@@ -11,7 +11,7 @@ enum class ColliderType : int {
     Circle = 2,
 };
 
-void Collider::on_update() {
+void Collider::on_play_update() {
     debug_draw();
     check_collisions();
 }
