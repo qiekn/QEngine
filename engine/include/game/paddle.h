@@ -7,7 +7,6 @@
 
 class Paddle : public VariantBase {
     VARIANT(Paddle);
-    REQUIRES(Position, Collider);
 
 public:
     float width = 100.0f; PROPERTY()

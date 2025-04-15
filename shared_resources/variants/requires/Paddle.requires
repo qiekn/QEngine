@@ -1,6 +1,5 @@
 {
     "requires": [
-        "Position",
-        "Collider"
+        "Position"
     ]
 }

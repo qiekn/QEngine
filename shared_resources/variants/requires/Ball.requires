@@ -1,6 +1,8 @@
 {
     "requires": [
+        "Collider",
         "Position",
+        "Speed",
         "Velocity"
     ]
 }

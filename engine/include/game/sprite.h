@@ -8,7 +8,6 @@
 
 class Sprite : public VariantBase { 
     VARIANT(Sprite);
-    REQUIRES(Position, Scale)
 
 public:
     std::string path_to_sprite; PROPERTY() SET_CALLBACK(path_to_sprite);

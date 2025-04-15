@@ -171,22 +171,34 @@ class ClassParser:
         return results
     
     def find_cpp_file(self, header_path: str, source_root: str) -> Optional[str]:
-        header_rel_path = os.path.relpath(header_path, 'include')
-        cpp_rel_path = os.path.splitext(header_rel_path)[0] + ".cpp"
-        potential_cpp_path = os.path.join(source_root, cpp_rel_path)
+        header_basename = os.path.basename(os.path.splitext(header_path)[0])
+        cpp_filename = header_basename + ".cpp"
         
-        if os.path.exists(potential_cpp_path):
-            return potential_cpp_path
+        header_dir_parts = os.path.dirname(header_path).split(os.sep)
+        category_dir = None
+        for part in header_dir_parts:
+            if part != "include" and part != "engine" and part != "editor":
+                category_dir = part
+                break
         
-        cpp_filename = os.path.basename(os.path.splitext(header_path)[0]) + ".cpp"
-        for root, _, files in os.walk(os.path.join(source_root, 'game')):
+        potential_paths = []
+        
+        if category_dir:
+            potential_paths.append(os.path.join(source_root, category_dir, cpp_filename))
+        
+        potential_paths.append(os.path.join(source_root, cpp_filename))
+        
+        for path in potential_paths:
+            if os.path.exists(path):
+                return path
+        
+        for root, _, files in os.walk(source_root):
             if cpp_filename in files:
                 return os.path.join(root, cpp_filename)
         
         return None
     
     def extract_query_dependencies(self, cpp_content: str) -> Set[str]:
-        """Parse cpp content to extract query dependencies."""
         dependencies = set()
         
         cpp_content = self.clean_content(cpp_content)
@@ -370,12 +382,11 @@ class RTTRGenerator:
                     self.includes.add(f'#include "{relative_path}"')
 
     def analyze_implementation_files(self, source_root: str) -> None:
-        """Analyze cpp files to find required dependencies not specified in headers."""
         for class_info in self.classes_info:
             if not class_info['is_variant']:
                 continue
                 
-            class_name = class_info['class_name']
+            class_name = class_info['class_name'].lower()
             
             for header_file in glob.glob(os.path.join(self.headers_dir, "**/*.h"), recursive=True):
                 if os.path.basename(header_file) == f"{class_name}.h":

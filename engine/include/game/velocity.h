@@ -6,7 +6,6 @@
 
 class Velocity : public VariantBase {
     VARIANT(Velocity);
-    REQUIRES(Position)
 
 public:
     float x = 0.0f; PROPERTY()

@@ -5,7 +5,6 @@
 
 class Collider : public VariantBase {
     VARIANT(Collider)
-    REQUIRES(Position)
 
 public:
     int m_collider_type = 0; PROPERTY() // 0=None, 1=Rectangle, 2=Circle
