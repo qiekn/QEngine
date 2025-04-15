@@ -30,7 +30,7 @@ void Collider::check_collisions() {
         return;
     }
 
-    auto position = Query::acquire<Position>(this);
+    auto position = Query::get<Position>(this);
 
     Query::for_each<Collider>([this](Collider& other) {
         if (other.entity_id == entity_id) {
@@ -56,14 +56,14 @@ void Collider::handle_collision(Collider& other) {
         return;
     }
 
-    auto& velocity = Query::acquire<Velocity>(this);
+    auto& velocity = Query::get<Velocity>(this);
 
     if(!Query::has<Position>(this) || !Query::has<Position>(other.entity_id)) {
         return;
     }
 
-    auto& position = Query::acquire<Position>(this);
-    auto& other_position = Query::acquire<Position>(other.entity_id);
+    auto& position = Query::get<Position>(this);
+    auto& other_position = Query::get<Position>(other.entity_id);
 
     Vector2 normal;
     
@@ -185,7 +185,7 @@ bool Collider::intersects(const Collider& other) const {
 }
 
 Rectangle Collider::get_rectangle() const {
-    const auto& position = Query::acquire<Position>(this);
+    const auto& position = Query::get<Position>(this);
 
     return Rectangle{
         position.x - m_width / 2, 
@@ -196,7 +196,7 @@ Rectangle Collider::get_rectangle() const {
 }
 
 Vector2 Collider::get_circle_center() const {
-    const auto& position = Query::acquire<Position>(this);
+    const auto& position = Query::get<Position>(this);
 
     return Vector2{
         position.x,
@@ -209,7 +209,7 @@ void Collider::debug_draw() {
         return;
     }
 
-    const auto& position = Query::acquire<Position>(this);
+    const auto& position = Query::get<Position>(this);
     Color color = m_is_trigger ? YELLOW : BLUE;
 
     switch (m_collider_type) {

@@ -52,7 +52,7 @@ bool has(const VariantBase* base) {
 // -------------------- Component Access --------------------
 
 template<typename T>
-T& acquire(entity_id id) {
+T& get(entity_id id) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     auto& variants = get_zeytin().get_variants(id);
 
@@ -66,31 +66,31 @@ T& acquire(entity_id id) {
 }
 
 template<typename T>
-T& acquire(const VariantBase* base) {
-    return acquire<T>(base->entity_id);
+T& get(const VariantBase* base) {
+    return get<T>(base->entity_id);
 }
 
 template<typename T1, typename T2, typename... Rest>
-std::tuple<T1&, T2&, Rest&...> acquire(entity_id id) {
-    return std::tie(acquire<T1>(id), acquire<T2>(id), acquire<Rest>(id)...);
+std::tuple<T1&, T2&, Rest&...> get(entity_id id) {
+    return std::tie(get<T1>(id), get<T2>(id), get<Rest>(id)...);
 }
 
 template<typename T1, typename T2, typename... Rest>
-std::tuple<T1&, T2&, Rest&...> acquire(const VariantBase* base) {
-    return acquire<T1, T2, Rest...>(base->entity_id);
+std::tuple<T1&, T2&, Rest&...> get(const VariantBase* base) {
+    return get<T1, T2, Rest...>(base->entity_id);
 }
 
 template<typename T>
-std::optional<std::reference_wrapper<T>> try_acquire(entity_id id) {
+std::optional<std::reference_wrapper<T>> try_get(entity_id id) {
     if (has<T>(id)) {
-        return std::optional<std::reference_wrapper<T>>(std::ref(acquire<T>(id)));
+        return std::optional<std::reference_wrapper<T>>(std::ref(get<T>(id)));
     }
     return std::nullopt;
 }
 
 template<typename T>
-std::optional<std::reference_wrapper<T>> try_acquire(const VariantBase* base) {
-    return try_acquire<T>(base->entity_id);
+std::optional<std::reference_wrapper<T>> try_get(const VariantBase* base) {
+    return try_get<T>(base->entity_id);
 }
 
 // -------------------- Read-Only Component Access --------------------
@@ -98,7 +98,7 @@ std::optional<std::reference_wrapper<T>> try_acquire(const VariantBase* base) {
 template<typename T>
 const T& read(entity_id id) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
-    return acquire<T>(id);
+    return get<T>(id);
 }
 
 template<typename T>
