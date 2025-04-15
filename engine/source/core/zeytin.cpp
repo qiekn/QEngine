@@ -5,6 +5,7 @@
 
 #ifdef EDITOR_MODE
 #include <fstream>
+#include "tracy/Tracy.hpp"
 #endif
 
 #include <algorithm>
