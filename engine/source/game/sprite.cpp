@@ -14,7 +14,7 @@ void Sprite::on_init() {
 void Sprite::on_update() {
     if(!m_texture_loaded) return;
 
-    auto [position, scale] = Query::acquire_all<Position, Scale>(this);
+    const auto [position, scale] = Query::read<Position, Scale>(this);
 
     float width = texture.width * scale.x;
     float height = texture.height * scale.y;

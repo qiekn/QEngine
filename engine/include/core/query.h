@@ -70,14 +70,14 @@ T& acquire(const VariantBase* base) {
     return acquire<T>(base->entity_id);
 }
 
-template<typename... Ts>
-std::tuple<Ts&...> acquire_all(entity_id id) {
-    return std::tie(acquire<Ts>(id)...);
+template<typename T1, typename T2, typename... Rest>
+std::tuple<T1&, T2&, Rest&...> acquire(entity_id id) {
+    return std::tie(acquire<T1>(id), acquire<T2>(id), acquire<Rest>(id)...);
 }
 
-template<typename... Ts>
-std::tuple<Ts&...> acquire_all(const VariantBase* base) {
-    return acquire_all<Ts...>(base->entity_id);
+template<typename T1, typename T2, typename... Rest>
+std::tuple<T1&, T2&, Rest&...> acquire(const VariantBase* base) {
+    return acquire<T1, T2, Rest...>(base->entity_id);
 }
 
 template<typename T>
@@ -91,6 +91,29 @@ std::optional<std::reference_wrapper<T>> try_acquire(entity_id id) {
 template<typename T>
 std::optional<std::reference_wrapper<T>> try_acquire(const VariantBase* base) {
     return try_acquire<T>(base->entity_id);
+}
+
+// -------------------- Read-Only Component Access --------------------
+
+template<typename T>
+const T& read(entity_id id) {
+    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
+    return acquire<T>(id);
+}
+
+template<typename T>
+const T& read(const VariantBase* base) {
+    return read<T>(base->entity_id);
+}
+
+template<typename T1, typename T2, typename... Rest>
+std::tuple<const T1&, const T2&, const Rest&...> read(entity_id id) {
+    return std::tie(read<T1>(id), read<T2>(id), read<Rest>(id)...);
+}
+
+template<typename T1, typename T2, typename... Rest>
+std::tuple<const T1&, const T2&, const Rest&...> read(const VariantBase* base) {
+    return read<T1, T2, Rest...>(base->entity_id);
 }
 
 // -------------------- Entity/Component Finding --------------------

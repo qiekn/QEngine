@@ -4,10 +4,10 @@
 #include "variant/variant_base.h"
 
 #include "game/position.h"
-#include "game/speed.h"
 
 class Sprite : public VariantBase { 
     VARIANT(Sprite);
+    REQUIRES(Position)
 
 public:
     std::string path_to_sprite; PROPERTY() SET_CALLBACK(path_to_sprite);

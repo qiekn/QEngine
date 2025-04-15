@@ -111,22 +111,9 @@ RTTR_REGISTRATION
         .property("drag_speed", &Camera2DSystem::drag_speed)
         .property("m_target", &Camera2DSystem::m_target);
 
-    rttr::registration::class_<Point>("Point")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .property("y", &Point::y)
-        .property("x", &Point::x)
-        (rttr::metadata("NO_VARIANT", true));
-
-    rttr::registration::class_<Point2>("Point2")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .property("point", &Point2::point)
-        .property("v2", &Point2::v2)
-        (rttr::metadata("NO_VARIANT", true));
-
     rttr::registration::class_<Ball>("Ball")
         .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("p2", &Ball::p2);
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 
     rttr::registration::class_<Brick>("Brick")
         .constructor<>()(rttr::policy::ctor::as_object)
