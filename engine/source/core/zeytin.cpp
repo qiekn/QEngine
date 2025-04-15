@@ -678,64 +678,25 @@ void Zeytin::generate_variants() {
     std::vector<rttr::type> valid_types;
 
     for (const auto& type : all_types) {
-        try {
-            if (!type.is_valid()) {
-                std::cerr << "Type is not valid: " << type.get_name() << std::endl;
-                continue;
-            }
-
-            std::string name;
-            try {
-                name = type.get_name().to_string();
-                if (name.empty()) {
-                    std::cerr << "Skipping type with empty name" << std::endl;
-                    continue;
-                }
-            } catch (...) {
-                std::cerr << "Exception accessing type name, skipping" << std::endl;
-                continue;
-            }
-
-            if (!type.is_derived_from<VariantBase>() ||
-                type.get_name() == "VariantBase" ||
-                type.is_pointer() ||
-                type.is_wrapper()) {
-
-                std::cout << "Type is skipped: " << type.get_name() << std::endl;
-                continue;
-            }
-
-            bool has_raylib_metadata = false;
-            try {
-                if (type.get_metadata("RAYLIB")) {
-                    has_raylib_metadata = true;
-                }
-            } catch (...) {
-                std::cerr << "Exception checking metadata for " << name << ", skipping" << std::endl;
-                continue;
-            }
-
-            if (has_raylib_metadata) {
-                continue;
-            }
-
-            valid_types.push_back(type);
-
-        } catch (const std::exception& e) {
-            std::cerr << "Exception filtering type: " << e.what() << std::endl;
-        } catch (...) {
-            std::cerr << "Unknown exception filtering type" << std::endl;
+        if (!type.is_valid()) {
+            std::cerr << "Type is not valid: " << type.get_name() << std::endl;
+            continue;
         }
+
+        if (!type.is_derived_from<VariantBase>() ||
+            type.get_name() == "VariantBase" ||
+            type.is_pointer() ||
+            type.is_wrapper()) {
+
+            continue;
+        }
+
+        valid_types.push_back(type);
     }
 
     for (const auto& type : valid_types) {
-        try {
-            std::string name = type.get_name().to_string();
-            zeytin::json::create_dummy(type);
-
-        } catch (const std::exception& e) {
-            std::cerr << "Error creating variant for" << std::endl;
-        }
+        std::cout << "Generating variant for: " << type.get_name() << std::endl;
+        zeytin::json::create_dummy(type);
     }
 }
 

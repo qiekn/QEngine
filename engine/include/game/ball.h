@@ -7,11 +7,6 @@
 #include "game/collider.h"
 #include "game/speed.h"
 
-class Point {
-    float x; PROPERTY();
-    float y; PROPERTY();
-};
-
 class Ball : public VariantBase {
     VARIANT(Ball);
     REQUIRES(Collider, Position, Velocity, Speed);

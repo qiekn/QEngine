@@ -38,40 +38,8 @@ class ClassParser:
         
         return content
 
-    def parse_variant_class(self, content: str, class_name: str, class_match: re.Match) -> Optional[Dict[str, Any]]:
-        if class_name in self.skip_classes:
-            return None
-        
-        required_variants = []
-        requires_match = self.requires_pattern.search(content)
-        if requires_match:
-            requirements = requires_match.group(1)
-            required_variants = [var.strip() for var in requirements.split(',')]
-        
-        properties = []
-        property_matches = self.property_pattern.finditer(content)
-        for match in property_matches:
-            prop_type = match.group(1).strip()
-            prop_name = match.group(2).strip()
-            has_callback = match.group(3) is not None
-            callback_name = match.group(3) if has_callback else None
-            
-            properties.append((prop_type, prop_name, has_callback))
-        
-        # Get base class (default to VariantBase if not specified)
-        base_class = class_match.group(3) if class_match.group(3) else "VariantBase"
-        
-        return {
-            'class_name': class_name,
-            'base_class': base_class,
-            'properties': properties,
-            'required_variants': required_variants,
-            'is_variant': True
-        }
-
-    def parse_regular_class(self, content: str, class_name: str, class_match: re.Match) -> Optional[Dict[str, Any]]:
-        properties = []
-        
+    def find_class_block(self, content: str, class_match: re.Match) -> str:
+        """Extract the content of a class or struct block."""
         class_start = class_match.start()
         class_block = content[class_start:]
         
@@ -84,19 +52,62 @@ class ClassParser:
             elif char == '}':
                 open_braces -= 1
                 if open_braces == 0:
-                    close_pos = i
+                    close_pos = i + 1  
                     break
         
         if close_pos > 0:
-            class_block = class_block[:close_pos]
+            return class_block[:close_pos]
+        return class_block
+
+    def parse_variant_class(self, class_block: str, class_name: str, base_class: str) -> Optional[Dict[str, Any]]:
+        if class_name in self.skip_classes:
+            return None
+        
+        required_variants = []
+        requires_match = self.requires_pattern.search(class_block)
+        if requires_match:
+            requirements = requires_match.group(1)
+            required_variants = [var.strip() for var in requirements.split(',')]
+        
+        properties = []
+        property_matches = self.property_pattern.finditer(class_block)
+        for match in property_matches:
+            prop_type = match.group(1).strip()
+            prop_name = match.group(2).strip()
+            has_callback = match.group(3) is not None
+            callback_name = match.group(3) if has_callback else None
+            
+            properties.append((prop_type, prop_name, has_callback))
+        
+        base_class = base_class if base_class else "VariantBase"
+        
+        return {
+            'class_name': class_name,
+            'base_class': base_class,
+            'properties': properties,
+            'required_variants': required_variants,
+            'is_variant': True
+        }
+
+    def parse_regular_class(self, class_block: str, class_name: str, base_class: str) -> Optional[Dict[str, Any]]:
+        """Parse a regular class or struct."""
+        properties = []
         
         for line in class_block.split('\n'):
-            property_match = self.regular_property_pattern.search(line)
+            property_match = self.property_pattern.search(line)
             if property_match:
                 prop_type = property_match.group(1).strip()
                 prop_name = property_match.group(2).strip()
+                has_callback = property_match.group(3) is not None
                 
-                # Skip methods and function pointers
+                properties.append((prop_type, prop_name, has_callback))
+                continue
+            
+            regular_match = self.regular_property_pattern.search(line)
+            if regular_match:
+                prop_type = regular_match.group(1).strip()
+                prop_name = regular_match.group(2).strip()
+                
                 if '(' in line or 'operator' in line:
                     continue
                 
@@ -104,8 +115,6 @@ class ClassParser:
         
         if not properties:
             return None
-        
-        base_class = class_match.group(3) if class_match.group(3) else None
         
         return {
             'class_name': class_name,
@@ -126,6 +135,7 @@ class ClassParser:
         content = self.clean_content(content)
         
         class_matches = list(self.class_pattern.finditer(content))
+        
         variant_matches = list(self.variant_pattern.finditer(content))
         
         variant_classes = {}
@@ -136,17 +146,23 @@ class ClassParser:
         results = []
         
         for class_match in class_matches:
+            class_type = class_match.group(1)  
             class_name = class_match.group(2)
+            base_class = class_match.group(3)
             
             if '<' in class_name or '>' in class_name:
                 continue
             
-            if class_name in variant_classes:
-                variant_info = self.parse_variant_class(content, class_name, class_match)
+            class_block = self.find_class_block(content, class_match)
+            
+            is_variant = class_name in variant_classes
+            
+            if is_variant:
+                variant_info = self.parse_variant_class(class_block, class_name, base_class)
                 if variant_info:
                     results.append(variant_info)
             else:
-                regular_info = self.parse_regular_class(content, class_name, class_match)
+                regular_info = self.parse_regular_class(class_block, class_name, base_class)
                 if regular_info:
                     results.append(regular_info)
         
@@ -156,7 +172,6 @@ class ClassParser:
 class CodeGenerator:
     @staticmethod
     def generate_base_classes_registration() -> str:
-        """Generate registration code for base classes."""
         return """    rttr::registration::class_<VariantCreateInfo>("VariantCreateInfo")
         .constructor<>()(rttr::policy::ctor::as_object)
         .property("entity_id", &VariantCreateInfo::entity_id);
@@ -168,19 +183,18 @@ class CodeGenerator:
 
     @staticmethod
     def generate_raylib_registration() -> str:
-        """Generate registration code for Raylib types."""
         return """    rttr::registration::class_<Vector2>("Vector2")
         .constructor<>()(rttr::policy::ctor::as_object)
         .property("x", &Vector2::x)
         .property("y", &Vector2::y)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Vector3>("Vector3")
         .constructor<>()(rttr::policy::ctor::as_object)
         .property("x", &Vector3::x)
         .property("y", &Vector3::y)
         .property("z", &Vector3::z)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Rectangle>("Rectangle")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -188,7 +202,7 @@ class CodeGenerator:
         .property("y", &Rectangle::y)
         .property("width", &Rectangle::width)
         .property("height", &Rectangle::height)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Color>("Color")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -196,7 +210,7 @@ class CodeGenerator:
         .property("g", &Color::g)
         .property("b", &Color::b)
         .property("a", &Color::a)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Camera2D>("Camera2D")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -204,7 +218,7 @@ class CodeGenerator:
         .property("target", &Camera2D::target)
         .property("rotation", &Camera2D::rotation)
         .property("zoom", &Camera2D::zoom)
-        (rttr::metadata("RAYLIB", true));
+        (rttr::metadata("NO_VARIANT", true));
 
     rttr::registration::class_<Texture2D>("Texture2D")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -213,11 +227,10 @@ class CodeGenerator:
         .property("height", &Texture2D::height)
         .property("mipmaps", &Texture2D::mipmaps)
         .property("format", &Texture2D::format)
-        (rttr::metadata("RAYLIB", true));\n\n"""
+        (rttr::metadata("NO_VARIANT", true));\n\n"""
 
     @staticmethod
     def generate_variant_class_registration(class_info: Dict[str, Any]) -> str:
-        """Generate registration code for a variant class."""
         class_name = class_info["class_name"]
         
         code = f'    rttr::registration::class_<{class_name}>("{class_name}")\n'
@@ -244,7 +257,6 @@ class CodeGenerator:
 
     @staticmethod
     def generate_regular_class_registration(class_info: Dict[str, Any]) -> str:
-        """Generate registration code for a regular class."""
         class_name = class_info["class_name"]
         
         code = f'    rttr::registration::class_<{class_name}>("{class_name}")\n'
@@ -253,14 +265,13 @@ class CodeGenerator:
         for prop_type, prop_name, _ in class_info['properties']:
             code += f'\n        .property("{prop_name}", &{class_name}::{prop_name})'
         
-        code += '\n        (rttr::metadata("RAYLIB", true))'
+        code += '\n        (rttr::metadata("NO_VARIANT", true))'
         
         code += ';\n\n'
         return code
 
     @staticmethod
     def generate_full_registration(classes_info: List[Dict[str, Any]]) -> str:
-        """Generate the complete RTTR registration code."""
         registration_code = "RTTR_REGISTRATION\n{\n"
         
         registration_code += CodeGenerator.generate_base_classes_registration()
@@ -278,7 +289,6 @@ class CodeGenerator:
 
     @staticmethod
     def generate_requires_file(class_name: str, required_variants: List[str], output_dir: str) -> None:
-        """Generate a requires file for a variant class."""
         requires_file_path = os.path.join(output_dir, f"{class_name}.requires")
         
         requires_data = {
@@ -294,8 +304,6 @@ class CodeGenerator:
 
 
 class RTTRGenerator:
-    """Main class for RTTR registration code generation."""
-    
     def __init__(self, headers_dir: str):
         self.headers_dir = os.path.normpath(headers_dir).replace('\\', '/')
         self.parser = ClassParser()
@@ -306,7 +314,6 @@ class RTTRGenerator:
         self.includes.add('#include "rttr/registration.h"')
 
     def process_headers(self) -> None:
-        """Process all header files in the directory."""
         header_files = glob.glob(os.path.join(self.headers_dir, "**/*.h"), recursive=True)
         
         for header_file in header_files:
@@ -342,7 +349,6 @@ class RTTRGenerator:
             print(f"Error writing RTTR header {output_path}: {e}")
 
     def generate_requires_files(self, requires_dir: str) -> None:
-        """Generate requirement files for all variant classes."""
         os.makedirs(requires_dir, exist_ok=True)
         
         for class_info in self.classes_info:
@@ -356,7 +362,6 @@ class RTTRGenerator:
         print(f"Requirements files written to {requires_dir}")
 
     def run(self) -> None:
-        """Run the full RTTR generation process."""
         self.process_headers()
         
         output_path = os.path.join(self.headers_dir, "rttr_registration.h")
@@ -368,7 +373,6 @@ class RTTRGenerator:
 
 
 def main():
-    """Main entry point."""
     parser = argparse.ArgumentParser(description='Generate RTTR registration code for Zeytin engine.')
     parser.add_argument('headers_dir', nargs='?', default=".", 
                         help='Directory containing header files to parse')
