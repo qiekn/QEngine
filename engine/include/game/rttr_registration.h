@@ -23,7 +23,6 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("entity_id", &VariantBase::entity_id)(rttr::metadata("NO_SERIALIZE", true));
 
-    
     rttr::registration::class_<Vector2>("Vector2")
         .constructor<>()(rttr::policy::ctor::as_object)
         .property("x", &Vector2::x)
@@ -114,7 +113,9 @@ RTTR_REGISTRATION
 
     rttr::registration::class_<Ball>("Ball")
         .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("x", &Ball::x)
+        .property("y", &Ball::y);
 
     rttr::registration::class_<Brick>("Brick")
         .constructor<>()(rttr::policy::ctor::as_object)
