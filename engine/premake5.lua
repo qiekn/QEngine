@@ -13,7 +13,7 @@ workspace "Zeytin"
 
     libdirs { 
         "3rdparty/raylib/src", 
-        "3rdparty/rttr/build/install/lib"
+        "3rdparty/rttr/build/install/lib",
     }
 
     links { 
@@ -45,7 +45,7 @@ workspace "Zeytin"
     project "Zeytin"
         kind "ConsoleApp"
         language "C++"
-        files { "source/**.cpp" }
+        files { "source/**.cpp", "3rdparty/backward-cpp/backward.cpp", }
 
         filter "configurations:EDITOR_MODE"
             defines {"DEBUG=1", "EDITOR_MODE=1"}

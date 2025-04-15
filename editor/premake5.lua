@@ -53,6 +53,7 @@ workspace "ZeytinEditor"
             "3rdparty/imgui/**.cpp",
             "3rdparty/imgui_test_engine/imgui_test_engine/**.cpp",
             "3rdparty/imgui_test_engine/imgui_test_engine/**.h",
+            "3rdparty/backward-cpp/backward.cpp",
             "source/**.cpp"
         }
 
