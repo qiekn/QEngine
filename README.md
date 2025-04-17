@@ -1,3 +1,1 @@
-# Zeytin
-
-![logo](https://github.com/user-attachments/assets/223277cd-eb5f-4092-956f-907af76646be)
+![image](https://github.com/user-attachments/assets/39fd0f50-88a5-4f9e-9342-9ea6bf911c9e)
