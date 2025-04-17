@@ -42,11 +42,11 @@ public:
     std::string serialize_entity(const entity_id id);
     std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
     entity_id deserialize_entity(const std::string& entity);
-    entity_id deserialize_entity(const std::filesystem::path& path);
     
+    void load_scene(const std::filesystem::path&);
+
     std::string serialize_scene();
-    void deserialize_scene(const std::string& scene);
-    void deserialize_entities();
+    void deserialize_scene(const std::string& scene); 
 
     void post_init_variants();
     void update_variants();

@@ -17,27 +17,32 @@ workspace "Zeytin"
         "3rdparty/rttr/build/install/lib",
     }
 
-    links { 
-        "raylib", 
-        "m", 
-        "pthread", 
-        "dl", 
-        "rt", 
-        "X11", 
-        "asound", 
-        "stdc++", 
+    links {
+        "raylib",
+        "m",
+        "pthread",
+        "dl",
+        "rt",
+        "X11",
+        "asound",
+        "stdc++",
         "rttr_core",
-        "zmq"
+        "zmq",
+        "dw",     
+        "bfd",
+        "dwarf",
+        "unwind"
     }
 
-
-    buildoptions { 
-        "-w",              
-        "-std=c++17",     
-        "-stdlib=libstdc++", 
-        "-g3",            
+    buildoptions {
+        "-w",
+        "-std=c++17",
+        "-stdlib=libstdc++",
+        "-g3",
         "-fno-omit-frame-pointer",
-        "-rdynamic"
+        "-rdynamic",
+        "-funwind-tables",
+        "-fasynchronous-unwind-tables"
     }
 
     filter "action:gmake"
@@ -50,5 +55,10 @@ workspace "Zeytin"
 
         filter "configurations:EDITOR_MODE"
             defines {"DEBUG=1", "EDITOR_MODE=1", "TRACY_ENABLE=1"}
+            symbols "On"
+            optimize "Off"
+
+        filter "configurations:STANDALONE"
+            defines {"TRACY_ENABLE=1"}
             symbols "On"
             optimize "Off"

@@ -269,56 +269,6 @@ rttr::variant from(entity_id entity_id, const std::filesystem::path& json_path)
 
 namespace zeytin { namespace json {
 
-entity_id deserialize_entity(const std::filesystem::path& path, entity_id& entity, std::vector<rttr::variant>& variants) {
-    std::ifstream file(path);
-    assert(file.is_open());
-
-    std::string entity_json((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-    file.close();
-    assert(!file.is_open());
-
-    Document document;
-    document.Parse(entity_json.c_str());
-    assert(!document.HasParseError());
-
-    assert(document.HasMember("entity_id") && document["entity_id"].IsNumber());
-    auto entity_id = document["entity_id"].GetUint64();
-    entity = entity_id;
-
-    assert(document.HasMember("variants") && document["variants"].IsArray());
-    const rapidjson::Value& variant_values = document["variants"];
-
-    const auto& known_types = rttr::type::get_types();
-
-    for(rapidjson::SizeType i = 0; i < variant_values.Size(); ++i) {
-        const rapidjson::Value& variant = variant_values[i];
-
-        const std::string& input_type = variant["type"].GetString();
-        bool found = false;
-
-        for(const auto& type : known_types) {
-            if(type.get_name() == input_type) {
-                found = true;
-            }
-        }
-
-        if(!found) {
-            log_warning() << "Skipped not known variant type: " << input_type << std::endl;
-            continue;
-        }
-
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        variant.Accept(writer);
-        const std::string variant_str = buffer.GetString();
-
-        rttr::variant var = from(entity_id, variant_str);
-        variants.push_back(std::move(var));
-    }
-    return entity_id;
-}
-
 entity_id deserialize_entity(const std::string& entity_json, entity_id& entity, std::vector<rttr::variant>& variants) {
     Document document;
     document.Parse(entity_json.c_str());
@@ -331,25 +281,10 @@ entity_id deserialize_entity(const std::string& entity_json, entity_id& entity, 
     assert(document.HasMember("variants") && document["variants"].IsArray());
     const rapidjson::Value& variant_values = document["variants"];
 
-    const auto& known_types = rttr::type::get_types();
-
     for(rapidjson::SizeType i = 0; i < variant_values.Size(); ++i) {
         const rapidjson::Value& variant = variant_values[i];
 
         const std::string& input_type = variant["type"].GetString();
-        bool found = false;
-
-        for(const auto& type : known_types) {
-            if(type.get_name() == input_type) {
-                found = true;
-            }
-        }
-
-        if(!found) {
-            log_warning() << "Skipped not known variant type: " << input_type << std::endl;
-            continue;
-        }
-
         rapidjson::StringBuffer buffer;
         rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
         variant.Accept(writer);

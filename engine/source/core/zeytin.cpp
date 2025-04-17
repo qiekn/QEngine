@@ -2,9 +2,9 @@
 #include <filesystem>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 
 #ifdef EDITOR_MODE
-#include <fstream>
 #include "tracy/Tracy.hpp"
 #endif
 
@@ -76,7 +76,8 @@ namespace {
 
 Zeytin::~Zeytin() {
 #ifdef EDITOR_MODE
-    exit_play_mode(); // to clear temp files
+    if(m_is_play_mode)
+        exit_play_mode(); 
 #endif
 }
 
@@ -98,7 +99,8 @@ void Zeytin::init() {
     generate_variants();
     subscribe_editor_events();
 #else
-    deserialize_entities(); // TODO: this should be named as load_scene and be uniform with editor_mode scene loading
+    // TODO load scene
+    load_scene("../shared_resources/scenes/main.scene");
     m_is_play_mode = true; // always set to play mode true if standalone
 #endif
 
@@ -220,23 +222,6 @@ entity_id Zeytin::deserialize_entity(const std::string& str) {
     return id;
 }
 
-entity_id Zeytin::deserialize_entity(const std::filesystem::path& path) {
-    entity_id id;
-    std::vector<rttr::variant> variants;
-
-    zeytin::json::deserialize_entity(path, id, variants);
-
-    auto& entity_variants = get_variants(id);
-    entity_variants.clear();
-
-    for (auto& var : variants) {
-        VariantBase& base = var.get_value<VariantBase&>();
-        base.on_init();
-        entity_variants.push_back(std::move(var));
-    }
-    return id;
-}
-
 std::string Zeytin::serialize_scene() {
     rapidjson::Document document;
     document.SetObject();
@@ -267,6 +252,29 @@ std::string Zeytin::serialize_scene() {
     return std::string(buffer.GetString(), buffer.GetSize());
 }
 
+void Zeytin::load_scene(const std::filesystem::path& path) {
+    if (std::filesystem::exists(path)) {
+        std::ifstream scene_file(path);
+        std::string scene((std::istreambuf_iterator<char>(scene_file)),
+                         std::istreambuf_iterator<char>());
+        std::cout << scene << std::endl;
+        scene_file.close();
+        deserialize_scene(scene);
+    }
+    else {
+        std::cerr << "Cannot load scene: Path " << path << " does not exist" << std::endl;
+        exit(1);
+    }
+
+
+    std::cout << std::filesystem::current_path() << std::endl;
+    std::ifstream t(path);
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    std::cout << buffer.str() << std::endl;
+    deserialize_scene(buffer.str());
+}
+
 void Zeytin::deserialize_scene(const std::string& scene) {
     m_storage.clear();
 
@@ -294,31 +302,6 @@ void Zeytin::deserialize_scene(const std::string& scene) {
         std::string entity_str = buffer.GetString();
 
         deserialize_entity(entity_str);
-    }
-}
-
-void Zeytin::deserialize_entities() {
-    try {
-        int file_count = 0;
-        int entity_count = 0;
-
-        for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(ENTITY_FOLDER)) {
-            file_count++;
-
-            if (!entry.is_regular_file() || entry.path().extension() != ".entity") {
-                continue;
-            }
-
-            std::filesystem::path file_path = entry.path();
-            std::string file_name = file_path.stem().string();
-
-            deserialize_entity(file_path);
-            entity_count++;
-        }
-
-    } 
-    catch (const std::filesystem::filesystem_error& e) {
-        log_error() << "Filesystem error: " << e.what() << std::endl;
     }
 }
 
