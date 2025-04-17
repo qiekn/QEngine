@@ -1,3 +1,5 @@
+#include "core/zeytin.h"
+
 #include <cassert>
 #include <filesystem>
 #include <sstream>
@@ -10,76 +12,21 @@
 
 #include <algorithm>
 
-#include "core/raylib_wrapper.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
-#include "core/zeytin.h"
 #include "core/json/json.h"
 #include "core/guid/guid.h"
+#include "core/raylib_wrapper.h"
+#include "core/utils.h"
+
 #include "editor/editor_event.h"
 #include "variant/variant_base.h"
 
 #include "remote_logger/remote_logger.h"
-#include "game/rttr_registration.h"
+#include "game/rttr_registration.h" // required for registering types
 
 #include "constants/paths.h"
-
-namespace {
-    template<typename T>
-    void update_property(rttr::variant& obj, const std::vector<std::string>& path_parts, 
-                         size_t path_index, const T& value) {
-        if (path_index >= path_parts.size()) {
-            return; 
-        }
-
-        const std::string& current_path = path_parts[path_index];
-
-        if (path_index == path_parts.size() - 1) {
-            for (auto& property : obj.get_type().get_properties()) {
-                if (property.get_name() == current_path) {
-                    property.set_value(obj, value);
-                    std::string set_callback_name = "on_" + property.get_name().to_string() + "_set";
-                    rttr::method set_callback = obj.get_type().get_method(set_callback_name);;
-                    if(set_callback.is_valid()) {
-                        set_callback.invoke(obj);
-                    }
-
-                    return;
-                }
-            }
-        } else {
-            for (auto& property : obj.get_type().get_properties()) {
-                if (property.get_name() == current_path) {
-                    rttr::variant nested_obj = property.get_value(obj);
-                    update_property(nested_obj, path_parts, path_index + 1, value);
-                    return;
-                }
-            }
-        }
-
-        log_error() << "Property " << current_path << " not found in path" << std::endl;
-    }
-
-    std::vector<std::string> split_path(const std::string& path) {
-        std::vector<std::string> path_parts;
-        std::string current_part;
-        std::istringstream path_stream(path);
-
-        while (std::getline(path_stream, current_part, '.')) {
-            path_parts.push_back(current_part);
-        }
-
-        return path_parts;
-    }
-}
-
-Zeytin::~Zeytin() {
-#ifdef EDITOR_MODE
-    if(m_is_play_mode)
-        exit_play_mode();  // for proper deinitialization
-#endif
-}
 
 void Zeytin::init() {
 #ifdef EDITOR_MODE
@@ -115,6 +62,13 @@ void Zeytin::init() {
     m_camera.target = {0, 0};
     m_camera.rotation = 0.0f;
     m_camera.zoom = 1.0f;
+}
+
+Zeytin::~Zeytin() {
+#ifdef EDITOR_MODE
+    if(m_is_play_mode)
+        exit_play_mode();  // for proper deinitialization
+#endif
 }
 
 void Zeytin::run_frame() {
