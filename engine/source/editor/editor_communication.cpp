@@ -1,7 +1,6 @@
 #include "editor/editor_communication.h"
 #include <iostream>
 #include <chrono>
-#include <atomic>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -46,7 +45,6 @@ bool EditorCommunication::initialize() {
         m_receive_thread = std::thread(&EditorCommunication::receive_messages, this);
 
         m_initialized = true;
-        log_info() << "EditorCommunication initialized successfully" << std::endl;
 
         return true;
     }
@@ -58,23 +56,21 @@ bool EditorCommunication::initialize() {
 
 void EditorCommunication::start_connection_attempts() {
     std::thread([this]() {
-        std::atomic<bool> connection_confirmed{false};
-
         EditorEventBus::get().subscribe<bool>(EditorEvent::EngineStartConfirmed,
-            [&connection_confirmed](bool) {
-                connection_confirmed = true;
+            [this](bool) {
+                m_connection_confirmed = true;
             });
 
         int attempts = 0;
         const int max_attempts = 30;
 
-        while (m_running && !connection_confirmed && attempts < max_attempts) {
+        while (m_running && !m_connection_confirmed && attempts < max_attempts) {
             send_started_message();
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             attempts++;
         }
 
-        if (connection_confirmed) {
+        if (m_connection_confirmed) {
             log_info() << "Connection to editor confirmed!" << std::endl;
         } else if (attempts >= max_attempts) {
             log_error() << "Failed to connect to editor after " << max_attempts << " attempts" << std::endl;
@@ -185,6 +181,7 @@ void EditorCommunication::raise_events() {
             EditorEventBus::get().publish<bool>(EditorEvent::EngineStartConfirmed, true);
         }
         else if (type == "scene") {
+            std::cout << "Scene is received" << std::endl;
             EditorEventBus::get().publish<const std::string&>(EditorEvent::Scene, msg);
         }
         else if(type == "die") {

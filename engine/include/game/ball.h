@@ -14,6 +14,8 @@ public:
     void on_init() override;
     void on_update() override;
     void on_play_update() override;
+
+    float test; PROPERTY();
     
     void launch();
     void reset_position(float x, float y);

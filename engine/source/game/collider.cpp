@@ -28,12 +28,7 @@ void Collider::check_collisions() {
         return;
     }
 
-
-    if(!Query::has<Position>(this)) {
-        return;
-    }
-
-    auto position = Query::get<Position>(this);
+    auto& position = Query::read<Position>(this);
 
     Query::for_each<Collider>([this](Collider& other) {
         if (other.entity_id == entity_id) {

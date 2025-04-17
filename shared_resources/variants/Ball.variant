@@ -1,4 +1,6 @@
 {
     "type": "Ball",
-    "value": {}
+    "value": {
+        "test": 0.0
+    }
 }

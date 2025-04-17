@@ -77,11 +77,28 @@ namespace {
 Zeytin::~Zeytin() {
 #ifdef EDITOR_MODE
     if(m_is_play_mode)
-        exit_play_mode(); 
+        exit_play_mode();  // for proper deinitialization
 #endif
 }
 
 void Zeytin::init() {
+#ifdef EDITOR_MODE
+    m_editor_communication = std::make_unique<EditorCommunication>();
+    subscribe_editor_events();
+    while(!(m_editor_communication->is_connection_confirmed() && is_scene_ready())) {
+        m_editor_communication->raise_events();
+        begin_drawing(); // temp black screen, otherwise may crash
+        clear_background(BLACK);
+        end_drawing();
+    }
+
+    generate_variants();
+    initial_sync_editor();
+#else
+    load_scene("../shared_resources/scenes/main.scene");
+    m_is_play_mode = true; // always set to play mode true if standalone
+#endif
+
     m_render_texture = load_render_texture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
     float scaleX = (float)get_screen_width() / VIRTUAL_WIDTH;
     float scaleY = (float)get_screen_height() / VIRTUAL_HEIGHT;
@@ -94,16 +111,6 @@ void Zeytin::init() {
     set_exit_key(0);
     set_target_fps(60);
 
-#ifdef EDITOR_MODE
-    m_editor_communication = std::make_unique<EditorCommunication>();
-    generate_variants();
-    subscribe_editor_events();
-#else
-    // TODO load scene
-    load_scene("../shared_resources/scenes/main.scene");
-    m_is_play_mode = true; // always set to play mode true if standalone
-#endif
-
     m_camera.offset = {0,0},
     m_camera.target = {0, 0};
     m_camera.rotation = 0.0f;
@@ -114,17 +121,6 @@ void Zeytin::run_frame() {
 
 #ifdef EDITOR_MODE
     m_editor_communication->raise_events();
-    if(!is_scene_ready())  {
-        begin_drawing();
-        clear_background(BLACK);
-        end_drawing();
-        return;
-    }
-
-    if(!m_synced_once) {
-        initial_sync_editor();
-        m_synced_once = true;
-    }
 #endif
 
     begin_texture_mode(m_render_texture);
@@ -149,9 +145,6 @@ void Zeytin::run_frame() {
     if(m_is_play_mode && !m_is_pause_play_mode) {
         play_start_variants();
         play_update_variants();
-#ifdef EDITOR_MODE
-        //sync_editor(); 
-#endif
     }
 
     end_texture_mode();

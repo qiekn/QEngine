@@ -113,7 +113,8 @@ RTTR_REGISTRATION
 
     rttr::registration::class_<Ball>("Ball")
         .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("test", &Ball::test);
 
     rttr::registration::class_<Brick>("Brick")
         .constructor<>()(rttr::policy::ctor::as_object)

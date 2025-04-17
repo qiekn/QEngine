@@ -5,6 +5,8 @@
 #include <queue>
 #include <string>
 #include <zmq.hpp>
+#include <atomic>
+
 
 class EditorCommunication {
 public:
@@ -16,6 +18,8 @@ public:
     bool send_message(const std::string& json);
     void raise_events();
 
+    bool is_connection_confirmed() const { return m_connection_confirmed; }
+
 private:
     void receive_messages();
     void start_connection_attempts();
@@ -24,6 +28,8 @@ private:
     
     bool m_running;
     bool m_initialized;
+
+    std::atomic<bool> m_connection_confirmed{false};
 
     zmq::context_t m_context;
     zmq::socket_t m_publisher;
