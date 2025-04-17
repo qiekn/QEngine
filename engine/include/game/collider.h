@@ -17,6 +17,7 @@ public:
     bool m_static = false; PROPERTY()
     bool m_draw_debug = false; PROPERTY()
     
+    void on_update() override;
     void on_play_update() override;
     bool intersects(const Collider& other) const;
 
