@@ -3,7 +3,11 @@ workspace "ZeytinEditor"
     location "build"
     targetdir "bin/%{cfg.buildcfg}"
     
-    toolset "clang"
+    filter "system:windows" 
+        toolset "msc"  
+    filter "system:not windows"
+        toolset "clang"  
+    filter {}
 
     includedirs {
         "include",
@@ -20,7 +24,8 @@ workspace "ZeytinEditor"
             "gdi32",
             "user32",
             "shell32",
-            "zmq"  
+            "ws2_32",  
+            "libzmq"  
         }
         
     filter "system:linux"
@@ -38,12 +43,17 @@ workspace "ZeytinEditor"
         buildoptions { "-fPIC" }
     filter {}
 
-    buildoptions {
-        "-w",
-        "-std=c++17",
-        "-stdlib=libstdc++",
-        "-ferror-limit=0"
-    }
+    filter "system:windows"
+        buildoptions { "/std:c++17", "/w" }
+        
+    filter "system:not windows"
+        buildoptions { 
+            "-w",
+            "-std=c++17",
+            "-stdlib=libstdc++",
+            "-ferror-limit=0" 
+        }
+    filter {}
 
     project "ZeytinEditor"
         kind "ConsoleApp"
