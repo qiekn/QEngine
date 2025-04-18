@@ -29,11 +29,13 @@ void Sprite::on_update() {
     );
 }
 
-void Sprite::on_path_to_sprite_set() {
+void Sprite::handle_new_path() {
     if(!path_to_sprite.empty()) {
         texture = LoadTexture(path_to_sprite.c_str());
         m_texture_loaded = true;
     }
+
+    log_info() << "Handle new path" << std::endl;
 }
 
 

@@ -19,7 +19,17 @@ namespace {
             for (auto& property : obj.get_type().get_properties()) {
                 if (property.get_name() == current_path) {
                     property.set_value(obj, value);
-                    std::string set_callback_name = "on_" + property.get_name().to_string() + "_set";
+
+                    // invoke set callback
+
+                    auto callback = property.get_metadata("SET_CALLBACK");
+                    if(!callback.is_valid()) {
+                        return;
+                    }
+
+                    std::string set_callback_name = callback.to_string();
+
+                    //std::string set_callback_name = "on_" + property.get_name().to_string() + "_set";
                     rttr::method set_callback = obj.get_type().get_method(set_callback_name);;
                     if(set_callback.is_valid()) {
                         set_callback.invoke(obj);

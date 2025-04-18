@@ -4,8 +4,8 @@
 #define PROPERTY() 
 #define DEBUG()
 
-#define SET_CALLBACK(property_name) \
-    void on_##property_name##_set();
+#define SET_CALLBACK(callback_name) \
+    void callback_name();
 
 #define VARIANT(ClassName) \
 public: \

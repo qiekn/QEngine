@@ -72,9 +72,9 @@ RTTR_REGISTRATION
     rttr::registration::class_<Sprite>("Sprite")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("path_to_sprite", &Sprite::path_to_sprite)(rttr::metadata("SET_CALLBACK", "on_path_to_sprite_set"))
+        .property("path_to_sprite", &Sprite::path_to_sprite)(rttr::metadata("SET_CALLBACK", "handle_new_path"))
 
-        .method("on_path_to_sprite_set", &Sprite::on_path_to_sprite_set);
+        .method("handle_new_path", &Sprite::handle_new_path);
 
     rttr::registration::class_<Paddle>("Paddle")
         .constructor<>()(rttr::policy::ctor::as_object)

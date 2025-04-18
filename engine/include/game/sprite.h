@@ -10,7 +10,7 @@ class Sprite : public VariantBase {
     VARIANT(Sprite);
 
 public:
-    std::string path_to_sprite; PROPERTY() SET_CALLBACK(path_to_sprite);
+    std::string path_to_sprite; PROPERTY() SET_CALLBACK(handle_new_path);
 
     void on_init() override;
     void on_update() override;

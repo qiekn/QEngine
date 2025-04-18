@@ -8,12 +8,12 @@ import argparse
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Set, Any, Union
 
-
 class ClassParser:
     def __init__(self):
         self.variant_pattern = re.compile(r'VARIANT\((\w+)\)')
         self.class_pattern = re.compile(r'(struct|class)\s+(\w+)\s*(?::\s*public\s+(\w+))?')
         self.requires_pattern = re.compile(r'REQUIRES\s*\(\s*(.*?)\s*\)')
+
         self.property_pattern = re.compile(r'(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)(?:\s*=\s*[^;]*)?;\s*PROPERTY\(\)(?:\s+SET_CALLBACK\((\w+)\))?')
         
         self.regular_property_pattern = re.compile(r'^\s*(?:public|private|protected)?:?\s*(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)\s*;')
@@ -77,10 +77,10 @@ class ClassParser:
         for match in property_matches:
             prop_type = match.group(1).strip()
             prop_name = match.group(2).strip()
-            has_callback = match.group(3) is not None
-            callback_name = match.group(3) if has_callback else None
+
+            callback_name = match.group(3)
             
-            properties.append((prop_type, prop_name, has_callback))
+            properties.append((prop_type, prop_name, callback_name))
         
         base_class = base_class if base_class else "VariantBase"
         
@@ -100,9 +100,9 @@ class ClassParser:
             if property_match:
                 prop_type = property_match.group(1).strip()
                 prop_name = property_match.group(2).strip()
-                has_callback = property_match.group(3) is not None
+                callback_name = property_match.group(3)
                 
-                properties.append((prop_type, prop_name, has_callback))
+                properties.append((prop_type, prop_name, callback_name))
                 continue
             
             regular_match = self.regular_property_pattern.search(line)
@@ -113,7 +113,7 @@ class ClassParser:
                 if '(' in line or 'operator' in line:
                     continue
                 
-                properties.append((prop_type, prop_name, False))
+                properties.append((prop_type, prop_name, None))
         
         if not properties:
             return None
@@ -289,20 +289,19 @@ class CodeGenerator:
         code += '        .constructor<>()(rttr::policy::ctor::as_object)\n'
         code += '        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)'
         
-        for prop_type, prop_name, has_callback in class_info['properties']:
+        for prop_type, prop_name, callback_name in class_info['properties']:
             code += f'\n        .property("{prop_name}", &{class_name}::{prop_name})'
             
-            if has_callback:
-                callback_method = f"on_{prop_name}_set"
-                code += f'(rttr::metadata("SET_CALLBACK", "{callback_method}"))'
+            if callback_name:
+
+                code += f'(rttr::metadata("SET_CALLBACK", "{callback_name}"))'
         
-        has_callbacks = any(has_callback for _, _, has_callback in class_info['properties'])
+        has_callbacks = any(callback_name for _, _, callback_name in class_info['properties'] if callback_name)
         if has_callbacks:
             code += '\n'
-            for prop_type, prop_name, has_callback in class_info['properties']:
-                if has_callback:
-                    callback_method = f"on_{prop_name}_set"
-                    code += f'\n        .method("{callback_method}", &{class_name}::{callback_method})'
+            for prop_type, prop_name, callback_name in class_info['properties']:
+                if callback_name:
+                    code += f'\n        .method("{callback_name}", &{class_name}::{callback_name})'
         
         code += ';\n\n'
         return code
