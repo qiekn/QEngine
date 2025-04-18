@@ -2,34 +2,42 @@ workspace "ZeytinEditor"
     configurations { "Debug" }
     location "build"
     targetdir "bin/%{cfg.buildcfg}"
+    
     toolset "clang"
 
-   
     includedirs {
         "include",
         "include/imgui",
         "3rdparty/raylib/src",
         "3rdparty/rapidjson/include"
     }
-
     
-    libdirs {
-        "3rdparty/raylib/src"
-    }
+    filter "system:windows"
+        defines { "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
+        links {
+            "raylib",
+            "winmm",
+            "gdi32",
+            "user32",
+            "shell32",
+            "zmq"  
+        }
+        
+    filter "system:linux"
+        links {
+            "raylib",
+            "m",
+            "pthread",
+            "dl",
+            "rt",
+            "X11",
+            "asound",
+            "stdc++",
+            "zmq"
+        }
+        buildoptions { "-fPIC" }
+    filter {}
 
-    links {
-        "raylib",
-        "m",
-        "pthread",
-        "dl",
-        "rt",
-        "X11",
-        "asound",
-        "stdc++",
-        "zmq"
-    }
-
-  
     buildoptions {
         "-w",
         "-std=c++17",
@@ -37,17 +45,12 @@ workspace "ZeytinEditor"
         "-ferror-limit=0"
     }
 
-    filter "action:gmake"
-        buildoptions { "-fPIC" }
-
-   
     project "ZeytinEditor"
         kind "ConsoleApp"
         language "C++"
         symbols "On"
         optimize "Off"
 
-        
         files {
             "3rdparty/rlimgui/**.cpp",
             "3rdparty/imgui/**.cpp",
