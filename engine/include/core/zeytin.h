@@ -51,6 +51,7 @@ public:
     void post_init_variants();
     void update_variants();
     void play_start_variants();
+    void play_late_start_variants();
     void play_update_variants();
 
     inline Camera2D& get_camera() { return m_camera; }
@@ -88,6 +89,7 @@ private:
     void update_camera();
     
     bool m_started = false;
+    bool m_late_started = false;
     bool m_should_die = false;
 
     bool m_is_scene_ready = false;
