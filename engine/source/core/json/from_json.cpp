@@ -20,7 +20,6 @@ using namespace rttr;
 namespace
 {
 
-
 void fromjson_recursively(instance obj, Value& json_object);
 
 

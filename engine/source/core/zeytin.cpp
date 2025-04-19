@@ -98,6 +98,7 @@ void Zeytin::run_frame() {
 
     if(m_is_play_mode && !m_is_pause_play_mode) {
         play_start_variants();
+        play_late_start_variants();
         play_update_variants();
     }
 
@@ -350,6 +351,33 @@ void Zeytin::play_start_variants() {
                 ZoneValue(pair.first);
 #endif
                 base.on_play_start();
+            }
+        }
+    }
+}
+
+void Zeytin::play_late_start_variants() {
+#ifdef EDITOR_MODE
+    ZoneScopedN("Zeytin::play_late_start_variants()");
+#endif
+
+    if (m_late_started) return;
+    m_late_started = true;
+
+    for (auto& pair : m_storage) {   
+        for (auto& variant : pair.second) {
+            VariantBase& base = variant.get_value<VariantBase&>();
+            if(base.is_dead) continue;
+#ifdef EDITOR_MODE
+            if(!base.check_dependencies("Zeytin::play_late_start_variants()")) continue;
+#endif
+            {
+#ifdef EDITOR_MODE
+                ZoneScopedN("VariantBase::on_play_late_start()");
+                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZoneValue(pair.first);
+#endif
+                base.on_play_late_start();
             }
         }
     }
