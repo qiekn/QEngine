@@ -35,6 +35,11 @@ bool has(const VariantBase* base) {
     return has<T>(base->entity_id);
 }
 
+template<typename T>
+bool has(VariantBase* base) {
+    return has<T>(base->entity_id);
+}
+
 template<typename T1, typename T2, typename... Rest>
 bool has(entity_id id) {
     return has<T1>(id) && has<T2, Rest...>(id);
@@ -245,56 +250,31 @@ void remove_variant_from(const VariantBase* base) {
     get_zeytin().remove_variant(base->entity_id, rttr::type::get<T>());
 }
 
-template<typename T>
-bool add(entity_id id) {
-    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
-    if(has<T>(id)) {
-        log_warning() << "Trying to add duplicate variants to entity" << std::endl;
-        return false;
-    }
-
-    VariantCreateInfo info;
-    info.entity_id = id;
-    T var(info);
-    var.on_init();
-    get_zeytin().get_variants(id).push_back(var);
-    return true;
-}
-
 template<typename T, typename... Args>
-bool add(entity_id id, Args&&... args) {
+std::optional<std::reference_wrapper<T>> add(entity_id id, Args&&... args) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     if(has<T>(id)) {
         log_warning() << "Trying to add duplicate variants to entity" << std::endl;
-        return false;
+        return std::nullopt;
     }
 
     T variant(std::forward<Args>(args)...);
     variant.entity_id = id;
     variant.on_init();
-    get_zeytin().get_variants(id).push_back(variant);
-    return true;
+    
+    auto& variants = get_zeytin().get_variants(id);
+    variants.push_back(std::move(variant));
+
+    return std::ref(Query::get<T>(id));
+    
+    //return std::optional<std::reference_wrapper<T>>(
+    //    std::ref(variants.back().template get_value<T&>())
+    //);
 }
 
 template<typename T, typename... Args>
-bool add(VariantBase* base, Args&&... args) {
+std::optional<std::reference_wrapper<T>> add(VariantBase* base, Args&&... args) {
     return add<T>(base->entity_id, std::forward<Args>(args)...);
-}
-
-
-template<typename T1, typename T2, typename... Rest>
-bool add(entity_id id) {
-    return add<T1>(id) && add<T2, Rest...>(id);
-}
-
-template<typename T>
-bool add(VariantBase* base) {
-    return add<T>(base->entity_id);
-}
-
-template<typename T1, typename T2, typename... Rest>
-bool add(VariantBase* base) {
-    return add<T1>(base) && add<T2, Rest...>(base);
 }
 
 } 
