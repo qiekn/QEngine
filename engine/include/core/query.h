@@ -12,13 +12,9 @@
 
 namespace Query {
 
-template<typename... Ts>
-entity_id create_entity() {
-    entity_id id = get_zeytin().new_entity_id();
-    return id;
+inline entity_id create_entity() {
+    return get_zeytin().new_entity_id();
 }
-
-// -------------------- Component Existence Checks --------------------
 
 template<typename T>
 bool has(entity_id id) {
@@ -49,7 +45,6 @@ bool has(const VariantBase* base) {
     return has<T1, T2, Rest...>(base->entity_id);
 }
 
-// -------------------- Component Access --------------------
 
 template<typename T>
 T& get(entity_id id) {
@@ -93,7 +88,6 @@ std::optional<std::reference_wrapper<T>> try_get(const VariantBase* base) {
     return try_get<T>(base->entity_id);
 }
 
-// -------------------- Read-Only Component Access --------------------
 
 template<typename T>
 const T& read(entity_id id) {
@@ -116,7 +110,6 @@ std::tuple<const T1&, const T2&, const Rest&...> read(const VariantBase* base) {
     return read<T1, T2, Rest...>(base->entity_id);
 }
 
-// -------------------- Entity/Component Finding --------------------
 
 template<typename T>
 std::optional<std::reference_wrapper<T>> find_first() {
@@ -186,7 +179,6 @@ std::vector<std::reference_wrapper<T>> find_where(std::function<bool(T&)> predic
     return results;
 }
 
-// -------------------- Helper Functions --------------------
 
 template<typename T, typename... Rest>
 bool has_types(const std::vector<rttr::variant>& variants) {
@@ -243,8 +235,6 @@ void for_each(std::function<void(T&)> action) {
     }
 }
 
-// -------------------- Component Removal --------------------
-
 template<typename T>
 void remove_variant_from(entity_id id) {
     get_zeytin().remove_variant(id, rttr::type::get<T>());
@@ -255,4 +245,37 @@ void remove_variant_from(const VariantBase* base) {
     get_zeytin().remove_variant(base->entity_id, rttr::type::get<T>());
 }
 
-} // namespace Query
+template<typename T>
+bool add(entity_id id) {
+    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
+    const bool already_has = has<T>(id);
+    if(already_has) {
+        log_warning() << "Trying to add duplicate variants to entity" << std::endl;
+        return false;
+    }
+
+    VariantCreateInfo info;
+    info.entity_id = id;
+    T var(info);
+    var.on_init();
+    get_zeytin().get_variants(id).push_back(var);
+    return true;
+}
+
+
+template<typename T1, typename T2, typename... Rest>
+bool add(entity_id id) {
+    return add<T1>(id) && add<T2, Rest...>(id);
+}
+
+template<typename T>
+bool add(VariantBase* base) {
+    return add<T>(base->entity_id);
+}
+
+template<typename T1, typename T2, typename... Rest>
+bool add(VariantBase* base) {
+    return add<T1>(base) && add<T2, Rest...>(base);
+}
+
+} 
