@@ -1,0 +1,13 @@
+{
+    "type": "BrickManager",
+    "value": {
+        "rows": 5,
+        "columns": 8,
+        "brick_width": 100.0,
+        "brick_height": 30.0,
+        "padding_x": 20.0,
+        "padding_y": 20.0,
+        "start_x": 400.0,
+        "start_y": 100.0
+    }
+}

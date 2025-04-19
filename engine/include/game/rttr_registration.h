@@ -1,5 +1,6 @@
 #include "game/ball.h"
 #include "game/brick.h"
+#include "game/brick_manager.h"
 #include "game/camera2d.h"
 #include "game/collider.h"
 #include "game/paddle.h"
@@ -128,6 +129,18 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Velocity::x)
         .property("y", &Velocity::y);
+
+    rttr::registration::class_<BrickManager>("BrickManager")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("rows", &BrickManager::rows)
+        .property("columns", &BrickManager::columns)
+        .property("brick_width", &BrickManager::brick_width)
+        .property("brick_height", &BrickManager::brick_height)
+        .property("padding_x", &BrickManager::padding_x)
+        .property("padding_y", &BrickManager::padding_y)
+        .property("start_x", &BrickManager::start_x)
+        .property("start_y", &BrickManager::start_y);
 
     rttr::registration::class_<Position>("Position")
         .constructor<>()(rttr::policy::ctor::as_object)

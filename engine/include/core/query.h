@@ -248,8 +248,7 @@ void remove_variant_from(const VariantBase* base) {
 template<typename T>
 bool add(entity_id id) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
-    const bool already_has = has<T>(id);
-    if(already_has) {
+    if(has<T>(id)) {
         log_warning() << "Trying to add duplicate variants to entity" << std::endl;
         return false;
     }
@@ -260,6 +259,26 @@ bool add(entity_id id) {
     var.on_init();
     get_zeytin().get_variants(id).push_back(var);
     return true;
+}
+
+template<typename T, typename... Args>
+bool add(entity_id id, Args&&... args) {
+    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
+    if(has<T>(id)) {
+        log_warning() << "Trying to add duplicate variants to entity" << std::endl;
+        return false;
+    }
+
+    T variant(std::forward<Args>(args)...);
+    variant.entity_id = id;
+    variant.on_init();
+    get_zeytin().get_variants(id).push_back(variant);
+    return true;
+}
+
+template<typename T, typename... Args>
+bool add(VariantBase* base, Args&&... args) {
+    return add<T>(base->entity_id, std::forward<Args>(args)...);
 }
 
 

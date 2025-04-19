@@ -1,13 +1,15 @@
 #include "game/ball.h"
 
-#include "game/paddle.h"
-#include "game/position.h"
-
 #include "core/query.h"
 #include "core/raylib_wrapper.h"
 
+#include "game/paddle.h"
+#include "game/position.h"
+#include "game/scale.h"
+
 void Ball::on_init() {
     m_launched = false;
+    Query::add<Scale>(this, 10, 20);
 }
 
 void Ball::on_update() {
