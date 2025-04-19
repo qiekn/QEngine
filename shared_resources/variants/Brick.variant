@@ -1,13 +1,4 @@
 {
     "type": "Brick",
-    "value": {
-        "health": 1,
-        "color": {
-            "r": 230,
-            "g": 41,
-            "b": 55,
-            "a": 255
-        },
-        "destroyed": false
-    }
+    "value": {}
 }

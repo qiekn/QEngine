@@ -6,7 +6,7 @@
             "value": {
                 "m_collider_type": 1,
                 "m_is_trigger": false,
-                "m_width": 1500.0,
+                "m_width": 2500.0,
                 "m_height": 100.0,
                 "m_radius": 0.0,
                 "m_static": true,
@@ -16,8 +16,8 @@
         {
             "type": "Position",
             "value": {
-                "x": 838.5999755859375,
-                "y": 49.900001525878906
+                "x": 927.0999755859376,
+                "y": -46.099998474121094
             }
         },
         {

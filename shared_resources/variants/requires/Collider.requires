@@ -1,6 +1,5 @@
 {
     "requires": [
-        "Position",
-        "Velocity"
+        "Position"
     ]
 }
