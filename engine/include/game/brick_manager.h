@@ -21,10 +21,10 @@ public:
     float start_x = 400.0f; PROPERTY()
     float start_y = 100.0f; PROPERTY()
     
-    //void on_init() override;
-    //void create_bricks();
+    void on_play_start() override;
+    void create_bricks();
     
 private:
-    //void create_brick(float x, float y, int row, int col);
-    //Color get_brick_color(int row) const;
+    void create_brick(float x, float y, int row, int col);
+    Color get_brick_color(int row) const;
 };

@@ -25,8 +25,15 @@ public:
     Vector2 get_circle_center() const;
     inline float get_radius() const { return m_radius; }
 
+    std::function<void(Collider& other)> m_callback;
+
+    inline void set_enable(bool value) { m_enable = value; }
+    inline bool is_enable() { return m_enable; }
+
 private:
     void debug_draw();
     void check_collisions();
-    void handle_collision(Collider& other);
+
+    bool m_enable = true;
 };
+

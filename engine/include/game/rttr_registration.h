@@ -114,15 +114,11 @@ RTTR_REGISTRATION
 
     rttr::registration::class_<Ball>("Ball")
         .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("test", &Ball::test);
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 
     rttr::registration::class_<Brick>("Brick")
         .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("health", &Brick::health)
-        .property("color", &Brick::color)
-        .property("destroyed", &Brick::destroyed);
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 
     rttr::registration::class_<Velocity>("Velocity")
         .constructor<>()(rttr::policy::ctor::as_object)

@@ -7,7 +7,14 @@ class Brick : public VariantBase {
     VARIANT(Brick);
 
 public:
-    int health = 1; PROPERTY()
-    Color color = RED; PROPERTY()
-    bool destroyed = false; PROPERTY()
+    Brick(int health, Color color) : m_health(health), m_color(color) {}
+
+    void on_play_update() override;
+
+    void damage();
+    inline bool is_destroyed() { return m_health <= 0; }
+
+private:
+    int m_health = 1; 
+    Color m_color = RED; 
 };
