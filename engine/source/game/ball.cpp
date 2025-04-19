@@ -5,16 +5,18 @@
 
 #include "game/paddle.h"
 #include "game/position.h"
-#include "game/scale.h"
-
-void Ball::on_init() {
-    m_launched = false;
-    Query::add<Scale>(this, 10, 20);
-}
+#include "game/brick.h"
 
 void Ball::on_update() {
     auto& collider = Query::get<Collider>(this);
     draw_circle_v(collider.get_circle_center(), collider.get_radius(), GREEN);
+}
+
+void Ball::on_play_start() {
+    auto& collider = Query::get<Collider>(this);
+    collider.m_callback = [this](Collider& other) {
+        handle_collision(other);
+    };
 }
 
 void Ball::on_play_update() {
@@ -59,3 +61,42 @@ void Ball::reset_position(float x, float y) {
     position.y = y;
     m_launched = false;
 }
+
+void Ball::handle_collision(Collider& other) {
+    auto [velocity, position, collider] = Query::get<Velocity, Position, Collider>(this);
+    auto& other_position = Query::get<Position>(other.entity_id);
+
+    Rectangle rect = other.get_rectangle();
+        
+    float closest_x = fmaxf(rect.x, fminf(position.x, rect.x + rect.width));
+    float closest_y = fmaxf(rect.y, fminf(position.y, rect.y + rect.height));
+        
+    Vector2 normal = vector2_subtract(
+        {position.x, position.y},
+        {closest_x, closest_y}
+    );
+
+    normal = Vector2Normalize(normal);
+        
+    float penetration = collider.m_radius - Vector2Distance({position.x, position.y}, {closest_x, closest_y});
+    position.x += normal.x * penetration;
+    position.y += normal.y * penetration;
+
+    float dot_product = velocity.x * normal.x + velocity.y * normal.y;
+    
+    if (dot_product < 0) {
+        velocity.x = velocity.x - 2 * dot_product * normal.x;
+        velocity.y = velocity.y - 2 * dot_product * normal.y;
+    }
+
+
+    if(Query::has<Brick>(other.entity_id)) {
+        auto& brick = Query::get<Brick>(other.entity_id);
+        brick.damage();
+    }
+
+}
+
+
+
+
