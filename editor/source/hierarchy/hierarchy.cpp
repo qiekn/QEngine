@@ -258,44 +258,6 @@ void Hierarchy::render_add_variant_menu(EntityDocument& entity_document) {
     static std::vector<std::string> recent_variants;
     const int max_recent = 5;
 
-    if (!recent_variants.empty()) {
-        if (ImGui::BeginMenu("Recent")) {
-            for (const auto& recent_name : recent_variants) {
-                if (search_buffer[0] != '\0') {
-                    std::string lower_name = recent_name;
-                    std::string lower_search = search_buffer;
-
-                    std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
-                                  [](unsigned char c){ return std::tolower(c); });
-                    std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
-                                  [](unsigned char c){ return std::tolower(c); });
-
-                    if (lower_name.find(lower_search) == std::string::npos) {
-                        continue;
-                    }
-                }
-
-                bool already_exists = check_variant_exists(entity_document, recent_name);
-
-                if (already_exists) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-                    ImGui::MenuItem(recent_name.c_str(), nullptr, false, false);
-                    ImGui::PopStyleColor();
-                } else if (ImGui::MenuItem(recent_name.c_str())) {
-                    for (auto& variant : m_variants) {
-                        if (variant.get_name() == recent_name) {
-                            add_variant_to_entity(entity_document, variant);
-                            update_recent_variants(recent_variants, recent_name, max_recent);
-                            break;
-                        }
-                    }
-                }
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::Separator();
-    }
-
     static std::vector<std::string> all_variants;
     static bool variants_need_update = true;
 

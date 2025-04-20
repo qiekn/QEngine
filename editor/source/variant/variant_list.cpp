@@ -49,6 +49,7 @@ void VariantList::load_variants() {
 }
 
 void VariantList::load_variant(const std::filesystem::path& path) {
+    log_trace() << "Loading variant from path: " << path << std::endl;
     std::string name = path.stem().string();
 
     auto it = std::find_if(m_variants.begin(), m_variants.end(),
@@ -57,6 +58,7 @@ void VariantList::load_variant(const std::filesystem::path& path) {
                           });
 
     if (it != m_variants.end()) {
+        log_trace() << "Variant already exist: " << path << std::endl;
         it->set_alive();
         it->load_from_file();
     } else {
@@ -71,6 +73,7 @@ void VariantList::start_watching() {
             load_variant(path);
         }
         else if(status == "deleted") {
+            log_trace() << "Deleting variant: " << path << std::endl;
             std::string name = path.stem().string();
             for(auto& variant : m_variants) {
                 if(variant.get_name() == name) {
