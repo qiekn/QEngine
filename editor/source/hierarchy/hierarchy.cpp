@@ -249,82 +249,28 @@ void Hierarchy::render_entity(EntityDocument& entity_document) {
 }
 
 void Hierarchy::render_add_variant_menu(EntityDocument& entity_document) {
-    static char search_buffer[64] = "";
-    ImGui::SetNextItemWidth(200.0f);
-    ImGui::InputTextWithHint("##variant_search", "Search variants...", search_buffer, sizeof(search_buffer));
+    const int items_per_column = 20;
+    int variant_count = 0;
 
-    ImGui::Separator();
-
-    static std::vector<std::string> recent_variants;
-    const int max_recent = 5;
-
-    static std::vector<std::string> all_variants;
-    static bool variants_need_update = true;
-
-    if (variants_need_update) {
-        all_variants.clear();
-
-        for (const auto& variant : m_variants) {
-            if (variant.is_dead()) continue;
-
-            const std::string& name = variant.get_name();
-            if (!name.empty()) {
-                all_variants.push_back(name);
-            }
+    for (const auto& variant : m_variants) {
+        if (!variant.is_dead() && !variant.get_name().empty()) {
+            variant_count++;
         }
-
-        std::sort(all_variants.begin(), all_variants.end());
-
-        variants_need_update = false;
     }
 
-    const int items_per_column = 20; 
-    int displayed_count = 0;
-
-    int filtered_count = 0;
-    for (const auto& variant_name : all_variants) {
-        if (search_buffer[0] != '\0') {
-            std::string lower_name = variant_name;
-            std::string lower_search = search_buffer;
-
-            std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
-                         [](unsigned char c){ return std::tolower(c); });
-            std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
-                         [](unsigned char c){ return std::tolower(c); });
-
-            if (lower_name.find(lower_search) == std::string::npos) {
-                continue;
-            }
-        }
-
-        filtered_count++;
-    }
-
-    bool use_columns = filtered_count > items_per_column;
+    bool use_columns = variant_count > items_per_column;
 
     if (use_columns) {
         ImGui::Columns(2, "variant_columns", false);
     }
 
-    bool found_any = false;
+    int displayed_count = 0;
 
-    for (const auto& variant_name : all_variants) {
-        if (search_buffer[0] != '\0') {
-            std::string lower_name = variant_name;
-            std::string lower_search = search_buffer;
+    for (const auto& variant : m_variants) {
+        if (variant.is_dead() || variant.get_name().empty()) continue;
 
-            std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
-                         [](unsigned char c){ return std::tolower(c); });
-            std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
-                         [](unsigned char c){ return std::tolower(c); });
-
-            if (lower_name.find(lower_search) == std::string::npos) {
-                continue;
-            }
-        }
-
-        found_any = true;
         displayed_count++;
+        const std::string& variant_name = variant.get_name();
 
         bool already_exists = check_variant_exists(entity_document, variant_name);
 
@@ -333,26 +279,16 @@ void Hierarchy::render_add_variant_menu(EntityDocument& entity_document) {
             ImGui::MenuItem(variant_name.c_str(), nullptr, false, false);
             ImGui::PopStyleColor();
         } else if (ImGui::MenuItem(variant_name.c_str())) {
-            for (auto& variant : m_variants) {
-                if (variant.get_name() == variant_name) {
-                    add_variant_to_entity(entity_document, variant);
-                    update_recent_variants(recent_variants, variant_name, max_recent);
-                    break;
-                }
-            }
+            add_variant_to_entity(entity_document, const_cast<VariantDocument&>(variant));
         }
 
-        if (use_columns && displayed_count % items_per_column == 0 && displayed_count < filtered_count) {
+        if (use_columns && displayed_count % items_per_column == 0 && displayed_count < variant_count) {
             ImGui::NextColumn();
         }
     }
 
     if (use_columns) {
         ImGui::Columns(1);
-    }
-
-    if (search_buffer[0] != '\0' && !found_any) {
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No matching variants found");
     }
 }
 
