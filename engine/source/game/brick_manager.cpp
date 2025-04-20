@@ -1,8 +1,15 @@
 #include "game/brick_manager.h"
 #include "core/query.h"
+#include "game/game.h"
 
 void BrickManager::on_play_start() {
     create_bricks();
+
+    auto result = Query::find_first<Game>();
+    if(result) {
+        auto& game = result->get();
+        // register restart bricks
+    }
 }
 
 void BrickManager::create_bricks() {

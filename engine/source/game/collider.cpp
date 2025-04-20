@@ -19,14 +19,6 @@ void Collider::on_play_update() {
 }
 
 void Collider::check_collisions() {
-    if(m_static) { // if static, skip
-        return;
-    }
-
-    if (m_is_trigger || m_collider_type == (int)ColliderType::None) {
-        return;
-    }
-
     auto& position = Query::read<Position>(this);
 
     Query::for_each<Collider>([this](Collider& other) {
@@ -39,10 +31,6 @@ void Collider::check_collisions() {
         }
 
         if (other.m_collider_type == (int)ColliderType::None) {
-            return;
-        }
-
-        if (m_is_trigger || other.m_is_trigger) {
             return;
         }
 

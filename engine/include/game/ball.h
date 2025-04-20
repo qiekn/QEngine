@@ -6,6 +6,7 @@
 #include "game/velocity.h"
 #include "game/collider.h"
 #include "game/speed.h"
+#include "game/game.h"
 
 class Ball : public VariantBase {
     VARIANT(Ball);

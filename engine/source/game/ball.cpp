@@ -7,6 +7,7 @@
 #include "game/position.h"
 #include "game/brick.h"
 #include "game/tag.h"
+#include "game/game.h"
 
 void Ball::on_update() {
     auto& collider = Query::get<Collider>(this);
@@ -18,6 +19,18 @@ void Ball::on_play_start() {
     collider.m_callback = [this](Collider& other) {
         handle_collision(other);
     };
+
+    auto result = Query::find_first<Game>();
+    if(result) {
+        auto& game = result->get();
+        game.register_on_game_start([this]() {
+            launch();
+        });
+
+        game.register_on_game_end([this](){
+                m_launched = false;
+        });
+    }
 }
 
 void Ball::on_play_update() {
@@ -35,9 +48,6 @@ void Ball::on_play_update() {
             }
         }
         
-        if (is_key_pressed(KEY_SPACE)) {
-            launch();
-        }
         return;
     }
     
@@ -139,15 +149,7 @@ void Ball::handle_collision(Collider& other) {
     if(Query::has<Tag>(other.entity_id)) {
         const auto& tag = Query::read<Tag>(other.entity_id);
         if(tag.value == "bottom") {
-            log_warning() << "Game should end" << std::endl;
+            Query::find_first<Game>()->get().end_game();
         }
     }
-
-
-
-
-
-
-
-
 }
