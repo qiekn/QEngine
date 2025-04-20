@@ -46,7 +46,7 @@ public:
     void load_scene(const std::filesystem::path&);
 
     std::string serialize_scene();
-    void deserialize_scene(const std::string& scene); 
+    bool deserialize_scene(const std::string& scene); 
 
     void post_init_variants();
     void update_variants();

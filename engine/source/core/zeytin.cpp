@@ -223,7 +223,7 @@ void Zeytin::load_scene(const std::filesystem::path& path) {
     deserialize_scene(buffer.str());
 }
 
-void Zeytin::deserialize_scene(const std::string& scene) {
+bool Zeytin::deserialize_scene(const std::string& scene) {
     m_storage.clear();
 
     rapidjson::Document scene_data;
@@ -231,14 +231,14 @@ void Zeytin::deserialize_scene(const std::string& scene) {
 
     if (parse_result.IsError()) {
         log_error() << "Error parsing scene at offset " << parse_result.Offset() << std::endl;
-        exit(1);
+        return false;
     }
 
     if (!scene_data.IsObject() || !scene_data.HasMember("type") ||
         !scene_data["type"].IsString() || strcmp(scene_data["type"].GetString(), "scene") != 0 ||
         !scene_data.HasMember("entities") || !scene_data["entities"].IsArray()) {
         log_error() << "Failed to deserialize scene: invalid scene format" << std::endl;
-        exit(1);
+        return false;
     }
 
     const rapidjson::Value& entities = scene_data["entities"];
@@ -251,6 +251,8 @@ void Zeytin::deserialize_scene(const std::string& scene) {
 
         deserialize_entity(entity_str);
     }
+
+    return true;
 }
 
 void Zeytin::post_init_variants() {

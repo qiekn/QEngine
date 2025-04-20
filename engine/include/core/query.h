@@ -282,10 +282,6 @@ std::optional<std::reference_wrapper<T>> add(entity_id id, Args&&... args) {
     variants.push_back(std::move(variant));
 
     return std::ref(Query::get<T>(id));
-    
-    //return std::optional<std::reference_wrapper<T>>(
-    //    std::ref(variants.back().template get_value<T&>())
-    //);
 }
 
 template<typename T, typename... Args>
