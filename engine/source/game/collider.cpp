@@ -55,34 +55,39 @@ void Collider::check_collisions() {
 }
 
 bool Collider::intersects(const Collider& other) const {
-    if (m_collider_type == (int)ColliderType::None || other.m_collider_type == (int)ColliderType::None) {
+    if (m_collider_type == 0 || other.m_collider_type == 0) {
         return false;
     }
 
-    if (m_collider_type == (int)ColliderType::Rectangle && other.m_collider_type == (int)ColliderType::Rectangle) {
+    if (m_collider_type == 1 && other.m_collider_type == 1) {
         const auto& this_rect = get_rectangle();
         const auto& other_rect = other.get_rectangle();
-
         return CheckCollisionRecs(this_rect, other_rect);
     }
 
-    if (m_collider_type == (int)ColliderType::Circle && other.m_collider_type == (int)ColliderType::Circle) {
-        float distanceSq = Vector2DistanceSqr(get_circle_center(), other.get_circle_center());
-        float combinedRadius = m_radius + other.m_radius;
-        return distanceSq <= (combinedRadius * combinedRadius);
+    if (m_collider_type == 2 && other.m_collider_type == 2) {
+        Vector2 center1 = get_circle_center();
+        Vector2 center2 = other.get_circle_center();
+        float distance = Vector2Distance(center1, center2);
+        return distance <= (m_radius + other.m_radius);
     }
 
-    if ((m_collider_type == (int)ColliderType::Rectangle && other.m_collider_type == (int)ColliderType::Circle) ||
-        (m_collider_type == (int)ColliderType::Circle && other.m_collider_type == (int)ColliderType::Rectangle)) {
+    if ((m_collider_type == 1 && other.m_collider_type == 2) ||
+        (m_collider_type == 2 && other.m_collider_type == 1)) {
 
-        const Collider& rect_collider = (m_collider_type == (int)ColliderType::Rectangle) ? *this : other;
-        const Collider& circle_collider = (m_collider_type == (int)ColliderType::Circle) ? *this : other;
+        const Collider& rect_collider = (m_collider_type == 1) ? *this : other;
+        const Collider& circle_collider = (m_collider_type == 2) ? *this : other;
 
-        return CheckCollisionCircleRec(
-            circle_collider.get_circle_center(), 
-            circle_collider.m_radius, 
-            rect_collider.get_rectangle()
-        );
+        Rectangle rect = rect_collider.get_rectangle();
+        Vector2 center = circle_collider.get_circle_center();
+        float radius = circle_collider.m_radius;
+
+        float closest_x = fmaxf(rect.x, fminf(center.x, rect.x + rect.width));
+        float closest_y = fmaxf(rect.y, fminf(center.y, rect.y + rect.height));
+
+        float distance = Vector2Distance(center, {closest_x, closest_y});
+
+        return distance <= radius;
     }
 
     return false;

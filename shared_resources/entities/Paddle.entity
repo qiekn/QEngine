@@ -4,9 +4,9 @@
         {
             "type": "Paddle",
             "value": {
-                "width": 100.0,
+                "width": 180.0,
                 "height": 20.0,
-                "speed": 600.0
+                "speed": 617.2000122070313
             }
         },
         {
@@ -21,7 +21,7 @@
             "value": {
                 "m_collider_type": 1,
                 "m_is_trigger": false,
-                "m_width": 100.0,
+                "m_width": 180.0,
                 "m_height": 20.0,
                 "m_radius": 0.0,
                 "m_static": false,

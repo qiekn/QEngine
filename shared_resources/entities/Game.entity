@@ -1,21 +1,4 @@
 {
     "entity_id": 976534070804215078,
-    "variants": [
-        {
-            "type": "Camera2DSystem",
-            "value": {
-                "zoom": 1.0,
-                "enable_drag": true,
-                "enable_zoom": true,
-                "zoom_increment": 0.10000000149011612,
-                "min_zoom": 0.10000000149011612,
-                "max_zoom": 10.0,
-                "drag_speed": 1.0,
-                "m_target": {
-                    "x": 0.0,
-                    "y": 0.0
-                }
-            }
-        }
-    ]
+    "variants": []
 }

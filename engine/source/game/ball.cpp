@@ -6,6 +6,7 @@
 #include "game/paddle.h"
 #include "game/position.h"
 #include "game/brick.h"
+#include "game/tag.h"
 
 void Ball::on_update() {
     auto& collider = Query::get<Collider>(this);
@@ -66,37 +67,87 @@ void Ball::handle_collision(Collider& other) {
     auto [velocity, position, collider] = Query::get<Velocity, Position, Collider>(this);
     auto& other_position = Query::get<Position>(other.entity_id);
 
-    Rectangle rect = other.get_rectangle();
-        
-    float closest_x = fmaxf(rect.x, fminf(position.x, rect.x + rect.width));
-    float closest_y = fmaxf(rect.y, fminf(position.y, rect.y + rect.height));
-        
-    Vector2 normal = vector2_subtract(
-        {position.x, position.y},
-        {closest_x, closest_y}
-    );
+    if(other.m_collider_type == 1) { // Rectangle
+        Rectangle rect = other.get_rectangle();
 
-    normal = Vector2Normalize(normal);
-        
-    float penetration = collider.m_radius - Vector2Distance({position.x, position.y}, {closest_x, closest_y});
-    position.x += normal.x * penetration;
-    position.y += normal.y * penetration;
+        float closest_x = fmaxf(rect.x, fminf(position.x, rect.x + rect.width));
+        float closest_y = fmaxf(rect.y, fminf(position.y, rect.y + rect.height));
 
-    float dot_product = velocity.x * normal.x + velocity.y * normal.y;
-    
-    if (dot_product < 0) {
-        velocity.x = velocity.x - 2 * dot_product * normal.x;
-        velocity.y = velocity.y - 2 * dot_product * normal.y;
+        Vector2 normal = {
+            position.x - closest_x,
+            position.y - closest_y
+        };
+
+        bool is_corner = (closest_x != position.x && closest_y != position.y);
+
+        if (!is_corner && Vector2Length(normal) > 0) {
+            if (fabsf(normal.x) < fabsf(normal.y)) {
+                normal.x = 0; 
+            } else {
+                normal.y = 0;
+            }
+        }
+
+        if (Vector2Length(normal) > 0) {
+            normal = Vector2Normalize(normal);
+        } else {
+            normal = {0, -1};
+        }
+
+        float penetration = collider.m_radius - Vector2Distance({position.x, position.y}, {closest_x, closest_y});
+        if (penetration > 0) {
+            position.x += normal.x * penetration;
+            position.y += normal.y * penetration;
+        }
+
+        float dot_product = velocity.x * normal.x + velocity.y * normal.y;
+        if (dot_product < 0) {
+            velocity.x = velocity.x - 2 * dot_product * normal.x;
+            velocity.y = velocity.y - 2 * dot_product * normal.y;
+        }
     }
+    else if(other.m_collider_type == 2) { 
+        Vector2 pos1 = {position.x, position.y};
+        Vector2 pos2 = other.get_circle_center();
 
+        Vector2 normal = Vector2Subtract(pos1, pos2);
+        if (Vector2Length(normal) > 0) {
+            normal = Vector2Normalize(normal);
+        } else {
+            normal = {0, -1}; 
+        }
+
+        float penetration = collider.m_radius + other.m_radius - Vector2Distance(pos1, pos2);
+        if (penetration > 0) {
+            position.x += normal.x * penetration;
+            position.y += normal.y * penetration;
+        }
+
+        float dot_product = velocity.x * normal.x + velocity.y * normal.y;
+        if (dot_product < 0) {
+            velocity.x = velocity.x - 2 * dot_product * normal.x;
+            velocity.y = velocity.y - 2 * dot_product * normal.y;
+        }
+    }
 
     if(Query::has<Brick>(other.entity_id)) {
         auto& brick = Query::get<Brick>(other.entity_id);
         brick.damage();
     }
 
+
+    if(Query::has<Tag>(other.entity_id)) {
+        const auto& tag = Query::read<Tag>(other.entity_id);
+        if(tag.value == "bottom") {
+            log_warning() << "Game should end" << std::endl;
+        }
+    }
+
+
+
+
+
+
+
+
 }
-
-
-
-
