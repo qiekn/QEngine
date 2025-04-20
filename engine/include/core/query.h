@@ -277,4 +277,9 @@ std::optional<std::reference_wrapper<T>> add(VariantBase* base, Args&&... args) 
     return add<T>(base->entity_id, std::forward<Args>(args)...);
 }
 
+template<typename T>
+void remove_entity(const T& t) {
+    get_zeytin().remove_entity(t.entity_id);
+}
+
 } 

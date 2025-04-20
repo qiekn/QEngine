@@ -8,7 +8,12 @@ void BrickManager::on_play_start() {
     auto result = Query::find_first<Game>();
     if(result) {
         auto& game = result->get();
-        // register restart bricks
+        game.register_on_game_end([this] {
+            Query::for_each<Brick>([this](Brick& brick){
+                // rebuild it, just the way it was, brick by brick
+                brick.reset();
+            });
+        });
     }
 }
 

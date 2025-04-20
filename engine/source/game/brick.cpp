@@ -31,3 +31,8 @@ void Brick::damage() {
         Query::get<Collider>(this).set_enable(false);
     }
 }
+
+void Brick::reset() {
+    m_health = m_inital_health;
+    Query::get<Collider>(this).set_enable(true);
+}

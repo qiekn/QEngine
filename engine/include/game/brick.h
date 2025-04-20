@@ -7,14 +7,15 @@ class Brick : public VariantBase {
     VARIANT(Brick);
 
 public:
-    Brick(int health, Color color) : m_health(health), m_color(color) {}
+    Brick(int health, Color color) : m_health(health), m_inital_health(health), m_color(color) {}
 
     void on_play_update() override;
-
     void damage();
+    void reset();
     inline bool is_destroyed() { return m_health <= 0; }
 
 private:
-    int m_health = 1; 
+    int m_health = 0;
+    int m_inital_health = 0; // used for resetting
     Color m_color = RED; 
 };
