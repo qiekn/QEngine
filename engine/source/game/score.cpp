@@ -8,6 +8,10 @@ void Score::on_play_start() {
     game.register_on_brick_destoryed([this](const auto& brick){
         on_break_destroyed(brick);
     });
+
+    game.register_on_game_start([this](){
+        reset();
+    });
 }
 
 void Score::add_points(int points) {
