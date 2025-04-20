@@ -3,6 +3,7 @@
 #include "game/brick_manager.h"
 #include "game/camera2d.h"
 #include "game/collider.h"
+#include "game/game.h"
 #include "game/paddle.h"
 #include "game/position.h"
 #include "game/scale.h"
@@ -94,6 +95,10 @@ RTTR_REGISTRATION
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Scale::x)
         .property("y", &Scale::y);
+
+    rttr::registration::class_<Game>("Game")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
 
     rttr::registration::class_<Tag>("Tag")
         .constructor<>()(rttr::policy::ctor::as_object)
