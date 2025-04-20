@@ -14,6 +14,8 @@ public:
     void reset();
     inline bool is_destroyed() { return m_health <= 0; }
 
+    int get_initial_health() const { return m_inital_health; }
+
 private:
     int m_health = 0;
     int m_inital_health = 0; // used for resetting

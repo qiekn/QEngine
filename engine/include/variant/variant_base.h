@@ -3,6 +3,7 @@
 #include "rttr/rttr_enable.h"
 #include "variant/variant_macros.h"
 #include <functional>
+#include "core/raylib_wrapper.h"
 
 template<typename T>
 using VariantRef = std::optional<std::reference_wrapper<T>>;

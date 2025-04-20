@@ -1,6 +1,7 @@
 #include "game/brick.h"
 #include "core/query.h"
 #include "core/raylib_wrapper.h"
+#include "game/game.h"
 
 void Brick::on_play_update() {
     if(is_destroyed()) {
@@ -29,6 +30,7 @@ void Brick::damage() {
 
     if(m_health == 0) {
         Query::get<Collider>(this).set_enable(false);
+        Query::find_first<Game>().on_break_destroyed(*this);
     }
 }
 

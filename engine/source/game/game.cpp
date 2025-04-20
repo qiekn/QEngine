@@ -52,3 +52,20 @@ void Game::register_on_game_end(callback cb) {
         m_game_end_callbacks.push_back(cb);
     }
 }
+
+void Game::register_on_brick_destoryed(std::function<void(const Brick& brick)> cb) {
+    if (cb) {
+        m_on_brick_destroyed.push_back(cb);
+    }
+}
+
+void Game::on_break_destroyed(const Brick& brick) {
+    for(const auto& callback : m_on_brick_destroyed) {
+        if(callback) {
+            callback(brick);
+        }
+    }
+}
+
+
+

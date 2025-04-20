@@ -20,24 +20,21 @@ void Ball::on_play_start() {
         handle_collision(other);
     };
 
-    auto result = Query::find_first<Game>();
-    if(result) {
-        auto& game = result->get();
-        game.register_on_game_start([this]() {
-            launch();
-        });
+    auto& game = Query::find_first<Game>();
+    game.register_on_game_start([this]() {
+        launch();
+    });
 
-        game.register_on_game_end([this](){
-                m_launched = false;
-        });
-    }
+    game.register_on_game_end([this](){
+        m_launched = false;
+    });
 }
 
 void Ball::on_play_update() {
     auto [position, velocity, collider] = Query::get<Position, Velocity, Collider>(this);
 
     if (!m_launched) {
-        auto paddle_ref = Query::find_first<Paddle>();
+        auto paddle_ref = Query::try_find_first<Paddle>();
         if (paddle_ref) {
             auto& paddle = paddle_ref->get();
             if(Query::has<Collider,Position>(paddle.get_id())) {
@@ -149,7 +146,7 @@ void Ball::handle_collision(Collider& other) {
     if(Query::has<Tag>(other.entity_id)) {
         const auto& tag = Query::read<Tag>(other.entity_id);
         if(tag.value == "bottom") {
-            Query::find_first<Game>()->get().end_game();
+            Query::find_first<Game>().end_game();
         }
     }
 }

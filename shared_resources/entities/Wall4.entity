@@ -5,7 +5,7 @@
             "type": "Collider",
             "value": {
                 "m_collider_type": 1,
-                "m_is_trigger": false,
+                "m_is_trigger": true,
                 "m_width": 2500.0,
                 "m_height": 100.0,
                 "m_radius": 0.0,

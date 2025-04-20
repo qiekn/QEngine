@@ -5,7 +5,7 @@
 void BrickManager::on_play_start() {
     create_bricks();
 
-    auto result = Query::find_first<Game>();
+    auto result = Query::try_find_first<Game>();
     if(result) {
         auto& game = result->get();
         game.register_on_game_end([this] {

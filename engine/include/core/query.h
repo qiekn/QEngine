@@ -117,7 +117,7 @@ std::tuple<const T1&, const T2&, const Rest&...> read(const VariantBase* base) {
 
 
 template<typename T>
-std::optional<std::reference_wrapper<T>> find_first() {
+std::optional<std::reference_wrapper<T>> try_find_first() {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     const rttr::type& type = rttr::type::get<T>();
     
@@ -130,6 +130,22 @@ std::optional<std::reference_wrapper<T>> find_first() {
     }
     
     return std::nullopt;
+}
+
+template<typename T>
+T& find_first() {
+    static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
+    const rttr::type& type = rttr::type::get<T>();
+    
+    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+        for (auto& variant : variants) {
+            if (variant.get_type() == type) {
+                return variant.get_value<T&>();
+            }
+        }
+    }
+    
+    throw std::runtime_error("Not able to find_first: " + type.get_name().to_string()); 
 }
 
 template<typename T>

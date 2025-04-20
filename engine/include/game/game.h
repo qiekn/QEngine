@@ -3,6 +3,7 @@
 #include "variant/variant_base.h"
 #include <vector>
 #include <functional>
+#include "game/brick.h"
 
 using callback = std::function<void()>;
 
@@ -25,12 +26,17 @@ public:
 
     void start_game();
     void end_game();
+    void on_break_destroyed(const Brick& brick);
     
     void register_on_game_start(callback cb);
     void register_on_game_end(callback cb);
+    void register_on_brick_destoryed(std::function<void(const Brick& brick)> cb);
 
 private:
     GameState m_game_state = GameState::Idle;
+
     std::vector<callback> m_game_start_callbacks;
     std::vector<callback> m_game_end_callbacks;
+    std::vector<std::function<void(const Brick& brick)>> m_on_brick_destroyed;
 };
+

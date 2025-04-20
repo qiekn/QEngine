@@ -7,6 +7,7 @@
 #include "game/paddle.h"
 #include "game/position.h"
 #include "game/scale.h"
+#include "game/score.h"
 #include "game/speed.h"
 #include "game/sprite.h"
 #include "game/tag.h"
@@ -116,6 +117,15 @@ RTTR_REGISTRATION
         .property("max_zoom", &Camera2DSystem::max_zoom)
         .property("drag_speed", &Camera2DSystem::drag_speed)
         .property("m_target", &Camera2DSystem::m_target);
+
+    rttr::registration::class_<Score>("Score")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("value", &Score::value)
+        .property("point_base", &Score::point_base)
+        .property("font_size", &Score::font_size)
+        .property("x", &Score::x)
+        .property("y", &Score::y);
 
     rttr::registration::class_<Ball>("Ball")
         .constructor<>()(rttr::policy::ctor::as_object)
