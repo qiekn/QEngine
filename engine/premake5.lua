@@ -15,6 +15,7 @@ workspace "Zeytin"
 
     libdirs { 
         "3rdparty/rttr/lib",
+        "3rdparty/rttr/raylib",
     }
 
     links {
@@ -60,5 +61,6 @@ workspace "Zeytin"
 
         filter "configurations:STANDALONE"
             defines {"TRACY_ENABLE=1"}
+            linkoptions {"-static"}
             symbols "On"
             optimize "Off"
