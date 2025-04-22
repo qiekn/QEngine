@@ -1,14 +1,14 @@
 workspace "Zeytin"
-    configurations {"EDITOR_MODE", "STANDALONE"}
+    configurations { "EDITOR_MODE", "STANDALONE" }
     location "build"
     targetdir "bin/%{cfg.buildcfg}"
-    
+
     filter "system:linux"
         toolset "clang"
     filter "system:windows"
         toolset "msc"
     filter {}
-    
+
     includedirs {
         "include", 
         "3rdparty",
@@ -17,11 +17,11 @@ workspace "Zeytin"
         "3rdparty/rapidjson/include",
         "3rdparty/tracy",
     }
-    
+
     libdirs { 
         "3rdparty/rttr/lib",
     }
-    
+
     filter { "system:linux", "configurations:EDITOR_MODE" }
         links {
             "raylib",
@@ -39,7 +39,7 @@ workspace "Zeytin"
             "dwarf",
             "unwind"
         }
-    
+
     filter { "system:linux", "configurations:STANDALONE" }
         links {
             "raylib",
@@ -51,12 +51,9 @@ workspace "Zeytin"
             "asound",
             "stdc++",
             "rttr_core",
-            "dw",     
-            "bfd",
-            "dwarf",
-            "unwind"
+            "zmq"
         }
-    
+
     filter "system:linux"
         buildoptions {
             "-w",
@@ -72,7 +69,7 @@ workspace "Zeytin"
         postbuildcommands {
             "{COPY} %{wks.location}/../3rdparty/raylib/lib/libraylib.so* %{cfg.targetdir}/"
         }
-    
+
     filter { "system:windows", "configurations:EDITOR_MODE" }
         links {
             "raylib",
@@ -83,7 +80,7 @@ workspace "Zeytin"
             "user32",
             "shell32"
         }
-    
+
     filter { "system:windows", "configurations:STANDALONE" }
         links {
             "raylib",
@@ -93,27 +90,33 @@ workspace "Zeytin"
             "user32",
             "shell32"
         }
-    
+
     filter "system:windows"
         buildoptions { "/std:c++17", "/w" }
-        
         postbuildcommands {
             "{COPY} %{wks.location}/../3rdparty/raylib/lib/*.dll %{cfg.targetdir}"
         }
-    
+
     filter {}
-    
+
     project "Zeytin"
         kind "ConsoleApp"
         language "C++"
-        files { "source/**.cpp", "3rdparty/backward-cpp/backward.cpp", "3rdparty/tracy/TracyClient.cpp"}
-        
+        files {
+            "source/**.cpp"
+        }
+
         filter "configurations:EDITOR_MODE"
-            defines {"DEBUG=1", "EDITOR_MODE=1", "TRACY_ENABLE=1"}
+            files {
+                "3rdparty/backward-cpp/backward.cpp",
+                "3rdparty/tracy/TracyClient.cpp"
+            }
+            defines { "DEBUG=1", "EDITOR_MODE=1", "TRACY_ENABLE=1" }
             symbols "On"
             optimize "Off"
-            
+
         filter "configurations:STANDALONE"
-            defines {"TRACY_ENABLE=1"}
+            defines { "TRACY_ENABLE=0" }
             symbols "On"
             optimize "Off"
+
