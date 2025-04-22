@@ -101,11 +101,6 @@ workspace "Zeytin"
             "{COPY} %{wks.location}/../3rdparty/raylib/lib/*.dll %{cfg.targetdir}"
         }
     
-    filter { "system:windows", "configurations:EDITOR_MODE" }
-        postbuildcommands {
-            "{COPY} %{wks.location}/../3rdparty/zmq/lib/*.dll %{cfg.targetdir}"
-        }
-    
     filter {}
     
     project "Zeytin"
