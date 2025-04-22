@@ -6,14 +6,15 @@ workspace "Zeytin"
 
     includedirs {
         "include", 
-        "3rdparty/raylib/raylib-5.5_linux_amd64/include",
-        "3rdparty/rttr/build/install/include", 
+        "3rdparty",
+        "3rdparty/raylib",
+        "3rdparty/rttr", 
         "3rdparty/rapidjson/include",
         "3rdparty/tracy",
     }
 
     libdirs { 
-        "3rdparty/rttr/build/install/lib",
+        "3rdparty/rttr/lib",
     }
 
     links {
