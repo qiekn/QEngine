@@ -1,5 +1,5 @@
 workspace "Zeytin"
-    configurations { "EDITOR_MODE", "STANDALONE" }
+    configurations { "EDITOR_MODE", "STANDALONE", "WEB"}
     location "build"
     targetdir "bin/%{cfg.buildcfg}"
     
@@ -9,7 +9,13 @@ workspace "Zeytin"
         toolset "clang"
     filter "system:windows"
         toolset "msc"
+
     filter {}
+
+    newoption {
+        trigger = "cross-windows",
+        description = "Cross-compile to Windows from non-Windows system"
+    }
     
     includedirs {
         "include", 
@@ -63,14 +69,8 @@ workspace "Zeytin"
             "-w",
             "-std=c++17",
             "-static-libstdc++",
-            "-g3",
-            "-fno-omit-frame-pointer",
-            "-rdynamic",
-            "-funwind-tables",
-            "-fasynchronous-unwind-tables",
-            "-fPIC"
         }
-    
+
     filter { "system:windows", "configurations:EDITOR_MODE" }
         links {
             "raylib_static",
@@ -104,6 +104,21 @@ workspace "Zeytin"
             "/w",
             "/bigobj",
         }
+
+    filter { "system:not windows", "options:cross-windows", "configurations:STANDALONE" }
+        toolset "gcc"
+        gccprefix "x86_64-w64-mingw32-"
+        targetextension ".exe"
+        links {
+            "raylib",
+            "rttr_core",
+            "winmm",
+            "gdi32",
+            "user32",
+            "shell32"
+        }
+        buildoptions { "-static-libgcc", "-static-libstdc++" }
+        linkoptions { "-static" }
     
     filter {}
     
