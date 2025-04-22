@@ -1,3 +1,4 @@
+#ifdef EDITOR_MODE
 #include "editor/editor_communication.h"
 #include <iostream>
 #include <chrono>
@@ -227,3 +228,4 @@ void EditorCommunication::receive_messages() {
         }
     }
 }
+#endif
