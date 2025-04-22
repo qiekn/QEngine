@@ -64,7 +64,6 @@ void TestViewer::render_test_execution_view() {
 
     ImGui::Separator();
 
-    // Simplified header section with test plan info in a more compact format
     ImGui::BeginGroup();
     ImGui::Text("Test Plan: %s", m_test_plans[m_current_plan_index].key.c_str());
     ImGui::SameLine();
@@ -329,21 +328,13 @@ void TestViewer::reset_all_tests() {
 }
 
 void TestViewer::load_tests_for_plan(const TestPlanOverview& plan) {
-    // In a real application, this would load tests from a database or file
-    // For now, we'll just use our existing test execution
-    
-    // Update the execution key and summary to match the selected plan
     m_test_execution.key = plan.key + "-EXEC";
     m_test_execution.summary = plan.summary;
     m_test_execution.description = "Test execution for " + plan.summary;
 
-    // For demonstration, we'll keep the test runs we already have
-    // In a real app, you'd load the tests associated with the plan
-    // m_test_execution.test_runs = [...];
 }
 
 void TestViewer::create_mockup_data() {
-    // Create sample test plans
     TestPlanOverview plan1;
     plan1.key = "TESTPLAN-101";
     plan1.summary = "Browser Compatibility Test Plan";
@@ -378,7 +369,6 @@ void TestViewer::create_mockup_data() {
     };
     m_test_plans.push_back(plan3);
     
-    // Set up default test execution (matching plan1)
     m_test_execution.key = "TESTEX-111";
     m_test_execution.summary = "Browser Compatibility Test Plan";
     m_test_execution.description = "Testing the application across different browsers and platforms";
