@@ -1,5 +1,5 @@
 workspace "Zeytin"
-    configurations { "EDITOR_MODE", "STANDALONE", "WEB"}
+    configurations { "EDITOR_MODE", "STANDALONE"}
     location "build"
     targetdir "bin/%{cfg.buildcfg}"
     

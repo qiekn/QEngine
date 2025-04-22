@@ -39,8 +39,8 @@ public:
     void clean_dead_variants();
     std::vector<rttr::variant>& get_variants(const entity_id& entity);
 
-    std::string serialize_entity(const entity_id id);
-    std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
+    std::string zserialize_entity(const entity_id id);
+    std::string zserialize_entity(const entity_id id, const std::filesystem::path& path);
     entity_id zdeserialize_entity(const std::string& entity);
     
     void load_scene(const std::filesystem::path&);

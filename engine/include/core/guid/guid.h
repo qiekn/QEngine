@@ -2,4 +2,4 @@
 
 #include <cstdint>
 
-uint64_t generateUniqueID();
+uint64_t generate_unique_id();

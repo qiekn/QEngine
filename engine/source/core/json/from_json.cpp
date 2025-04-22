@@ -1,3 +1,5 @@
+#include "core/json/from_json.h"
+
 #include <cstdio>
 #include <string>
 #include <cassert>
@@ -11,8 +13,6 @@
 
 #include "entity/entity.h"
 #include "variant/variant_base.h"
-
-#include "remote_logger/remote_logger.h"
 
 using namespace rapidjson;
 using namespace rttr;
@@ -264,9 +264,9 @@ rttr::variant from(entity_id entity_id, const std::filesystem::path& json_path)
     return from(entity_id, json_content);
 }
 
-} 
+}  // end of anonynmous namepsace
 
-namespace zeytin { namespace json {
+namespace rttr_json {
 
 entity_id deserialize_entity(const std::string& entity_json, entity_id& entity, std::vector<rttr::variant>& variants) {
     Document document;
@@ -296,4 +296,4 @@ entity_id deserialize_entity(const std::string& entity_json, entity_id& entity, 
     return entity_id;
 }
 
-} }  // end of namespace
+}   // end of namespace

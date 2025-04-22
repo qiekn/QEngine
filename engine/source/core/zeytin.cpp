@@ -15,7 +15,8 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 
-#include "core/json/json.h"
+#include "core/json/from_json.h"
+#include "core/json/to_json.h"
 #include "core/guid/guid.h"
 #include "core/raylib_wrapper.h"
 #include "core/utils.h"
@@ -27,6 +28,7 @@
 #include "game/rttr_registration.h" // required for registering types
 
 #include "constants/paths.h"
+
 
 void Zeytin::init() {
 #ifdef EDITOR_MODE
@@ -124,7 +126,7 @@ void Zeytin::run_frame() {
 }
 
 entity_id Zeytin::new_entity_id() {
-    return generateUniqueID();
+    return generate_unique_id();
 }
 
 std::vector<rttr::variant>& Zeytin::get_variants(const entity_id& entity) {
@@ -145,19 +147,19 @@ void Zeytin::clean_dead_variants() {
     }
 }
 
-std::string Zeytin::serialize_entity(const entity_id id) {
-    return zeytin::json::serialize_entity(id, get_variants(id));
+std::string Zeytin::zserialize_entity(const entity_id id) {
+    return rttr_json::serialize_entity(id, get_variants(id));
 }
 
-std::string Zeytin::serialize_entity(const entity_id id, const std::filesystem::path& path) {
-    return zeytin::json::serialize_entity(id, get_variants(id), path);
+std::string Zeytin::zserialize_entity(const entity_id id, const std::filesystem::path& path) {
+    return rttr_json::serialize_entity(id, get_variants(id), path);
 }
 
 entity_id Zeytin::zdeserialize_entity(const std::string& str) {
     entity_id id;
     std::vector<rttr::variant> variants;
 
-    zeytin::json::deserialize_entity(str, id, variants);
+    rttr_json::deserialize_entity(str, id, variants);
 
     auto& entity_variants = get_variants(id);
     entity_variants.clear();
@@ -178,7 +180,7 @@ std::string Zeytin::serialize_scene() {
     rapidjson::Value entitiesArray(rapidjson::kArrayType);
 
     for (const auto& [entity_id, variants] : m_storage) {
-        std::string entityJson = serialize_entity(entity_id);
+        std::string entityJson = zserialize_entity(entity_id);
 
         rapidjson::Document entityDoc;
         entityDoc.Parse(entityJson.c_str());
@@ -656,12 +658,12 @@ void Zeytin::generate_variants() {
 
     for (const auto& type : valid_types) {
         std::cout << "Generating variant for: " << type.get_name() << std::endl;
-        zeytin::json::create_dummy(type);
+        rttr_json::create_dummy(type);
     }
 }
 
 void Zeytin::generate_variant(const rttr::type& type) {
-    zeytin::json::create_dummy(type);
+    rttr_json::create_dummy(type);
 }
 
 #endif 

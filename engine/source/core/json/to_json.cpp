@@ -1,3 +1,5 @@
+#include "core/json/to_json.h"
+
 #include <cstdio>
 #include <string>
 #include <iostream>
@@ -10,7 +12,6 @@
 #include <rttr/type.h>
 
 #include "entity/entity.h"
-
 
 using namespace rapidjson;
 using namespace rttr;
@@ -357,7 +358,7 @@ std::string to(rttr::instance obj, const std::string& path) {
 
 }  // end of anonymous namespace
 
-namespace zeytin { namespace json  {
+namespace rttr_json  {
 
 std::string serialize_entity(const entity_id entity_id, const std::vector<rttr::variant>& variants) {
     if (variants.empty()) {
@@ -477,4 +478,4 @@ void create_dummy(const rttr::type& type) {
     }
 }
 
-}} // end of namespace
+} // end of namespace
