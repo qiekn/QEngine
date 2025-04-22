@@ -67,7 +67,7 @@ workspace "Zeytin"
 
     filter { "system:windows", "configurations:EDITOR_MODE" }
         links {
-            "raylib_static",
+            "raylib",
             "rttr_core",
             "libzmq",
             "winmm",
@@ -97,6 +97,31 @@ workspace "Zeytin"
             "/std:c++17", 
             "/w",
             "/bigobj",
+        }
+
+    filter { "configurations:WEB" }
+        kind "ConsoleApp"
+        targetextension ".html"
+        defines { "PLATFORM_WEB" }
+        buildoptions {
+            "-std=c++17",
+            "-Wall",
+            "-Wno-missing-braces",
+            "-Wunused-result"
+        }
+        linkoptions {
+            "--preload-file ../shared_resources@/shared_resources",
+            "-s USE_GLFW=3",
+            "-s ASYNCIFY",
+            "-s TOTAL_MEMORY=67108864", 
+            "-s FORCE_FILESYSTEM=1",
+            "-s WASM=1",
+            "-s EXPORTED_FUNCTIONS=[\"_free\",\"_malloc\",\"_main\"]",
+            "-s EXPORTED_RUNTIME_METHODS=ccall",
+            "-Os" 
+        }
+        links {
+            "raylib"
         }
 
     filter {}

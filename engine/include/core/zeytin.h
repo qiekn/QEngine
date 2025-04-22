@@ -41,7 +41,7 @@ public:
 
     std::string serialize_entity(const entity_id id);
     std::string serialize_entity(const entity_id id, const std::filesystem::path& path);
-    entity_id deserialize_entity(const std::string& entity);
+    entity_id zdeserialize_entity(const std::string& entity);
     
     void load_scene(const std::filesystem::path&);
 

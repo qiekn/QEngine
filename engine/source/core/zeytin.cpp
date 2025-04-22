@@ -153,7 +153,7 @@ std::string Zeytin::serialize_entity(const entity_id id, const std::filesystem::
     return zeytin::json::serialize_entity(id, get_variants(id), path);
 }
 
-entity_id Zeytin::deserialize_entity(const std::string& str) {
+entity_id Zeytin::zdeserialize_entity(const std::string& str) {
     entity_id id;
     std::vector<rttr::variant> variants;
 
@@ -249,7 +249,7 @@ bool Zeytin::deserialize_scene(const std::string& scene) {
         entities[i].Accept(writer);
         std::string entity_str = buffer.GetString();
 
-        deserialize_entity(entity_str);
+        zdeserialize_entity(entity_str);
     }
 
     return true;
