@@ -2,13 +2,15 @@ workspace "Zeytin"
     configurations { "EDITOR_MODE", "STANDALONE" }
     location "build"
     targetdir "bin/%{cfg.buildcfg}"
+    
+    staticruntime "On"
 
     filter "system:linux"
         toolset "clang"
     filter "system:windows"
         toolset "msc"
     filter {}
-
+    
     includedirs {
         "include", 
         "3rdparty",
@@ -16,12 +18,15 @@ workspace "Zeytin"
         "3rdparty/rttr", 
         "3rdparty/rapidjson/include",
         "3rdparty/tracy",
+        "3rdparty/zmq/include"
     }
-
+    
     libdirs { 
         "3rdparty/rttr/lib",
+        "3rdparty/raylib/lib",
+        "3rdparty/zmq/lib"
     }
-
+    
     filter { "system:linux", "configurations:EDITOR_MODE" }
         links {
             "raylib",
@@ -39,7 +44,7 @@ workspace "Zeytin"
             "dwarf",
             "unwind"
         }
-
+    
     filter { "system:linux", "configurations:STANDALONE" }
         links {
             "raylib",
@@ -50,15 +55,14 @@ workspace "Zeytin"
             "X11",
             "asound",
             "stdc++",
-            "rttr_core",
-            "zmq"
+            "rttr_core"
         }
-
+    
     filter "system:linux"
         buildoptions {
             "-w",
             "-std=c++17",
-            "-stdlib=libstdc++",
+            "-static-libstdc++",
             "-g3",
             "-fno-omit-frame-pointer",
             "-rdynamic",
@@ -66,13 +70,10 @@ workspace "Zeytin"
             "-fasynchronous-unwind-tables",
             "-fPIC"
         }
-        postbuildcommands {
-            "{COPY} %{wks.location}/../3rdparty/raylib/lib/libraylib.so* %{cfg.targetdir}/"
-        }
-
+    
     filter { "system:windows", "configurations:EDITOR_MODE" }
         links {
-            "raylib",
+            "raylib_static",
             "rttr_core",
             "libzmq",
             "winmm",
@@ -80,7 +81,10 @@ workspace "Zeytin"
             "user32",
             "shell32"
         }
-
+        buildoptions {
+            "/MT" 
+        }
+    
     filter { "system:windows", "configurations:STANDALONE" }
         links {
             "raylib",
@@ -90,33 +94,42 @@ workspace "Zeytin"
             "user32",
             "shell32"
         }
-
-    filter "system:windows"
-        buildoptions { "/std:c++17", "/w" }
-        postbuildcommands {
-            "{COPY} %{wks.location}/../3rdparty/raylib/lib/*.dll %{cfg.targetdir}"
+        buildoptions {
+            "/MT"  
         }
-
+    
+    filter "system:windows"
+        buildoptions { 
+            "/std:c++17", 
+            "/w",
+            "/bigobj",
+        }
+    
     filter {}
-
+    
     project "Zeytin"
         kind "ConsoleApp"
         language "C++"
         files {
             "source/**.cpp"
         }
-
+        
         filter "configurations:EDITOR_MODE"
             files {
                 "3rdparty/backward-cpp/backward.cpp",
                 "3rdparty/tracy/TracyClient.cpp"
             }
-            defines { "DEBUG=1", "EDITOR_MODE=1", "TRACY_ENABLE=1" }
+            defines { 
+                "DEBUG=1", 
+                "EDITOR_MODE=1", 
+                "TRACY_ENABLE=1" 
+            }
             symbols "On"
             optimize "Off"
-
+        
         filter "configurations:STANDALONE"
-            defines { "TRACY_ENABLE=0" }
+            defines { 
+                "TRACY_ENABLE=0" 
+            }
             symbols "On"
             optimize "Off"
-
