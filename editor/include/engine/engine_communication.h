@@ -4,7 +4,8 @@
 #include <mutex>
 #include <queue>
 #include <string>
-#include <zmq.hpp>
+
+#include "zmq/zmq.hpp"
 
 class EngineCommunication {
 public:
