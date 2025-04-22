@@ -11,7 +11,8 @@ workspace "ZeytinEditor"
 
     includedirs {
         "include",
-        "include/imgui",
+        "3rdparty/imgui",
+        "3rdparty/zmq",
         "3rdparty/raylib/src",
         "3rdparty/rapidjson/include"
     }
