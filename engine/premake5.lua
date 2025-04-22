@@ -61,6 +61,5 @@ workspace "Zeytin"
 
         filter "configurations:STANDALONE"
             defines {"TRACY_ENABLE=1"}
-            linkoptions {"-static"}
             symbols "On"
             optimize "Off"
