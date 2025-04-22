@@ -12,17 +12,11 @@ workspace "Zeytin"
 
     filter {}
 
-    newoption {
-        trigger = "cross-windows",
-        description = "Cross-compile to Windows from non-Windows system"
-    }
-    
     includedirs {
         "include", 
         "3rdparty",
         "3rdparty/raylib",
         "3rdparty/rttr", 
-        "3rdparty/rapidjson/include",
         "3rdparty/tracy",
         "3rdparty/zmq/include"
     }
@@ -105,21 +99,6 @@ workspace "Zeytin"
             "/bigobj",
         }
 
-    filter { "system:not windows", "options:cross-windows", "configurations:STANDALONE" }
-        toolset "gcc"
-        gccprefix "x86_64-w64-mingw32-"
-        targetextension ".exe"
-        links {
-            "raylib",
-            "rttr_core",
-            "winmm",
-            "gdi32",
-            "user32",
-            "shell32"
-        }
-        buildoptions { "-static-libgcc", "-static-libstdc++" }
-        linkoptions { "-static" }
-    
     filter {}
     
     project "Zeytin"

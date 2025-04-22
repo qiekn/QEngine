@@ -1,3 +1,5 @@
+#ifdef EDITOR_MODE
+
 #include "remote_logger/remote_logger.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -39,3 +41,5 @@ void RemoteLogger::log(LogLevel level, const std::string& message) {
     
     EditorEventBus::get().publish<const std::string&>(EditorEvent::LogToEditor, buffer.GetString());
 }
+
+#endif

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef EDITOR_MODE
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -79,7 +81,6 @@ private:
     LogLevel m_min_log_level;
 };
 
-#ifdef EDITOR_MODE 
 
 #define log_trace() RemoteLogger::get().trace()  
 #define log_info() RemoteLogger::get().info()
@@ -87,6 +88,8 @@ private:
 #define log_error() RemoteLogger::get().error()
 
 #else
+
+#include <iostream>
 
 #define log_trace() std::cout 
 #define log_info() std::cout 

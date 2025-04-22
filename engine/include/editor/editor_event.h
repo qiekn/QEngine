@@ -5,6 +5,8 @@
 #include <mutex>
 #include <shared_mutex>
 
+#ifdef EDITOR_MODE
+
 enum class EditorEvent {
     EngineStartConfirmed,
     Scene,
@@ -77,3 +79,5 @@ private:
     std::map<EditorEvent, std::vector<std::any>> m_subscribers;
     std::shared_mutex m_mutex; 
 };
+
+#endif
