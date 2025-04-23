@@ -18,11 +18,18 @@ workspace "Zeytin"
         "3rdparty/zmq/include"
     }
 
-    libdirs {
-        "3rdparty/raylib/lib",
-        "3rdparty/zmq/lib",
-        "3rdparty/rttr/lib",
-    }
+    filter "system:windows"
+        libdirs {
+            "3rdparty/raylib/lib/windows",
+            "3rdparty/rttr/lib/windows",
+        }
+    filter "system:linux"
+        libdirs {
+            "3rdparty/raylib/lib/linux",
+            "3rdparty/zmq/lib/linux",
+            "3rdparty/rttr/lib/linux",
+        }
+    filter {}
 
     filter { "system:linux", "configurations:EDITOR_MODE" }
         links {
@@ -49,12 +56,6 @@ workspace "Zeytin"
             "-w",
             "-static-libgcc",
             "-static-libstdc++"
-        }
-
-    filter { "system:windows", "toolset:gcc", "configurations:EDITOR_MODE" }
-        links {
-            "raylib", "rttr_core", "libzmq",
-            "winmm", "gdi32", "user32", "shell32"
         }
 
     filter { "system:windows", "toolset:gcc", "configurations:STANDALONE" }
