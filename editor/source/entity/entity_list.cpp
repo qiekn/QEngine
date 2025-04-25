@@ -7,6 +7,7 @@
 
 #include "logger.h"
 #include "engine/engine_event.h"
+#include "path_resolver/path_resolver.h"
 
 namespace {
     constexpr const char* BACKUP_DIR = "temp_backup";
@@ -14,7 +15,7 @@ namespace {
 }
 
 EntityList::EntityList() {
-    load_entities(ENTITY_FOLDER);
+    load_entities(PathResolver::get().get_entity_folder());
     register_event_handlers();
 }
 
@@ -27,7 +28,7 @@ void EntityList::register_event_handlers() {
                 EngineEventBus::get().publish<const std::string&>(EngineEvent::EngineSendScene, scene);
             }
             else {
-                log_warning() << "Empty scene will not be sent to the runtime" << std::endl;
+                log_warning() << "Empty scene will not be sent to the engine" << std::endl;
             }
         }
     );

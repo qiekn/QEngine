@@ -5,9 +5,9 @@
 #include "file_watcher/file_w.h"
 #include "logger.h"
 
-#include "constants/paths.h"
+#include "path_resolver/path_resolver.h"
 
-VariantList::VariantList() : m_variant_watcher(VARIANT_FOLDER, std::chrono::milliseconds(500)) {
+VariantList::VariantList() : m_variant_watcher(PathResolver::get().get_variant_folder(), std::chrono::milliseconds(500)) {
     load_variants();
     start_watching();
 }
@@ -15,23 +15,9 @@ VariantList::VariantList() : m_variant_watcher(VARIANT_FOLDER, std::chrono::mill
 void VariantList::load_variants() {
     m_variants.clear();
 
-    std::error_code ec;
-    if (!std::filesystem::exists(VARIANT_FOLDER, ec)) {
-        if (ec) {
-            log_error() << "Error checking if path exists: " << VARIANT_FOLDER << ", error: " << ec.message() << std::endl;
-            return;
-        }
+    const auto& variant_folder = PathResolver::get().get_variant_folder();
 
-        log_error() << "Path does not exist: " << VARIANT_FOLDER << std::endl;
-        return;
-    }
-
-    if(!std::filesystem::is_directory(VARIANT_FOLDER)) {
-        log_error() << "Cannot find variants folder at: " << VARIANT_FOLDER << std::endl;
-        return;
-    }
-
-    for(const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(VARIANT_FOLDER)) {
+    for(const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(variant_folder)) {
         if(!entry.is_regular_file() || entry.path().extension() != ".variant") {
             continue;
         }
@@ -43,7 +29,6 @@ void VariantList::load_variants() {
     }
 
     for(auto& variant : m_variants) {
-
         variant.load_from_file();
     }
 }

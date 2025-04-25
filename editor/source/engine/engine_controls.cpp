@@ -9,6 +9,7 @@
 
 #include "logger.h"
 #include "engine/engine_event.h"
+#include "path_resolver/path_resolver.h"
 
 EngineControls::EngineControls() 
     : m_is_running(false)
@@ -41,9 +42,10 @@ EngineControls::EngineControls()
         }
     );
     
-    std::filesystem::create_directories("../engine/build_status");
+    std::filesystem::path build_status_path = PathResolver::get().get_engine_path() / "build_status";
+    std::filesystem::create_directories(build_status_path);
     
-    std::string status_file = "../engine/build_status/build_status.json";
+    std::string status_file = build_status_path / "build_status.json";
     if (std::filesystem::exists(status_file)) {
         try {
             std::ofstream file(status_file);
@@ -311,8 +313,8 @@ void EngineControls::monitor_build() {
     log_info() << "Starting build process..." << std::endl;
     
     m_build_monitor_future = std::async(std::launch::async, [this]() {
-        std::filesystem::remove_all("../engine/build_status");
-        std::filesystem::create_directory("../engine/build_status");
+        std::filesystem::path build_status_path = PathResolver::get().get_engine_path() / "build_status";
+        std::filesystem::create_directories(build_status_path);
         
         #ifdef _WIN32
         log_info() << "Executing: cd ../engine && build_wrapper.sh build_status/build_status.json" << std::endl;

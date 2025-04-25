@@ -15,6 +15,7 @@
 #include "test_viewer/test_viewer.h"
 #include "test_manager/test_manager.h"
 #include "window/window_manager.h"
+#include "path_resolver/path_resolver.h"
 
 void RegisterEditorTests(ImGuiTestEngine* test_engine);
 

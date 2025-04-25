@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include "logger.h"
+#include "path_resolver/path_resolver.h"
 
 void VariantDocument::load_from_file() {
     if (m_name.empty()) {
@@ -9,7 +10,7 @@ void VariantDocument::load_from_file() {
         return;
     }
 
-    std::filesystem::path path = std::filesystem::path(VARIANT_FOLDER) / (m_name + ".variant");
+    std::filesystem::path path = PathResolver::get().get_variant_folder() / (m_name + ".variant");
 
     if (!std::filesystem::exists(path)) {
         log_error() << "Error: Variant file does not exist: " << path << std::endl;
