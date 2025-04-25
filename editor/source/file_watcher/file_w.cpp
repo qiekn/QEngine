@@ -1,7 +1,7 @@
 #include "file_watcher/file_w.h"
 #include "logger.h"
 
-FileW::FileW(const std::string& path_to_watch, std::chrono::duration<int, std::milli> polling_interval)
+FileW::FileW(const std::filesystem::path& path_to_watch, std::chrono::duration<int, std::milli> polling_interval)
     : m_path_to_watch(path_to_watch), m_polling_interval(polling_interval), m_running(false) {
 
     const bool directory = std::filesystem::exists(path_to_watch);
