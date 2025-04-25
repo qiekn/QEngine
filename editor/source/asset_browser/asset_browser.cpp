@@ -67,14 +67,6 @@ void AssetBrowser::load_directory(const fs::path& path) {
             }
         }
         
-        std::sort(dir_info.files.begin(), dir_info.files.end(), 
-            [](const FileInfo& a, const FileInfo& b) { return a.name < b.name; });
-        
-        std::sort(dir_info.subdirectories.begin(), dir_info.subdirectories.end(), 
-            [](const fs::path& a, const fs::path& b) { 
-                return a.filename().string() < b.filename().string(); 
-            });
-        
         m_directory_cache[path] = dir_info;
     }
     catch (const std::exception& e) {
