@@ -31,7 +31,7 @@ public:
     void start();
     void stop();
 
-    std::string m_path_to_watch;
+    std::filesystem::path m_path_to_watch;
     std::chrono::duration<int, std::milli> m_polling_interval;
     std::unordered_map<std::string, fs::file_time_type> m_paths;
     std::map<std::string, std::vector<Callback>> m_callbacks;
