@@ -8,7 +8,7 @@
 #include "rlImGui.h"
 #include "file_watcher/file_w.h"
 
-AssetBrowser::AssetBrowser(const std::string& root_directory)
+AssetBrowser::AssetBrowser(const std::filesystem::path& root_directory)
     : m_root_directory(root_directory), m_file_watcher_started(false)
 {
     std::filesystem::create_directories(root_directory);
