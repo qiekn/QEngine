@@ -70,7 +70,7 @@ private:
         bool failed = false;
     };
 
-    AssetBrowser(const std::string& root_directory);
+    AssetBrowser(const std::filesystem::path& root_directory);
     ~AssetBrowser();
 
     bool build_directory_tree(const std::string& path);
