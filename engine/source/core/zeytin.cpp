@@ -25,10 +25,9 @@
 #include "variant/variant_base.h"
 
 #include "remote_logger/remote_logger.h"
-#include "game/rttr_registration.h" // required for registering types
+#include "game/generated/rttr_registration.h" // required for registering types
 
 #include "constants/paths.h"
-
 
 void Zeytin::init() {
 #ifdef EDITOR_MODE
