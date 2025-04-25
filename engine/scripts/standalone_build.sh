@@ -8,4 +8,4 @@
 #    rm -r build
 #fi
 
-premake5 gmake && cd build && make config=standalone platform=x64 && cd ..
+python3 parser2.py && cd .. && premake5 gmake && cd build && make config=standalone
