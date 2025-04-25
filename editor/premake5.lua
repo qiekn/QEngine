@@ -2,13 +2,8 @@ workspace "ZeytinEditor"
     configurations { "Debug" }
     location "build"
     targetdir "bin/%{cfg.buildcfg}"
+    staticruntime "On"
     
-    filter "system:windows" 
-        toolset "msc"  
-    filter "system:not windows"
-        toolset "clang"  
-    filter {}
-
     includedirs {
         "include",
         "3rdparty",
@@ -16,53 +11,40 @@ workspace "ZeytinEditor"
         "3rdparty/zmq",
         "3rdparty/rapidjson",
         "3rdparty/raylib",
+        "3rdparty/imgui_test_engine",
     }
     
     filter "system:windows"
+        toolset "gcc"
         defines { "_WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
         links {
-            "raylib",
-            "winmm",
-            "gdi32",
-            "user32",
-            "shell32",
-            "ws2_32",  
-            "libzmq"  
+            "raylib", "winmm", "gdi32", "user32", "shell32", "libzmq"
         }
-        
+        libdirs {
+            "3rdparty/raylib/lib/windows",
+            "3rdparty/zmq/windows"
+        }
+        buildoptions { "-std=c++17", "-w", "-static-libgcc", "-static-libstdc++"}
+    
     filter "system:linux"
+        toolset "clang"
         links {
-            "raylib",
-            "m",
-            "pthread",
-            "dl",
-            "rt",
-            "X11",
-            "asound",
-            "stdc++",
-            "zmq"
+            "raylib", "m", "pthread", "dl", "rt", "X11", "asound", "stdc++", "zmq"
         }
-        buildoptions { "-fPIC" }
-    filter {}
-
-    filter "system:windows"
-        buildoptions { "/std:c++17", "/w" }
-        
-    filter "system:not windows"
-        buildoptions { 
-            "-w",
-            "-std=c++17",
-            "-stdlib=libstdc++",
-            "-ferror-limit=0" 
+        libdirs {
+            "3rdparty/raylib/lib/linux",
+            "3rdparty/zmq/linux"
         }
+        buildoptions { "-std=c++17", "-w", "-fPIC" }
+    
     filter {}
-
+    
     project "ZeytinEditor"
         kind "ConsoleApp"
         language "C++"
         symbols "On"
         optimize "Off"
-
+        
         files {
             "3rdparty/rlimgui/**.cpp",
             "3rdparty/imgui/**.cpp",
@@ -70,14 +52,9 @@ workspace "ZeytinEditor"
             "3rdparty/backward-cpp/backward.cpp",
             "source/**.cpp"
         }
-
-        filter "configurations:Debug"
-            defines {
-                "DEBUG=1",
-                "IMGUI_ENABLE_TEST_ENGINE",
-                "IMGUI_TEST_ENGINE_ENABLE_COROUTINE_STDTHREAD_IMPL=1"
-            }
-
-            includedirs {
-                "3rdparty/imgui_test_engine"
-            }
+        
+        defines {
+            "DEBUG=1",
+            "IMGUI_ENABLE_TEST_ENGINE",
+            "IMGUI_TEST_ENGINE_ENABLE_COROUTINE_STDTHREAD_IMPL=1"
+        }

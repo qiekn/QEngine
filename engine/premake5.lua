@@ -26,15 +26,16 @@ workspace "Zeytin"
     filter "system:linux"
         libdirs {
             "3rdparty/raylib/lib/linux",
-            "3rdparty/zmq/lib/linux",
             "3rdparty/rttr/lib/linux",
         }
-    filter {}
 
     filter { "system:linux", "configurations:EDITOR_MODE" }
         links {
             "raylib", "m", "pthread", "dl", "rt", "X11", "asound", "stdc++",
             "rttr_core", "zmq", "dw", "bfd", "dwarf", "unwind"
+        }
+        libdirs {
+            "3rdparty/zmq/lib/linux", 
         }
 
     filter { "system:linux", "configurations:STANDALONE" }
