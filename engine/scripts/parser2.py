@@ -4,7 +4,7 @@ import os
 import re
 import glob
 import json
-import argparse
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Set, Any, Union
 
@@ -293,7 +293,6 @@ class CodeGenerator:
             code += f'\n        .property("{prop_name}", &{class_name}::{prop_name})'
             
             if callback_name:
-
                 code += f'(rttr::metadata("SET_CALLBACK", "{callback_name}"))'
         
         has_callbacks = any(callback_name for _, _, callback_name in class_info['properties'] if callback_name)
@@ -354,9 +353,78 @@ class CodeGenerator:
             print(f"Error writing requirements file {requires_file_path}: {e}")
 
 
+class ProjectFinder:
+    @staticmethod
+    def find_root_folders():
+        current_dir = os.path.abspath(os.path.curdir)
+        
+        engine_dir = None
+        project_root = None
+        shared_resources_dir = None
+        
+        max_depth = 5
+        current_depth = 0
+        search_path = current_dir
+        
+        while current_depth < max_depth:
+            if os.path.isdir(os.path.join(search_path, "engine")) and os.path.isdir(os.path.join(search_path, "editor")):
+                project_root = search_path
+                engine_dir = os.path.join(search_path, "engine")
+                
+                shared_resources_path = os.path.join(search_path, "shared_resources")
+                if os.path.isdir(shared_resources_path):
+                    shared_resources_dir = shared_resources_path
+                break
+            
+            if os.path.isdir(os.path.join(search_path, "include")) and os.path.isdir(os.path.join(search_path, "source")):
+                if "engine" in search_path.lower():
+                    engine_dir = search_path
+            
+            parent_path = os.path.dirname(search_path)
+            if parent_path == search_path:  
+                break
+            
+            search_path = parent_path
+            current_depth += 1
+        
+        if engine_dir and not project_root:
+            potential_project_root = os.path.dirname(engine_dir)
+            if os.path.isdir(os.path.join(potential_project_root, "editor")):
+                project_root = potential_project_root
+        
+        if project_root and not shared_resources_dir:
+            shared_resources_dir = os.path.join(project_root, "shared_resources")
+            os.makedirs(shared_resources_dir, exist_ok=True)
+        
+        return {
+            "engine_dir": engine_dir,
+            "project_root": project_root,
+            "shared_resources_dir": shared_resources_dir
+        }
+
+
 class RTTRGenerator:
-    def __init__(self, headers_dir: str):
-        self.headers_dir = os.path.normpath(headers_dir).replace('\\', '/')
+    def __init__(self):
+        paths = ProjectFinder.find_root_folders()
+        
+        self.engine_dir = paths.get("engine_dir")
+        if not self.engine_dir:
+            print("Error: Could not locate the engine directory")
+            print("Please run this script from within the project directory structure")
+            sys.exit(1)
+            
+        self.headers_dir = os.path.join(self.engine_dir, "include")
+        self.source_dir = os.path.join(self.engine_dir, "source")
+        self.game_headers_dir = os.path.join(self.headers_dir, "game")
+        self.game_source_dir = os.path.join(self.source_dir, "game")
+
+        self.shared_resources_dir = paths.get("shared_resources_dir")
+
+        print(f"Found engine directory: {self.engine_dir}")
+        print(f"Using headers directory: {self.headers_dir}")
+        print(f"Using source directory: {self.source_dir}")
+        print(f"Using shared resources directory: {self.shared_resources_dir}")
+        
         self.parser = ClassParser()
         self.classes_info = []
         self.includes = set()
@@ -365,14 +433,14 @@ class RTTRGenerator:
         self.includes.add('#include "rttr/registration.h"')
 
     def process_headers(self) -> None:
-        header_files = glob.glob(os.path.join(self.headers_dir, "**/*.h"), recursive=True)
+        header_files = glob.glob(os.path.join(self.game_headers_dir, "**/*.h"), recursive=True)
+        
+        print(f"Processing {len(header_files)} header files...")
         
         for header_file in header_files:
             relative_path = os.path.normpath(header_file).replace('\\', '/')
             
-            if self.headers_dir.startswith('include'):
-                include_pattern = r'^include/'
-                relative_path = re.sub(include_pattern, '', relative_path)
+            relative_path = os.path.relpath(header_file, self.headers_dir)
             
             class_infos = self.parser.parse_header(header_file)
             if class_infos:
@@ -380,7 +448,8 @@ class RTTRGenerator:
                     self.classes_info.append(class_info)
                     self.includes.add(f'#include "{relative_path}"')
 
-    def analyze_implementation_files(self, source_root: str) -> None:
+    def analyze_implementation_files(self) -> None:
+        print("Analyzing implementation files for dependencies...")
         for class_info in self.classes_info:
             if not class_info['is_variant']:
                 continue
@@ -389,7 +458,7 @@ class RTTRGenerator:
             
             for header_file in glob.glob(os.path.join(self.headers_dir, "**/*.h"), recursive=True):
                 if os.path.basename(header_file) == f"{class_name}.h":
-                    cpp_file = self.parser.find_cpp_file(header_file, source_root)
+                    cpp_file = self.parser.find_cpp_file(header_file, self.source_dir)
                     if cpp_file:
                         try:
                             with open(cpp_file, 'r') as f:
@@ -437,30 +506,23 @@ class RTTRGenerator:
         
         print(f"Requirements files written to {requires_dir}")
 
-    def run(self, source_root: str) -> None:
+    def run(self) -> None:
         self.process_headers()
-        self.analyze_implementation_files(source_root)
+        self.analyze_implementation_files()
+
+        output_path = os.path.join(self.game_headers_dir, "generated/rttr_registration.h")
         
-        output_path = os.path.join(self.headers_dir, "rttr_registration.h")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
         self.generate_rttr_header(output_path)
         
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        requires_dir = os.path.normpath(os.path.join(script_dir, "../shared_resources/variants/requires"))
+        requires_dir = os.path.join(self.shared_resources_dir, "variants", "requires")
         self.generate_requires_files(requires_dir)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate RTTR registration code for Zeytin engine.')
-    parser.add_argument('headers_dir', nargs='?', default=".", 
-                        help='Directory containing header files to parse')
-    parser.add_argument('--source-root', default="source", 
-                        help='Root directory containing implementation files')
-    
-    args = parser.parse_args()
-    
-    generator = RTTRGenerator(args.headers_dir)
-    generator.run(args.source_root)
-
+    generator = RTTRGenerator()
+    generator.run()
 
 if __name__ == "__main__":
     main()

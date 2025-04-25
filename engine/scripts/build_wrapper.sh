@@ -1,10 +1,10 @@
 #!/bin/bash
 
-OUTPUT_FILE="${1:-build_status.json}"
-BUILD_LOG="build_status/build_output.log"
+OUTPUT_FILE="../build_status/build_status.json"
+BUILD_LOG="../build_status/build_output.log"
 BUILD_COMMAND="./build.sh"
 
-mkdir -p build_status
+mkdir -p ../build_status
 
 echo "BUILD: Starting build process..."
 echo "{\"status\":\"running\",\"message\":\"Build started\",\"timestamp\":\"$(date +%s)\"}" > "$OUTPUT_FILE"
@@ -30,7 +30,6 @@ else
     
     echo "{\"status\":\"failed\",\"message\":\"Build failed with exit code $BUILD_EXIT_CODE\",\"details\":\"$ERROR_JSON\",\"timestamp\":\"$(date +%s)\"}" > "$OUTPUT_FILE"
     
-    # Print error summary to console
     echo "BUILD ERROR SUMMARY:"
     echo "$ERROR_SUMMARY" | sed 's/\\n/\n/g'
     
