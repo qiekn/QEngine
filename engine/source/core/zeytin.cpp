@@ -26,8 +26,7 @@
 
 #include "remote_logger/remote_logger.h"
 #include "game/generated/rttr_registration.h" // required for registering types
-
-#include "constants/paths.h"
+#include "resource_manager/resource_manager.h"
 
 void Zeytin::init() {
 #ifdef EDITOR_MODE
@@ -43,7 +42,7 @@ void Zeytin::init() {
     generate_variants();
     initial_sync_editor();
 #else
-    load_scene("../shared_resources/scenes/main.scene");
+    load_scene(get_resource_manager().get_resource_subdir("scenes") / "main.scene");
     m_is_play_mode = true; // always set to play mode true if standalone
 #endif
 
@@ -628,7 +627,7 @@ void Zeytin::sync_editor() {
 
 
 void Zeytin::generate_variants() {
-    for(const auto& entry : std::filesystem::directory_iterator(VARIANT_FOLDER)) {
+    for(const auto& entry : get_resource_manager().get_variant_folder()) {
         if(entry.is_regular_file() && entry.path().extension() == ".variant") {
             std::filesystem::remove(entry.path());
         }

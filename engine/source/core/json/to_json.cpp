@@ -12,6 +12,7 @@
 #include <rttr/type.h>
 
 #include "entity/entity.h"
+#include "resource_manager/resource_manager.h"
 
 using namespace rapidjson;
 using namespace rttr;
@@ -459,9 +460,9 @@ void create_dummy(const rttr::type& type) {
     }
     
     try {
-        std::filesystem::path variants_dir = "../shared_resources/variants";
+        std::filesystem::path variants_dir = get_resource_manager().get_variants_path();
+
         std::filesystem::create_directories(variants_dir);
-        
         
         const std::filesystem::path path = variants_dir / (type.get_name().to_string() + ".variant");
         
