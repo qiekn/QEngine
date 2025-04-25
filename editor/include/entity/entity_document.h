@@ -4,9 +4,6 @@
 #include <filesystem>
 #include <rapidjson/document.h>
 
-#include "constants/paths.h"
-
-
 class EntityDocument final {
 
 public:
@@ -23,9 +20,9 @@ public:
     inline void mark_as_dead() { m_dead = true; }
     inline bool is_dead() const { return m_dead; }
 
-    void delete_entity_file(); // ENTITY_FOLDER + name
-    void load_from_file(); // ENTITY_FOLDER + name
-    void save_to_file() const; // ENTITY_FOLDER + name
+    void delete_entity_file(); 
+    void load_from_file(); 
+    void save_to_file() const; 
 
     void save_to_file(const std::filesystem::path& path) const;
     void load_from_file(const std::filesystem::path& path); 

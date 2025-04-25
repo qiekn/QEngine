@@ -11,6 +11,8 @@
 
 #include "logger.h"
 #include "engine/engine_event.h"
+#include "resource_manager/resource_manager.h"
+#include "resource_manager/resource_manager.h"
 
 namespace {
     void notify_engine_entity_property_changed(uint64_t entity_id, 
@@ -336,7 +338,7 @@ void Hierarchy::handle_entity_context_menu(EntityDocument& entity_document, uint
             }
 
             std::string variant_name = "[" + entity_document.get_name() + "]";
-            std::filesystem::path variant_path = std::filesystem::path(VARIANT_FOLDER) / (variant_name + ".variant");
+            std::filesystem::path variant_path = get_resource_manager().get_variant_path(variant_name);
 
             VariantDocument variant(std::move(entity_as_var), variant_name);
             m_variants.push_back(std::move(variant));
@@ -784,7 +786,7 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
 }
 
 void Hierarchy::add_required_variants_to_entity(EntityDocument& entity_document, const std::string& variant_type) {
-    std::string requires_path = std::string(VARIANT_FOLDER) + "/requires/" + variant_type + ".requires";
+    std::string requires_path = get_resource_manager().get_variants_path() / "requires" / variant_type / ".requires";
 
     if (!std::filesystem::exists(requires_path)) {
         return;

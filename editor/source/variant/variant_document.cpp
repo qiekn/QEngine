@@ -1,8 +1,8 @@
 #include "variant/variant_document.h"
+#include "resource_manager/resource_manager.h"
 
-#include <fstream>
 #include "logger.h"
-#include "path_resolver/path_resolver.h"
+#include <fstream>
 
 void VariantDocument::load_from_file() {
     if (m_name.empty()) {
@@ -10,12 +10,7 @@ void VariantDocument::load_from_file() {
         return;
     }
 
-    std::filesystem::path path = PathResolver::get().get_variant_folder() / (m_name + ".variant");
-
-    if (!std::filesystem::exists(path)) {
-        log_error() << "Error: Variant file does not exist: " << path << std::endl;
-        return;
-    }
+    std::filesystem::path path = get_resource_manager().get_variant_path(m_name);
 
     std::ifstream in_file(path);
     if (!in_file.is_open()) {

@@ -5,9 +5,9 @@
 #include "file_watcher/file_w.h"
 #include "logger.h"
 
-#include "path_resolver/path_resolver.h"
+#include "resource_manager/resource_manager.h"
 
-VariantList::VariantList() : m_variant_watcher(PathResolver::get().get_variant_folder(), std::chrono::milliseconds(500)) {
+VariantList::VariantList() : m_variant_watcher(get_resource_manager().get_variants_path(), std::chrono::milliseconds(500)) {
     load_variants();
     start_watching();
 }
@@ -15,9 +15,9 @@ VariantList::VariantList() : m_variant_watcher(PathResolver::get().get_variant_f
 void VariantList::load_variants() {
     m_variants.clear();
 
-    const auto& variant_folder = PathResolver::get().get_variant_folder();
+    log_trace() << "Load variants" << std::endl;
 
-    for(const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(variant_folder)) {
+    for(const auto& entry : std::filesystem::directory_iterator(get_resource_manager().get_variants_path())) {
         if(!entry.is_regular_file() || entry.path().extension() != ".variant") {
             continue;
         }

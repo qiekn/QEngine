@@ -6,10 +6,11 @@
 #include "rapidjson/stringbuffer.h"
 
 #include "logger.h"
+#include "resource_manager/resource_manager.h"
+
 
 void EntityDocument::save_to_file() const {
-    std::filesystem::create_directories(ENTITY_FOLDER);
-    std::filesystem::path path = std::filesystem::path(ENTITY_FOLDER) / (m_name + ".entity");
+    std::filesystem::path path = get_resource_manager().get_entity_path(m_name);
     std::ofstream out_file(path);
 
     if (!out_file.is_open()) {
@@ -46,8 +47,7 @@ std::string EntityDocument::as_string() const {
 }
 
 void EntityDocument::load_from_file() {
-    std::filesystem::create_directories(ENTITY_FOLDER);
-    std::filesystem::path path = std::filesystem::path(ENTITY_FOLDER) / (m_name + ".entity");
+    std::filesystem::path path = get_resource_manager().get_entity_path(m_name);
    
     std::ifstream in_file(path);
    
@@ -122,7 +122,8 @@ void EntityDocument::load_from_file(const std::filesystem::path& path) {
 
 
 void EntityDocument::delete_entity_file() {
-    std::filesystem::path path = std::filesystem::path(ENTITY_FOLDER) / (m_name + ".entity");
+    std::filesystem::path path = get_resource_manager().get_entity_path(m_name);
+
     std::filesystem::remove(path);
 }
 

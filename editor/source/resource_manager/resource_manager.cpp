@@ -1,11 +1,13 @@
-#include "path_resolver/path_resolver.h"
+#include "resource_manager/resource_manager.h"
 #include "logger.h"
 
-#define ENGINE "engine"
-#define EDITOR "editor"
-#define SHARED_RESOUCES "shared_resources"
+namespace {
+    const char* ENGINE = "engine";
+    const char* EDITOR = "editor";
+    const char* SHARED_RESOUCES = "shared_resources";
+}
 
-void PathResolver::construct_paths() {
+void ResourceManager::construct_paths() {
     std::filesystem::path current_dir = get_executable_directory();
 
     const int MAX_LEVELS = 10;
@@ -28,10 +30,10 @@ void PathResolver::construct_paths() {
                 std::filesystem::create_directory(m_resources_path);
             }
 
-            log_info() << "[PathResolver] Project root found at: " << m_root_path << std::endl;
-            log_info() << "[PathResolver] Engine path: " << m_engine_path << std::endl;
-            log_info() << "[PathResolver] Editor path: " << m_editor_path << std::endl;
-            log_info() << "[PathResolver] Resources path: " << m_resources_path << std::endl;
+            log_info() << "[ResourceManager] Project root found at: " << m_root_path << std::endl;
+            log_info() << "[ResourceManager] Engine path: " << m_engine_path << std::endl;
+            log_info() << "[ResourceManager] Editor path: " << m_editor_path << std::endl;
+            log_info() << "[ResourceManager] Resources path: " << m_resources_path << std::endl;
 
             return; // paths are constructred
         }
@@ -46,7 +48,7 @@ void PathResolver::construct_paths() {
     log_error() << "ERROR: Could not locate project root structure!" << std::endl;
 }
 
-std::filesystem::path PathResolver::get_executable_directory() const {
+std::filesystem::path ResourceManager::get_executable_directory() const {
     std::filesystem::path executable_path;
 
 #ifdef _WIN32
@@ -65,7 +67,7 @@ std::filesystem::path PathResolver::get_executable_directory() const {
     return executable_path.parent_path();
 }
 
-std::filesystem::path PathResolver::get_resource_subdir(const std::filesystem::path& subdir) const {
+std::filesystem::path ResourceManager::get_resource_subdir(const std::filesystem::path& subdir) const {
     std::filesystem::path full_path = m_resources_path / subdir;
 
     if(!std::filesystem::exists(full_path)) {
@@ -75,7 +77,7 @@ std::filesystem::path PathResolver::get_resource_subdir(const std::filesystem::p
     return full_path;
 }
 
-std::filesystem::path PathResolver::get_engine_subdir(const std::filesystem::path& subdir) const {
+std::filesystem::path ResourceManager::get_engine_subdir(const std::filesystem::path& subdir) const {
     std::filesystem::path full_path = m_engine_path / subdir;
 
     if(!std::filesystem::exists(full_path)) {
@@ -85,3 +87,20 @@ std::filesystem::path PathResolver::get_engine_subdir(const std::filesystem::pat
 }
 
 
+std::filesystem::directory_iterator ResourceManager::get_entity_folder() const {
+    const std::filesystem::path entities_path = get_entities_path(); // ensured to exist
+    return std::filesystem::directory_iterator(entities_path);
+}
+
+std::filesystem::directory_iterator ResourceManager::get_variant_folder() const {
+    const std::filesystem::path variants_path = get_entities_path(); // ensured to exist
+    return std::filesystem::directory_iterator(variants_path);
+}
+
+std::filesystem::path ResourceManager::get_entity_path(const std::string& name) const {
+    return get_entities_path() / (name + ".entity");
+}
+
+std::filesystem::path ResourceManager::get_variant_path(const std::string& name) const {
+    return get_variants_path() / (name + ".variant");
+}

@@ -4,9 +4,6 @@
 #include <filesystem>
 #include <rapidjson/document.h>
 
-#include "constants/paths.h"
-
-
 class VariantDocument final {
 
 public:

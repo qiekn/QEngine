@@ -10,7 +10,7 @@
 #include "raylib.h"
 #include "file_watcher/file_w.h"
 
-#include "path_resolver/path_resolver.h"
+#include "resource_manager/resource_manager.h"
 
 enum class AssetType {
     Unknown,
@@ -45,7 +45,7 @@ public:
     inline const std::string& get_selected_path() const { return m_selected_path; }
 
     static AssetBrowser& get() {
-        static AssetBrowser instance(PathResolver::get().get_root_path());
+        static AssetBrowser instance(get_resource_manager().get_root_path());
         return instance;
     }
 

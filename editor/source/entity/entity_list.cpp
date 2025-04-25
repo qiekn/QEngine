@@ -7,7 +7,7 @@
 
 #include "logger.h"
 #include "engine/engine_event.h"
-#include "path_resolver/path_resolver.h"
+#include "resource_manager/resource_manager.h"
 
 namespace {
     constexpr const char* BACKUP_DIR = "temp_backup";
@@ -15,7 +15,7 @@ namespace {
 }
 
 EntityList::EntityList() {
-    load_entities(PathResolver::get().get_entity_folder());
+    load_entities(get_resource_manager().get_entities_path());
     register_event_handlers();
 }
 

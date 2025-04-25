@@ -10,7 +10,7 @@
 
 #include "logger.h"
 #include "engine/engine_event.h"
-#include "path_resolver/path_resolver.h"
+#include "resource_manager/resource_manager.h"
 
 static void write_status_file(const std::string& status, const std::string& message);
 
@@ -200,7 +200,7 @@ void EngineControls::render_build_status() {
 }
 
 void EngineControls::check_build_status() {
-    std::filesystem::path status_file = PathResolver::get().get_engine_path() / "build_status" / "build_status.json";
+    std::filesystem::path status_file = get_resource_manager().get_engine_path() / "build_status" / "build_status.json";
     
     if (!std::filesystem::exists(status_file)) {
         return;
@@ -235,7 +235,7 @@ void EngineControls::check_build_status() {
             m_build_status = BuildStatus::Running;
             log_info() << "Build status: RUNNING - " << message << std::endl;
             
-            std::filesystem::path build_log_path = PathResolver::get().get_engine_path() / "build_status" / "build_output.log";
+            std::filesystem::path build_log_path = get_resource_manager().get_editor_path() / "build_status" / "build_output.log";
             if (std::filesystem::exists(build_log_path)) {
                 std::ifstream log_file(build_log_path);
                 if (log_file.is_open()) {
@@ -284,7 +284,7 @@ void EngineControls::start_engine() {
     m_build_message.clear();
     m_build_details.clear();
     
-    std::filesystem::create_directories(PathResolver::get().get_engine_path() / "build_status");
+    std::filesystem::create_directories(get_resource_manager().get_engine_path() / "build_status");
     
     monitor_build();
 }
@@ -299,10 +299,10 @@ void EngineControls::monitor_build() {
     log_info() << "Starting build process..." << std::endl;
     
     m_build_monitor_future = std::async(std::launch::async, [this]() {
-        std::filesystem::path build_status_path = PathResolver::get().get_engine_path() / "build_status";
+        std::filesystem::path build_status_path = get_resource_manager().get_engine_path() / "build_status";
         std::filesystem::create_directories(build_status_path);
         
-        std::string engine_path = PathResolver::get().get_engine_path().string();
+        std::string engine_path = get_resource_manager().get_engine_path().string();
         std::string engine_scripts_path = engine_path + "/scripts/";
         std::string build_command;
 
@@ -382,7 +382,7 @@ void EngineControls::exit_play_mode() {
 }
 
 static void write_status_file(const std::string& status, const std::string& message) {
-    std::filesystem::path status_path = PathResolver::get().get_engine_path() / "build_status" / "build_status.json";
+    std::filesystem::path status_path = get_resource_manager().get_engine_path() / "build_status" / "build_status.json";
     std::filesystem::create_directories(status_path.parent_path());
     
     try {
