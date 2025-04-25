@@ -4,6 +4,7 @@
 #include <any>
 #include <mutex>
 #include <shared_mutex>
+#include <algorithm>
 
 enum class EngineEvent {
     EngineStarted,

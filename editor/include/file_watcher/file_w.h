@@ -15,7 +15,7 @@ class FileW {
 public:
     using Callback = std::function<void(const fs::path&, const std::string&)>;
 
-    FileW(const std::string& path_to_watch, 
+    FileW(const std::filesystem::path& path_to_watch, 
           std::chrono::duration<int, std::milli> polling_interval = std::chrono::milliseconds(1000));
     
     ~FileW();

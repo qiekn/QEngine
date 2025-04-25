@@ -786,7 +786,7 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
 }
 
 void Hierarchy::add_required_variants_to_entity(EntityDocument& entity_document, const std::string& variant_type) {
-    std::string requires_path = get_resource_manager().get_variants_path() / "requires" / variant_type / ".requires";
+    std::filesystem::path requires_path = get_resource_manager().get_variants_path() / "requires" / variant_type / ".requires";
 
     if (!std::filesystem::exists(requires_path)) {
         return;
