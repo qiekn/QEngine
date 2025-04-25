@@ -8,7 +8,7 @@ namespace {
 }
 
 void ResourceManager::construct_paths() {
-    std::filesystem::path current_dir = get_executable_directory();
+    std::filesystem::path current_dir = get_search_start_dir();
 
     const int MAX_LEVELS = 10;
     int level = 0;
@@ -34,23 +34,8 @@ void ResourceManager::construct_paths() {
     log_error() << "ERROR: Could not locate resources!" << std::endl;
 }
 
-std::filesystem::path ResourceManager::get_executable_directory() const {
-    std::filesystem::path executable_path;
-
-#ifdef _WIN32
-    char buffer[MAX_PATH];
-    GetModuleFileNameA(NULL, buffer, MAX_PATH);
-    executable_path = buffer;
-#else
-    char buffer[PATH_MAX];
-    ssize_t count = readlink("/proc/self/exe", buffer, PATH_MAX);
-    if (count != -1) {
-        buffer[count] = '\0';
-        executable_path = buffer;
-    }
-#endif
-
-    return executable_path.parent_path();
+std::filesystem::path ResourceManager::get_search_start_dir() const {
+    return std::filesystem::current_path();
 }
 
 std::filesystem::path ResourceManager::get_resource_subdir(const std::filesystem::path& subdir) const {

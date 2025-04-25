@@ -3,13 +3,6 @@
 #include <string>
 #include <filesystem>
 
-#ifdef _WIN32
-    #include <windows.h>
-#else
-    #include <unistd.h>
-    #include <linux/limits.h> // for PATH_MAX
-#endif
-
 #define ENTITY_FOLDER "entities"
 #define VARIANT_FOLDER  "variants"
 #define ENGINE_SCRIPTS_FOLDER "scripts"
@@ -42,7 +35,7 @@ private:
     }
 
     void construct_paths();
-    std::filesystem::path get_executable_directory() const;
+    std::filesystem::path get_search_start_dir() const;
 
     std::filesystem::path m_resources_path;
 };
