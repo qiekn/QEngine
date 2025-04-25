@@ -303,13 +303,15 @@ void EngineControls::monitor_build() {
         std::filesystem::create_directories(build_status_path);
         
         std::string engine_path = PathResolver::get().get_engine_path().string();
-        std::string engine_script_path = engine_path + "/script";
+        std::string engine_scripts_path = engine_path + "/scripts/";
         std::string build_command;
+
         
         #ifdef _WIN32
-        build_command = "cd " + engine_script_path + " && build_wrapper.sh ../build_status/build_status.json";
+        build_command = "cd " + engine_scripts_path + " && build_wrapper.sh ../build_status/build_status.json";
         #else
-        build_command = "cd " + engine_script_path + " && ./build_wrapper.sh ../build_status/build_status.json";
+        build_command = "cd " + engine_scripts_path + " && ./build_wrapper.sh ../build_status/build_status.json";
+        log_info() << std::filesystem::current_path() << std::endl;
         #endif
         
         log_info() << "Executing: " << build_command << std::endl;
@@ -348,9 +350,9 @@ void EngineControls::monitor_build() {
             std::string run_command;
             
             #ifdef _WIN32
-            run_command = "cd " + engine_script_path + " && run.sh";
+            run_command = "cd " + engine_scripts_path + " && run.sh";
             #else
-            run_command = "cd " + engine_script_path + " && ./run.sh";
+            run_command = "cd " + engine_scripts_path + " && ./run.sh";
             #endif
             
             std::system(run_command.c_str());
