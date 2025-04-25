@@ -1,15 +1,18 @@
 #include "engine/engine_controls.h"
-#include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
-#include <filesystem>
 
 #include "imgui.h"
 #include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 #include "logger.h"
 #include "engine/engine_event.h"
 #include "path_resolver/path_resolver.h"
+
+static void write_status_file(const std::string& status, const std::string& message);
 
 EngineControls::EngineControls() 
     : m_is_running(false)
@@ -42,24 +45,7 @@ EngineControls::EngineControls()
         }
     );
     
-    std::filesystem::path build_status_path = PathResolver::get().get_engine_path() / "build_status";
-    std::filesystem::create_directories(build_status_path);
-    
-    std::string status_file = build_status_path / "build_status.json";
-    if (std::filesystem::exists(status_file)) {
-        try {
-            std::ofstream file(status_file);
-            if (file.is_open()) {
-                file << "{\"status\":\"none\",\"message\":\"Editor started\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
-                file.close();
-            }
-        } catch (...) {
-            try {
-                std::filesystem::remove(status_file);
-            } catch (...) {
-            }
-        }
-    }
+    write_status_file("none", "Editor started");
 }
 
 EngineControls::~EngineControls() {
@@ -74,9 +60,9 @@ void EngineControls::render() {
     check_build_status();
 
     float total_width = ImGui::GetWindowWidth();
-    float center_width = total_width * 0.2;
+    float center_width = total_width * 0.2f;
     float center_pos = (total_width - center_width) * 0.5f;
-    float right_pos = total_width - 400; 
+    float right_pos = total_width - 400.0f; 
 
     ImGui::SetCursorPosX(center_pos);
     render_engine_controls();
@@ -94,8 +80,9 @@ void EngineControls::render_engine_controls() {
         kill_engine();
     }
 
+    ImGui::SameLine();
+    
     if (!m_is_running) {
-        ImGui::SameLine();
         if (!m_is_engine_starting) {
             if (m_build_status == BuildStatus::Running) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
@@ -117,7 +104,6 @@ void EngineControls::render_engine_controls() {
             ImGui::PopStyleColor(4);
         }
     } else {
-        ImGui::SameLine();
         ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Engine Running");
     }
     
@@ -214,7 +200,7 @@ void EngineControls::render_build_status() {
 }
 
 void EngineControls::check_build_status() {
-    std::string status_file = "../engine/build_status/build_status.json";
+    std::filesystem::path status_file = PathResolver::get().get_engine_path() / "build_status" / "build_status.json";
     
     if (!std::filesystem::exists(status_file)) {
         return;
@@ -249,9 +235,9 @@ void EngineControls::check_build_status() {
             m_build_status = BuildStatus::Running;
             log_info() << "Build status: RUNNING - " << message << std::endl;
             
-            static std::string build_log_path = "../engine/build_status/build_output.log";
+            std::filesystem::path build_log_path = PathResolver::get().get_engine_path() / "build_status" / "build_output.log";
             if (std::filesystem::exists(build_log_path)) {
-                static std::ifstream log_file(build_log_path);
+                std::ifstream log_file(build_log_path);
                 if (log_file.is_open()) {
                     std::string line;
                     while (std::getline(log_file, line)) {
@@ -298,7 +284,7 @@ void EngineControls::start_engine() {
     m_build_message.clear();
     m_build_details.clear();
     
-    std::filesystem::create_directories("../engine/build_status");
+    std::filesystem::create_directories(PathResolver::get().get_engine_path() / "build_status");
     
     monitor_build();
 }
@@ -316,24 +302,26 @@ void EngineControls::monitor_build() {
         std::filesystem::path build_status_path = PathResolver::get().get_engine_path() / "build_status";
         std::filesystem::create_directories(build_status_path);
         
+        std::string engine_path = PathResolver::get().get_engine_path().string();
+        std::string engine_script_path = engine_path + "/script";
+        std::string build_command;
+        
         #ifdef _WIN32
-        log_info() << "Executing: cd ../engine && build_wrapper.sh build_status/build_status.json" << std::endl;
-        int result = std::system("cd ../engine && build_wrapper.sh build_status/build_status.json");
+        build_command = "cd " + engine_script_path + " && build_wrapper.sh ../build_status/build_status.json";
         #else
-        log_info() << "Executing: cd ../engine && ./build_wrapper.sh build_status/build_status.json" << std::endl;
-        int result = std::system("cd ../engine && ./build_wrapper.sh build_status/build_status.json");
+        build_command = "cd " + engine_script_path + " && ./build_wrapper.sh ../build_status/build_status.json";
         #endif
+        
+        log_info() << "Executing: " << build_command << std::endl;
+        int result = std::system(build_command.c_str());
         
         if (result != 0) {
             log_error() << "Build command failed with exit code: " << result << std::endl;
-            std::ofstream status_file("../engine/build_status/build_status.json");
-            if (status_file.is_open()) {
-                status_file << "{\"status\":\"failed\",\"message\":\"Build process failed with code " << result << "\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
-                status_file.close();
-            }
+            write_status_file("failed", "Build process failed with code " + std::to_string(result));
             
             try {
-                std::ifstream log_file("../engine/build_status/build_output.log");
+                std::filesystem::path log_path = build_status_path / "build_output.log";
+                std::ifstream log_file(log_path);
                 if (log_file.is_open()) {
                     std::string line;
                     std::vector<std::string> last_lines;
@@ -354,18 +342,18 @@ void EngineControls::monitor_build() {
                 log_error() << "Failed to read build log: " << e.what() << std::endl;
             }
         } else {
-            std::ofstream status_file("../engine/build_status/build_status.json");
-            if (status_file.is_open()) {
-                status_file << "{\"status\":\"success\",\"message\":\"Build completed successfully\",\"timestamp\":\"" << std::time(nullptr) << "\"}";
-                status_file.close();
-            }
+            write_status_file("success", "Build completed successfully");
             
             log_info() << "Launching engine..." << std::endl;
+            std::string run_command;
+            
             #ifdef _WIN32
-            std::system("cd ../engine && run.sh");
+            run_command = "cd " + engine_script_path + " && run.sh";
             #else
-            std::system("cd ../engine && ./run.sh");
+            run_command = "cd " + engine_script_path + " && ./run.sh";
             #endif
+            
+            std::system(run_command.c_str());
         }
     });
 }
@@ -389,4 +377,31 @@ void EngineControls::exit_play_mode() {
     m_is_play_mode = false;
     m_is_paused = false;
     EngineEventBus::get().publish<bool>(EngineEvent::ExitPlayMode, true);
+}
+
+static void write_status_file(const std::string& status, const std::string& message) {
+    std::filesystem::path status_path = PathResolver::get().get_engine_path() / "build_status" / "build_status.json";
+    std::filesystem::create_directories(status_path.parent_path());
+    
+    try {
+        rapidjson::Document doc;
+        doc.SetObject();
+        auto& allocator = doc.GetAllocator();
+        
+        doc.AddMember("status", rapidjson::Value(status.c_str(), allocator), allocator);
+        doc.AddMember("message", rapidjson::Value(message.c_str(), allocator), allocator);
+        doc.AddMember("timestamp", rapidjson::Value(std::to_string(std::time(nullptr)).c_str(), allocator), allocator);
+        
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        doc.Accept(writer);
+        
+        std::ofstream file(status_path);
+        if (file.is_open()) {
+            file << buffer.GetString();
+            file.close();
+        }
+    } catch (const std::exception& e) {
+        log_error() << "Failed to write status file: " << e.what() << std::endl;
+    }
 }
