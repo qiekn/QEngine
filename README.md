@@ -354,7 +354,7 @@ Now that we have an entity, let's start the engine, so it will compile and build
 
 * Right click on **TestEntity** and add **Cube** variant to the entity.
 * To help with the setup and minimize setup related issues, ZeytinEditor auto adds queried variants. Queried **Speed** and **Position** variants are automatically added once the Cube variant is added.
-* You can disable this feature if you want:
+* You can disable this feature and (optionally) enforce variants by hand:
 
 
 ```cpp
@@ -365,9 +365,10 @@ Now that we have an entity, let's start the engine, so it will compile and build
 
 class Cube : public VariantBase {
     VARIANT(Cube);
-    IGNORE_REQUIRES(); // Editor will not introduce any dependency check for this variant
-      // or
-    REQUIRES(Position, Scale); // Editor will enforce input variants as requirements
+    IGNORE_QUERIES(); // Editor will not introduce any query based dependency check for this variant
+      // optionally:
+    REQUIRES(Position, Scale); // You can still enforce input variants as requirements by hand.
+    // This is OK even if the query based dependency check is enabled, still parsed and still enforced
 
 public:
     float width = 50.0f; PROPERTY()
@@ -383,7 +384,16 @@ private:
 };
 ```
 
-![image](https://github.com/user-attachments/assets/7c1c7ee0-a03b-406b-b1c3-25cdb6daf092)
+
+* You can tweak property values with engine on/off
+* I have increased the size a bit, set the speed value to a non-zero value, and set the start position
+* Enter play mode, and move the cube as you want
+* You can tweak values while in play mode, but the changes are not saved
+* Exit play mode to return to the original scene
+* Final state: 
+
+![image](https://github.com/user-attachments/assets/db955d5a-cd96-4bc7-a31e-4085d17ea024)
+
 
 
 
