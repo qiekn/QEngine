@@ -15,8 +15,7 @@
 *.mod
 *.smod
 
-# Executables
-*.exe
+
 *.out
 *.app
 
