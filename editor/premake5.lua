@@ -35,6 +35,9 @@ workspace "ZeytinEditor"
             "3rdparty/raylib/lib/linux",
             "3rdparty/zmq/linux"
         }
+        files {
+            "3rdparty/backward-cpp/backward.cpp",
+        }
         buildoptions { "-std=c++17", "-w", "-fPIC" }
     
     filter {}
@@ -49,7 +52,6 @@ workspace "ZeytinEditor"
             "3rdparty/rlimgui/**.cpp",
             "3rdparty/imgui/**.cpp",
             "3rdparty/imgui_test_engine/**.cpp",
-            "3rdparty/backward-cpp/backward.cpp",
             "source/**.cpp"
         }
         
