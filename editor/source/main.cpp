@@ -25,9 +25,8 @@ int main(int argc, char* argv[])
     EngineControls engine_controls;
     EngineCommunication engine_communication;
 
-    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_ALWAYS_RUN);
+    SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
     InitWindow(GetScreenWidth(), GetScreenHeight(), "ZeytinEditor");
-    MaximizeWindow();
     SetTargetFPS(144);
     SetExitKey(0);
     rlImGuiSetup(true);
@@ -77,7 +76,6 @@ int main(int argc, char* argv[])
             }
         }
 
-        SetWindowState(FLAG_WINDOW_UNFOCUSED);
         BeginDrawing();
         ClearBackground(BLACK);
 

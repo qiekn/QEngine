@@ -16,7 +16,17 @@ void Application::init_window() {
     const int windowHeight = 720;
     InitWindow(windowWidth, windowHeight, "ZeytinEngine");
 
-    SetWindowPosition(466, 172);
+    float console_height = GetScreenHeight() * 0.35; // magical aspect, from LayoutConfig editor
+    float free_height = GetScreenHeight() - console_height;
+    float window_start_height = free_height/3;
+
+    float hierarchy_width = GetScreenWidth() * 0.18; // magical aspect, from LayoutConfig editor
+    float asset_browser_width = GetScreenWidth() * 0.315; // magical aspect, from LayoutConfig editor
+    float free_width = GetScreenWidth() - hierarchy_width - asset_browser_width;
+
+
+    //SetWindowPosition(466, 172);
+    SetWindowPosition(hierarchy_width*2+5, window_start_height);
 #else
     const int windowWidth = 1920;
     const int windowHeight = 1080;

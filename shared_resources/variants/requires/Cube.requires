@@ -1,7 +1,0 @@
-{
-    "requires": [
-        "Scale",
-        "Position",
-        "Speed"
-    ]
-}
