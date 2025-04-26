@@ -13,6 +13,7 @@ class ClassParser:
         self.variant_pattern = re.compile(r'VARIANT\((\w+)\)')
         self.class_pattern = re.compile(r'(struct|class)\s+(\w+)\s*(?::\s*public\s+(\w+))?')
         self.requires_pattern = re.compile(r'REQUIRES\s*\(\s*(.*?)\s*\)')
+        self.ignore_queries_pattern = re.compile(r'IGNORE_QUERIES\s*\(\s*\)')
 
         self.property_pattern = re.compile(r'(\w+(?:::\w+)*(?:\s*\*)?)\s+(\w+)(?:\s*=\s*[^;]*)?;\s*PROPERTY\(\)(?:\s+SET_CALLBACK\((\w+)\))?')
         
@@ -66,11 +67,19 @@ class ClassParser:
         if class_name in self.skip_classes:
             return None
         
+        ignore_queries = False
+        ignore_queries_match = self.ignore_queries_pattern.search(class_block)
+        if ignore_queries_match:
+            ignore_queries = True
+        
         required_variants = []
-        requires_match = self.requires_pattern.search(class_block)
-        if requires_match:
+        requires_matches = list(self.requires_pattern.finditer(class_block))
+        for requires_match in requires_matches:
             requirements = requires_match.group(1)
-            required_variants = [var.strip() for var in requirements.split(',')]
+            for req in requirements.split(','):
+                req_type = req.strip()
+                if req_type and req_type not in required_variants:
+                    required_variants.append(req_type)
         
         properties = []
         property_matches = self.property_pattern.finditer(class_block)
@@ -89,7 +98,8 @@ class ClassParser:
             'base_class': base_class,
             'properties': properties,
             'required_variants': required_variants,
-            'is_variant': True
+            'is_variant': True,
+            'ignore_queries': ignore_queries
         }
 
     def parse_regular_class(self, class_block: str, class_name: str, base_class: str) -> Optional[Dict[str, Any]]:
@@ -123,7 +133,8 @@ class ClassParser:
             'base_class': base_class,
             'properties': properties,
             'required_variants': [],
-            'is_variant': False
+            'is_variant': False,
+            'ignore_queries': False
         }
 
     def parse_header(self, file_path: str) -> List[Dict[str, Any]]:
@@ -339,6 +350,9 @@ class CodeGenerator:
 
     @staticmethod
     def generate_requires_file(class_name: str, required_variants: List[str], output_dir: str) -> None:
+        if not required_variants:
+            return
+            
         requires_file_path = os.path.join(output_dir, f"{class_name}.requires")
         
         requires_data = {
@@ -346,6 +360,7 @@ class CodeGenerator:
         }
         
         try:
+            os.makedirs(output_dir, exist_ok=True)
             with open(requires_file_path, 'w') as f:
                 json.dump(requires_data, f, indent=4)
             print(f"Generated requirements file: {requires_file_path}")
@@ -451,13 +466,15 @@ class RTTRGenerator:
     def analyze_implementation_files(self) -> None:
         print("Analyzing implementation files for dependencies...")
         for class_info in self.classes_info:
-            if not class_info['is_variant']:
+            if not class_info['is_variant'] or class_info['ignore_queries']:
+                if class_info['is_variant'] and class_info['ignore_queries']:
+                    print(f"Skipping dependency analysis for {class_info['class_name']} (IGNORE_QUERIES is set)")
                 continue
                 
             class_name = class_info['class_name'].lower()
             
             for header_file in glob.glob(os.path.join(self.headers_dir, "**/*.h"), recursive=True):
-                if os.path.basename(header_file) == f"{class_name}.h":
+                if os.path.basename(header_file).lower() == f"{class_name}.h":
                     cpp_file = self.parser.find_cpp_file(header_file, self.source_dir)
                     if cpp_file:
                         try:
@@ -467,9 +484,9 @@ class RTTRGenerator:
                             dependencies = self.parser.extract_query_dependencies(cpp_content)
                             
                             for dep in dependencies:
-                                if dep not in class_info['required_variants'] and dep != class_name:
+                                if dep not in class_info['required_variants'] and dep != class_info['class_name']:
                                     class_info['required_variants'].append(dep)
-                                    print(f"Added auto-detected dependency: {class_name} requires {dep}")
+                                    print(f"Added auto-detected dependency: {class_info['class_name']} requires {dep}")
                         except Exception as e:
                             print(f"Error analyzing cpp file {cpp_file}: {e}")
                     break
@@ -480,6 +497,7 @@ class RTTRGenerator:
         final_code = includes_code + registration_code
         
         try:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
             with open(output_path, "w") as f:
                 f.write(final_code)
             
@@ -494,6 +512,16 @@ class RTTRGenerator:
             print(f"Error writing RTTR header {output_path}: {e}")
 
     def generate_requires_files(self, requires_dir: str) -> None:
+        if os.path.exists(requires_dir):
+            print(f"Clearing existing requires directory: {requires_dir}")
+            try:
+                for file in os.listdir(requires_dir):
+                    file_path = os.path.join(requires_dir, file)
+                    if os.path.isfile(file_path) and file.endswith('.requires'):
+                        os.remove(file_path)
+            except Exception as e:
+                print(f"Error clearing requires directory: {e}")
+        
         os.makedirs(requires_dir, exist_ok=True)
         
         for class_info in self.classes_info:

@@ -3,6 +3,7 @@
 #include "game/brick_manager.h"
 #include "game/camera2d.h"
 #include "game/collider.h"
+#include "game/cube.h"
 #include "game/game.h"
 #include "game/paddle.h"
 #include "game/position.h"
@@ -126,6 +127,13 @@ RTTR_REGISTRATION
         .property("font_size", &Score::font_size)
         .property("x", &Score::x)
         .property("y", &Score::y);
+
+    rttr::registration::class_<Cube>("Cube")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("width", &Cube::width)
+        .property("height", &Cube::height)
+        .property("color", &Cube::color);
 
     rttr::registration::class_<Ball>("Ball")
         .constructor<>()(rttr::policy::ctor::as_object)

@@ -786,13 +786,14 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
 }
 
 void Hierarchy::add_required_variants_to_entity(EntityDocument& entity_document, const std::string& variant_type) {
-    std::filesystem::path requires_path = get_resource_manager().get_variants_path() / "requires" / variant_type / ".requires";
+    std::filesystem::path requires_path = get_resource_manager().get_variants_path() / "requires" / (variant_type + ".requires");
 
     if (!std::filesystem::exists(requires_path)) {
+        log_trace() << "Requires file not found at path: " << requires_path << std::endl;
         return;
     }
 
-    log_info() << "Found requirements file for " << variant_type << std::endl;
+    log_trace() << "Found requirements file for " << variant_type << std::endl;
 
     try {
         std::ifstream requires_file(requires_path);

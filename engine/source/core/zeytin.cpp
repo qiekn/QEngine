@@ -261,9 +261,6 @@ void Zeytin::post_init_variants() {
             VariantBase& base = variant.get_value<VariantBase&>();
             if(base.is_dead || base.post_inited) continue;
             base.post_inited = true;
-#ifdef EDITOR_MODE
-            if(!base.check_dependencies("Zeytin::post_init_variants")) continue;
-#endif
             {
                 ZPROFILE_ZONE_NAMED("VariantBase::post_init_variants()");
                 ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),
@@ -282,9 +279,6 @@ void Zeytin::update_variants() {
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if(base.is_dead) continue;
-#ifdef EDITOR_MODE
-            if(!base.check_dependencies("Zeytin::update_variants()")) continue;
-#endif
             {
                 ZPROFILE_ZONE_NAMED("VariantBase::on_update()");
                 ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
@@ -303,9 +297,6 @@ void Zeytin::play_update_variants() {
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if(base.is_dead) continue;
-#ifdef EDITOR_MODE
-            if(!base.check_dependencies("Zeytin::play_update_variants()")) continue;
-#endif
             {
                 ZPROFILE_ZONE_NAMED("VariantBase::on_play_update()");
                 ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
@@ -326,9 +317,6 @@ void Zeytin::play_start_variants() {
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if(base.is_dead) continue;
-#ifdef EDITOR_MODE
-            if(!base.check_dependencies("Zeytin::play_start_variants()")) continue;
-#endif
             {
                 ZPROFILE_ZONE_NAMED("VariantBase::on_play_update()");
                 ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
@@ -349,9 +337,6 @@ void Zeytin::play_late_start_variants() {
         for (auto& variant : pair.second) {
             VariantBase& base = variant.get_value<VariantBase&>();
             if(base.is_dead) continue;
-#ifdef EDITOR_MODE
-            if(!base.check_dependencies("Zeytin::play_late_start_variants()")) continue;
-#endif
             {
                 ZPROFILE_ZONE_NAMED("VariantBase::on_play_late_start()");
                 ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
