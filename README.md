@@ -7,7 +7,7 @@
 
 ---
 
-## ✨ Features
+## Features
 
 -  Lightweight, modular core engine
 -  Editor developed as a separate C++ application
@@ -15,24 +15,115 @@
 -  Advanced runtime type information with automatic code generation
 -  Cross-platform build system powered by [Premake](https://premake.github.io/)
 
+## Prerequisites
+
+### Windows
+- MinGW-w64 with GCC compiler (tested on version 14.2.0)
+- Premake5
+- Git
+
+### Linux
+- Clang compiler (tested on version 14.0.0)
+- Premake5
+- Git
+
+Required development libraries:
+
+```bash
+sudo apt-get install libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libdw-dev libbfd-dev libdwarf-dev libzmq3-dev
+```
+
+## Editor Dependencies
+
+- ImGui - Immediate mode GUI library for the editor interface  
+- Raylib - Graphics and input handling library  
+- ImGui-Test-Engine - Testing framework for ImGui-based applications  
+- ZeroMQ (ZMQ) - Messaging library for communication with the engine  
+- RapidJSON - JSON parsing and generation library  
+- rlImGui - Integration layer between Raylib and ImGui  
+
+## Engine Dependencies
+
+- Raylib - Graphics and input handling library  
+- RTTR - Run-time type reflection library for C++  
+- ZeroMQ (ZMQ) - Messaging library for communication with the editor  
+- RapidJSON - JSON parsing and generation library  
+- Tracy - Profiling library (used in debug builds, currently Linux only)  
+- Backward-cpp - Stack trace library (Linux only)  
+
+All of these dependencies are included in the repository under the 3rdparty directories in both the editor and engine folders, so you don't need to install them separately. The build scripts will use these local versions.
+
+## Installation Steps
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/berkaysahiin/Zeytin.git  
+cd zeytin
+```
+
+### 2. Setting up the Editor
+
+```bash
+cd editor  
+premake5 gmake  
+cd build  
+make
+```
+
+After building, run the editor:
+
+```bash
+cd ..  
+./bin/Debug/ZeytinEditor
+```
+
+### 3. Setting up the Engine
+
+Editor mode:
+
+```bash
+cd engine  
+premake5 gmake  
+cd build  
+make config=EDITOR_MODE
+```
+
+Standalone mode:
+
+```bash
+cd engine  
+premake5 gmake  
+cd build  
+make config=STANDALONE
+```
+
+### 4. Running the Engine
+
+The engine will automatically launch from the editor using the "Start Engine" button.
+
+To run the standalone engine manually:
+
+```bash
+cd engine  
+./bin/STANDALONE/Zeytin
+```
+
+## Troubleshooting
+
+### Windows
+- If you encounter DLL errors when running the editor, ensure libzmq-mt-4_3_5.dll is in the correct path (targer directory, where the executable is located)
+- Ensure the MinGW bin directory is in your PATH environment variable. (and double check the version)
+
+### Linux
+- For missing library errors, make sure all required development packages are installed.
+- For ZMQ-related errors, verify that libzmq3-dev is properly installed.
+
 ---
 
-## ⚙️ Getting Started
+## A Tour of Zeytin
 
-### Prerequisites
-
-Make sure the following tools and libraries are installed on your system:
-
--  A C++ compiler with **C++17** support (e.g., GCC, Clang, MSVC)
--  [Premake](https://premake.github.io/) for project file generation
--  [Raylib](https://github.com/raysan5/raylib) (already bundled with Zeytin)
--  [ZeroMQ](https://zeromq.org/) for messaging support
-
----
-
-## 🧭 A Tour of Zeytin
-
-Upon launching the editor, you'll find an intuitive interface designed for productivity:
+Upon launching the editor, you'll find an intuitive interface designed for ease of use:
 
 - **Hierarchy Panel (Left):**  
   Displays all entities and their components in the current scene.
@@ -47,7 +138,7 @@ Upon launching the editor, you'll find an intuitive interface designed for produ
 
 ---
 
-## 🧪 Running the Engine
+## Running the Engine
 
 - You can design and edit levels directly in the editor—no need to start the engine immediately.
 - To start the engine:
@@ -56,14 +147,14 @@ Upon launching the editor, you'll find an intuitive interface designed for produ
 
 ---
 
-## 🚀 Your First Game: Adding a Moving Cube
+## Your First Game: Adding a Moving Cube
 
 In Zeytin, the engine and editor are separate executables, but the game code is part of the engine project. This means:
 
 - The **game code is compiled with the engine code**.
 - The **parser expects all game-related code** to be placed under a specific directory: 
 
-###  Project Structure
+### Project Structure
 
 ```plaintext
 zeytin/
