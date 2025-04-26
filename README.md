@@ -1,5 +1,44 @@
 ![image](https://github.com/user-attachments/assets/39fd0f50-88a5-4f9e-9342-9ea6bf911c9e)
 
+Table of Contents
+=================
+
+* [What is Zeytin ?](#what-is-zeytin-)
+* [Features](#features)
+* [Prerequisites](#prerequisites)
+   * [Windows](#windows)
+   * [Linux](#linux)
+   * [Editor Dependencies](#editor-dependencies)
+   * [Engine Dependencies](#engine-dependencies)
+   * [Installation Steps](#installation-steps)
+      * [1. Clone the Repository](#1-clone-the-repository)
+      * [2. Setting up the Editor](#2-setting-up-the-editor)
+      * [3. Setting up the Engine](#3-setting-up-the-engine)
+      * [4. Running the Engine](#4-running-the-engine)
+   * [Troubleshooting](#troubleshooting)
+      * [Windows](#windows-1)
+      * [Linux](#linux-1)
+* [A Tour of Zeytin](#a-tour-of-zeytin)
+   * [Hierarchy Panel (Left)](#hierarchy-panel-left)
+   * [Console (Bottom)](#console-bottom)
+   * [Asset Browser (Right)](#asset-browser-right)
+   * [Running the Engine](#running-the-engine)
+* [Your First Game: Adding a Moving Cube](#your-first-game-adding-a-moving-cube)
+   * [Project Structure](#project-structure)
+   * [Creating a Variant](#creating-a-variant)
+      * [Step 1: Define a Simple Position Variant](#step-1-define-a-simple-position-variant)
+      * [Key Concepts](#key-concepts)
+      * [Example: position.h](#example-positionh)
+      * [Example: speed.h](#example-speedh)
+      * [Example: cube.h](#example-cubeh)
+   * [Creating a Design-time Entity](#creating-a-design-time-entity)
+   * [Putting it all together](#putting-it-all-together)
+* [Query API](#query-api)
+   * [Key Functions](#key-functions)
+   * [Example Usage](#example-usage)
+* [SET_CALLBACK](#set_callback)
+   * [Usage](#usage)
+
 
 # What is Zeytin ?
 
