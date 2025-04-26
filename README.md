@@ -5,9 +5,7 @@
 
 **Zeytin** is a lightweight and modular game engine written in **C++**, built on top of [Raylib](https://github.com/raysan5/raylib). It features a fully integrated editor built using [Dear ImGui](https://github.com/ocornut/imgui), offering a streamlined and efficient development workflow.
 
----
-
-## Features
+# Features
 
 -  Lightweight, modular core engine
 -  Editor developed as a separate C++ application
@@ -15,14 +13,14 @@
 -  Advanced runtime type information with automatic code generation
 -  Cross-platform build system powered by [Premake](https://premake.github.io/)
 
-## Prerequisites
+# Prerequisites
 
-### Windows
+## Windows
 - MinGW-w64 with GCC compiler (tested on version 14.2.0)
 - Premake5
 - Git
 
-### Linux
+## Linux
 - Clang compiler (tested on version 14.0.0)
 - Premake5
 - Git
@@ -121,7 +119,7 @@ cd engine
 
 ---
 
-## A Tour of Zeytin
+# A Tour of Zeytin
 
 Upon launching the editor, you'll find an intuitive interface designed for ease of use:
 
@@ -147,14 +145,14 @@ Upon launching the editor, you'll find an intuitive interface designed for ease 
 
 ---
 
-## Your First Game: Adding a Moving Cube
+# Your First Game: Adding a Moving Cube
 
 In Zeytin, the engine and editor are separate executables, but the game code is part of the engine project. This means:
 
 - The **game code is compiled with the engine code**.
 - The **parser expects all game-related code** to be placed under a specific directory: 
 
-### Project Structure
+## Project Structure
 
 ```plaintext
 zeytin/
@@ -199,7 +197,7 @@ zeytin/
 ```
 
 
-#### Key Concepts
+### Key Concepts
 
 - **Variants** are a core abstraction in Zeytin used to define game object components.
 - **Macros** like `VARIANT()` and `PROPERTY()` are essential for reflection and parsing:
@@ -208,7 +206,7 @@ zeytin/
   - `PROPERTY()`:
     - An empty macro used by the editor/parser to identify fields that should be treated as editable properties.
 
-#### Example: `position.h`
+### Example: `position.h`
 
 ```cpp
 #pragma once
@@ -227,7 +225,7 @@ public:
 };
 ```
 
-#### Example: `speed.h`
+### Example: `speed.h`
 
 Now let's define a speed variant, under ```game/include```:
 
@@ -246,7 +244,7 @@ public:
 ```
 
 
-#### Example: `cube.h`
+### Example: `cube.h`
 
 Finally, let's a cube variant where we will also have the logic, under ```game/include```:
 
@@ -394,11 +392,11 @@ private:
 ![image](https://github.com/user-attachments/assets/db955d5a-cd96-4bc7-a31e-4085d17ea024)
 
 
-## Query API
+# Query API
 
 The Query namespace provides a convenient way to work with entities and their variants in the Zeytin engine.
 
-### Key Functions
+## Key Functions
 
 - `create_entity()`: Creates a new entity and returns its ID.
 - `has<T>(entity_id)`: Checks if an entity has a specific variant type.
@@ -414,7 +412,7 @@ The Query namespace provides a convenient way to work with entities and their va
 - `remove_variant_from<T>(entity_id)`: Removes a variant from an entity.
 - `remove_entity(entity_id)`: Removes an entity completely.
 
-### Example Usage
+## Example Usage
 
 ```cpp
 // Create an entity with position and sprite variants
@@ -457,11 +455,11 @@ if (auto health_opt = Query::try_get<Health>(entity_id)) {
 
 ```
 
-## SET_CALLBACK
+# SET_CALLBACK
 
 The `SET_CALLBACK` macro provides a way to define callback methods that are automatically invoked when property values change in your variants.
 
-# Usage
+## Usage
 
 - Add the `SET_CALLBACK` macro after the property declaration  
 - Implement the callback method in your variant class  
