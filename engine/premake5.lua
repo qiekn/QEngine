@@ -4,11 +4,6 @@ workspace "Zeytin"
     targetdir "bin/%{cfg.buildcfg}"
     staticruntime "On"
 
-    filter "system:linux"
-        toolset "clang"
-
-    filter {}
-
     includedirs {
         "include",
         "3rdparty",
@@ -18,21 +13,23 @@ workspace "Zeytin"
         "3rdparty/zmq/include"
     }
 
-    filter "system:windows"
-        libdirs {
-            "3rdparty/raylib/lib/windows",
-            "3rdparty/rttr/lib/windows",
-        }
     filter "system:linux"
+        toolset "clang"
         libdirs {
             "3rdparty/raylib/lib/linux",
             "3rdparty/rttr/lib/linux",
+        }
+        buildoptions {
+            "-w",
+            "-std=c++17",
+            "-static-libstdc++"
         }
 
     filter { "system:linux", "configurations:EDITOR_MODE" }
         links {
             "raylib", "m", "pthread", "dl", "rt", "X11", "asound", "stdc++",
-            "rttr_core", "zmq", "dw", "bfd", "dwarf", "unwind"
+            "rttr_core", "zmq"
+            , "dw", "bfd", "dwarf", "unwind" -- for better callstack, not included in windows
         }
         libdirs {
             "3rdparty/zmq/lib/linux", 
@@ -44,14 +41,12 @@ workspace "Zeytin"
             "rttr_core"
         }
 
-    filter "system:linux"
-        buildoptions {
-            "-w",
-            "-std=c++17",
-            "-static-libstdc++"
+    filter "system:windows"
+        toolset "gcc"
+        libdirs {
+            "3rdparty/raylib/lib/windows",
+            "3rdparty/rttr/lib/windows",
         }
-
-    filter { "system:windows", "toolset:gcc" }
         buildoptions {
             "-std=c++17",
             "-w",
@@ -59,10 +54,19 @@ workspace "Zeytin"
             "-static-libstdc++"
         }
 
-    filter { "system:windows", "toolset:gcc", "configurations:STANDALONE" }
+    filter { "system:windows", "configurations:STANDALONE" }
         links {
             "raylib", "rttr_core",
             "winmm", "gdi32", "user32", "shell32"
+        }
+    
+    filter { "system:windows", "configurations:EDITOR_MODE" }
+        links {
+            "raylib", "rttr_core",
+            "winmm", "gdi32", "user32", "shell32", "zmq",
+        }
+        postbuildcommands {
+            "cp ../3rdparty/zmq/windows/libzmq-mt-4_3_5.dll %{cfg.targetdir}"
         }
 
     filter {}
