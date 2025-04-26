@@ -38,6 +38,9 @@ workspace "Zeytin"
             "3rdparty/backward-cpp/backward.cpp", -- not included in windows 
             "3rdparty/tracy/TracyClient.cpp", -- not included in windows
         }
+        defines {
+            "PROFILE=1",
+        }
 
     filter { "system:linux", "configurations:STANDALONE" }
         links {

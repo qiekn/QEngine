@@ -6,10 +6,6 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef EDITOR_MODE
-#include "tracy/Tracy.hpp"
-#endif
-
 #include <algorithm>
 
 #include "rapidjson/document.h"
@@ -27,6 +23,8 @@
 #include "remote_logger/remote_logger.h"
 #include "game/generated/rttr_registration.h" // required for registering types
 #include "resource_manager/resource_manager.h"
+
+#include "core/profiling.h"
 
 void Zeytin::init() {
 #ifdef EDITOR_MODE
@@ -256,9 +254,7 @@ bool Zeytin::deserialize_scene(const std::string& scene) {
 }
 
 void Zeytin::post_init_variants() {
-#ifdef EDITOR_MODE
-    ZoneScopedN("Zeytin::post_init_variants()");
-#endif
+    ZPROFILE_ZONE_NAMED("Zeytin::post_init_variants()");
 
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
@@ -269,12 +265,10 @@ void Zeytin::post_init_variants() {
             if(!base.check_dependencies("Zeytin::post_init_variants")) continue;
 #endif
             {
-#ifdef EDITOR_MODE
-                ZoneScopedN("VariantBase::post_init_variants()");
-                ZoneText(base.get_type().get_name().to_string().c_str(),
+                ZPROFILE_ZONE_NAMED("VariantBase::post_init_variants()");
+                ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),
                             base.get_type().get_name().to_string().size());
-                ZoneValue(pair.first);
-#endif
+                ZPROFILE_VALUE(pair.first);
                 base.on_post_init();
             }
         }
@@ -282,9 +276,7 @@ void Zeytin::post_init_variants() {
 }
 
 void Zeytin::update_variants() {
-#ifdef EDITOR_MODE
-    ZoneScopedN("Zeytin::update_variants()");
-#endif
+    ZPROFILE_ZONE_NAMED("Zeytin::update_variants()");
 
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
@@ -294,22 +286,18 @@ void Zeytin::update_variants() {
             if(!base.check_dependencies("Zeytin::update_variants()")) continue;
 #endif
             {
-#ifdef EDITOR_MODE
-                ZoneScopedN("VariantBase::on_update()");
-                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
-                ZoneValue(pair.first);
-#endif
-                base.on_update();
+                ZPROFILE_ZONE_NAMED("VariantBase::on_update()");
+                ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZPROFILE_VALUE(pair.first);
 
+                base.on_update();
             }
         }
     }
 }
 
 void Zeytin::play_update_variants() {
-#ifdef EDITOR_MODE
-    ZoneScopedN("Zeytin::play_update_variants()");
-#endif
+    ZPROFILE_ZONE_NAMED("Zeytin::play_update_variants()");
 
     for (auto& pair : m_storage) {   
         for (auto& variant : pair.second) {
@@ -319,22 +307,17 @@ void Zeytin::play_update_variants() {
             if(!base.check_dependencies("Zeytin::play_update_variants()")) continue;
 #endif
             {
-#ifdef EDITOR_MODE
-                ZoneScopedN("VariantBase::on_play_update()");
-                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
-                ZoneValue(pair.first);
-#endif
+                ZPROFILE_ZONE_NAMED("VariantBase::on_play_update()");
+                ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZPROFILE_VALUE(pair.first);
                 base.on_play_update();
-                
             }
         }
     }
 }
 
 void Zeytin::play_start_variants() {
-#ifdef EDITOR_MODE
-    ZoneScopedN("Zeytin::play_start_variants()");
-#endif
+    ZPROFILE_ZONE_NAMED("Zeytin::play_start_variants()");
 
     if (m_started) return;
     m_started = true;
@@ -347,11 +330,9 @@ void Zeytin::play_start_variants() {
             if(!base.check_dependencies("Zeytin::play_start_variants()")) continue;
 #endif
             {
-#ifdef EDITOR_MODE
-                ZoneScopedN("VariantBase::on_play_update()");
-                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
-                ZoneValue(pair.first);
-#endif
+                ZPROFILE_ZONE_NAMED("VariantBase::on_play_update()");
+                ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZPROFILE_VALUE(pair.first);
                 base.on_play_start();
             }
         }
@@ -359,9 +340,7 @@ void Zeytin::play_start_variants() {
 }
 
 void Zeytin::play_late_start_variants() {
-#ifdef EDITOR_MODE
-    ZoneScopedN("Zeytin::play_late_start_variants()");
-#endif
+    ZPROFILE_ZONE_NAMED("Zeytin::play_late_start_variants()");
 
     if (m_late_started) return;
     m_late_started = true;
@@ -374,11 +353,9 @@ void Zeytin::play_late_start_variants() {
             if(!base.check_dependencies("Zeytin::play_late_start_variants()")) continue;
 #endif
             {
-#ifdef EDITOR_MODE
-                ZoneScopedN("VariantBase::on_play_late_start()");
-                ZoneText(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
-                ZoneValue(pair.first);
-#endif
+                ZPROFILE_ZONE_NAMED("VariantBase::on_play_late_start()");
+                ZPROFILE_TEXT(base.get_type().get_name().to_string().c_str(),base.get_type().get_name().to_string().size());
+                ZPROFILE_VALUE(pair.first);
                 base.on_play_late_start();
             }
         }
