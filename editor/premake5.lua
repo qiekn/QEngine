@@ -25,6 +25,10 @@ workspace "ZeytinEditor"
             "3rdparty/zmq/windows"
         }
         buildoptions { "-std=c++17", "-w", "-static-libgcc", "-static-libstdc++"}
+
+        postbuildcommands {
+            "{COPY} ../3rdparty/zmq/windows/libzmq-mt-4_3_5.dll %{cfg.targetdir}"
+        }
     
     filter "system:linux"
         toolset "clang"
