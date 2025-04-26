@@ -287,7 +287,7 @@ Now it's time to code some logic, let's add cube.cpp under ```source/game/```
 #include "core/query.h"
 #include "core/raylib_wrapper.h"
 
-#include "logger.h"
+#include "remote_logger/remote_logger.h" // To send log messages to the editor console
 
 void Cube::on_init() {
     // Initialization if needed
