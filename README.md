@@ -390,11 +390,114 @@ private:
 * Enter play mode, and move the cube as you want
 * You can tweak values while in play mode, but the changes are not saved
 * Exit play mode to return to the original scene
-* Final state: 
 
 ![image](https://github.com/user-attachments/assets/db955d5a-cd96-4bc7-a31e-4085d17ea024)
 
 
+## Query API
+
+The Query namespace provides a convenient way to work with entities and their variants in the Zeytin engine.
+
+### Key Functions
+
+- `create_entity()`: Creates a new entity and returns its ID.
+- `has<T>(entity_id)`: Checks if an entity has a specific variant type.
+- `get<T>(entity_id)`: Gets a reference to a variant for modification.
+- `read<T>(entity_id)`: Gets a const reference to a variant for read-only access.
+- `try_find_first<T>()`: Finds the first entity with a specific variant type.
+- `find_first<T>()`: Like try_find_first but throws if not found.
+- `find_all<T>()`: Returns all variants of a specified type.
+- `find_all_with<T, U...>()`: Returns all entity IDs that have the specified variant types.
+- `find_where<T>(predicate)`: Returns variants matching a predicate function.
+- `for_each<T>(action)`: Executes an action on all variants of a type.
+- `add<T>(entity_id, args...)`: Adds a variant to an entity, optionally with constructor args.
+- `remove_variant_from<T>(entity_id)`: Removes a variant from an entity.
+- `remove_entity(entity_id)`: Removes an entity completely.
+
+### Example Usage
+
+```cpp
+// Create an entity with position and sprite variants
+auto entity_id = Query::create_entity();
+Query::add<Position>(entity_id, 100.0f, 200.0f);
+auto& sprite = Query::add<Sprite>(entity_id)->get();
+sprite.path_to_sprite = "path/to/image.png";
+
+// Retrieve and modify variants
+if (Query::has<Position>(entity_id)) {
+    auto& pos = Query::get<Position>(entity_id);
+    pos.x += 10.0f;
+}
+
+// Work with multiple components
+auto [position, velocity] = Query::get<Position, Velocity>(entity_id);
+position.x += velocity.x * delta_time;
+
+// Find entities with specific variants
+for (auto id : Query::find_all_with<Position, Sprite>()) {
+    // Process entities with both Position and Sprite
+}
+
+// Execute an action on all variants of a type
+Query::for_each<Ball>([](Ball& ball) {
+    ball.reset();
+});
+
+// Get multiple variants in one call
+auto [position, sprite, collider] = Query::get<Position, Sprite, Collider>(entity_id);
+
+// Read-only access
+const auto [position, velocity] = Query::read<Position, Velocity>(entity_id);
+
+// Safely handling variant queries
+if (auto health_opt = Query::try_get<Health>(entity_id)) {
+    Health& health = health_opt->get();
+    health.value -= damage;
+}
+
+```
+
+## SET_CALLBACK
+
+The `SET_CALLBACK` macro provides a way to define callback methods that are automatically invoked when property values change in your variants.
+
+# Usage
+
+- Add the `SET_CALLBACK` macro after the property declaration  
+- Implement the callback method in your variant class  
+- The callback will be called whenever the property is modified through the editor or with the property update system  
+
+Example:
+```cpp
+class Sprite : public VariantBase {  
+    VARIANT(Sprite);
+
+public:  
+    // Declare property with a callback  
+    std::string path_to_sprite; PROPERTY() SET_CALLBACK(handle_new_path);
+
+    void on_init() override {  
+        load_sprite_if_needed();  
+    }
+
+    // Implement the callback method  
+    void handle_new_path() {  
+        load_sprite_if_needed();  
+        log_info() << "Sprite path changed to: " << path_to_sprite << std::endl;  
+    }
+
+private:  
+    void load_sprite_if_needed() {  
+        if (!path_to_sprite.empty()) {  
+            texture = LoadTexture(path_to_sprite.c_str());  
+            m_texture_loaded = true;  
+        }  
+    }
+
+    Texture texture;  
+    bool m_texture_loaded = false;  
+};
+```
 
 
 
