@@ -34,6 +34,9 @@ workspace "Zeytin"
         libdirs {
             "3rdparty/zmq/lib/linux", 
         }
+        files {
+            "3rdparty/backward-cpp/backward.cpp", -- not included in windows 
+        }
 
     filter { "system:linux", "configurations:STANDALONE" }
         links {
@@ -80,7 +83,6 @@ workspace "Zeytin"
 
         filter "configurations:EDITOR_MODE"
             files {
-                "3rdparty/backward-cpp/backward.cpp",
                 "3rdparty/tracy/TracyClient.cpp"
             }
             defines {
