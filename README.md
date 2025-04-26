@@ -268,7 +268,7 @@ public:
     void on_update() override; // Lifetime method, called every frame
     void on_play_update() override; // Lifetime method, called every frame while in play mode
 
-    /*  Not implemented ones:
+    /*  Not overriden ones:
         void on_post_init() override; // Called after on_init()
         void on_play_start() override; // Called on entering play mode
         void on_play_late_start() override // Called after on_play_start()
