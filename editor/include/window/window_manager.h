@@ -6,12 +6,26 @@
 #include <string>
 #include "imgui.h"
 
+#include "raylib.h"
 
-// TODO: Read this from .ini
 struct LayoutConfig {
-    float hierarchy_width = 460.0f;
-    float console_height = 490.0f;
-    float asset_browser_width = 810.0f;
+    float hierarchy_width_ratio = 0.18;
+    float console_height_ratio = 0.35;
+    float asset_browser_width_ratio = 0.315;
+    
+    float hierarchy_width;
+    float console_height;
+    float asset_browser_width;
+    
+    LayoutConfig() {
+        update_from_screen_size(GetScreenWidth(), GetScreenHeight());
+    }
+    
+    void update_from_screen_size(float screen_width, float screen_height) {
+        hierarchy_width = screen_width * hierarchy_width_ratio;
+        console_height = screen_height * console_height_ratio;
+        asset_browser_width = screen_width * asset_browser_width_ratio;
+    }
     
     static LayoutConfig& get() {
         static LayoutConfig instance;

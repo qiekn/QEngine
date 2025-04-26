@@ -1,6 +1,6 @@
 {
     "requires": [
-        "Scale",
-        "Position"
+        "Position",
+        "Scale"
     ]
 }
