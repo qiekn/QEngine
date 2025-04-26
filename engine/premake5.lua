@@ -32,10 +32,11 @@ workspace "Zeytin"
             , "dw", "bfd", "dwarf", "unwind" -- for better callstack, not included in windows
         }
         libdirs {
-            "3rdparty/zmq/lib/linux", 
+            "3rdparty/zmq/linux", 
         }
         files {
             "3rdparty/backward-cpp/backward.cpp", -- not included in windows 
+            "3rdparty/tracy/TracyClient.cpp", -- not included in windows
         }
 
     filter { "system:linux", "configurations:STANDALONE" }
@@ -66,7 +67,10 @@ workspace "Zeytin"
     filter { "system:windows", "configurations:EDITOR_MODE" }
         links {
             "raylib", "rttr_core",
-            "winmm", "gdi32", "user32", "shell32", "zmq",
+            "winmm", "gdi32", "user32", "shell32", "libzmq",
+        }
+        libdirs {
+            "3rdparty/zmq/windows",
         }
         postbuildcommands {
             "cp ../3rdparty/zmq/windows/libzmq-mt-4_3_5.dll %{cfg.targetdir}"
@@ -82,9 +86,6 @@ workspace "Zeytin"
         }
 
         filter "configurations:EDITOR_MODE"
-            files {
-                "3rdparty/tracy/TracyClient.cpp"
-            }
             defines {
                 "DEBUG=1",
                 "EDITOR_MODE=1",
