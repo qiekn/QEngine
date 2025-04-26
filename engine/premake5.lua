@@ -7,10 +7,10 @@ workspace "Zeytin"
     includedirs {
         "include",
         "3rdparty",
+        "3rdparty/zmq",
         "3rdparty/raylib",
         "3rdparty/rttr",
         "3rdparty/tracy",
-        "3rdparty/zmq/include"
     }
 
     filter "system:linux"

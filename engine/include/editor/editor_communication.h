@@ -6,9 +6,9 @@
 #include <mutex>
 #include <queue>
 #include <string>
-#include <zmq.hpp>
 #include <atomic>
 
+#include "zmq/zmq.hpp"
 
 class EditorCommunication {
 public:
