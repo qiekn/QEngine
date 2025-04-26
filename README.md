@@ -339,9 +339,51 @@ void Cube::handle_input() {
 }
 ```
 
+## Creating a Design-time Entity 
+
+Now, let's create a design-time entity. I am referring this as **design-time** because this entity will be created within the editor and constructed upon start by the engine as it loads the scene, as opposed to **runtime-created** entities, which refers to entities that are instantiated while the game is running.
+
+* To create a design-time entity, click on "Create New Entity" and enter a name.
+
+![image](https://github.com/user-attachments/assets/c4716a26-e451-42ee-bccb-30e4b9ee50e5)
 
 
+## Putting it all together
 
+Now that we have an entity, let's start the engine, so it will compile and build the engine and let the engine generate **variant** files necessary for the editor.
+
+* Right click on **TestEntity** and add **Cube** variant to the entity.
+* To help with the setup and minimize setup related issues, ZeytinEditor auto adds queried variants. Queried **Speed** and **Position** variants are automatically added once the Cube variant is added.
+* You can disable this feature if you want:
+
+
+```cpp
+#pragma once
+
+#include "variant/variant_base.h"
+#include "game/position.h"
+
+class Cube : public VariantBase {
+    VARIANT(Cube);
+    IGNORE_REQUIRES(); // Editor will not introduce any dependency check for this variant
+      // or
+    REQUIRES(Position, Scale); // Editor will enforce input variants as requirements
+
+public:
+    float width = 50.0f; PROPERTY()
+    float height = 50.0f; PROPERTY()
+    Color color = RED; PROPERTY()
+
+    void on_init() override; 
+    void on_update() override; 
+    void on_play_update() override; 
+
+private:
+    void handle_input();
+};
+```
+
+![image](https://github.com/user-attachments/assets/7c1c7ee0-a03b-406b-b1c3-25cdb6daf092)
 
 
 
