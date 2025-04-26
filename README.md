@@ -123,18 +123,16 @@ cd engine
 
 Upon launching the editor, you'll find an intuitive interface designed for ease of use:
 
-- **Hierarchy Panel (Left):**  
-  Displays all entities and their components in the current scene.
+## Hierarchy Panel (Left)
+  - Displays all entities and their components in the current scene.
   
-- **Console (Bottom):**  
-  Outputs real-time log messages from both the engine and the editor.
+## Console (Bottom)
+  - Outputs real-time log messages from both the engine and the editor.
   
-- **Asset Browser (Right):**  
-  Lets you navigate and manage project files and folders.
+## Asset Browser (Right)
+  - Lets you navigate and manage project files and folders.
 
 ![Zeytin Editor UI](https://github.com/user-attachments/assets/67f2b4a7-10bb-40cd-bc7b-3be628679f8d)
-
----
 
 ## Running the Engine
 
@@ -142,8 +140,6 @@ Upon launching the editor, you'll find an intuitive interface designed for ease 
 - To start the engine:
   - Click the **"Start Engine"** button at the top of the editor.
   - This will automatically **build** and **run** the engine.
-
----
 
 # Your First Game: Adding a Moving Cube
 
