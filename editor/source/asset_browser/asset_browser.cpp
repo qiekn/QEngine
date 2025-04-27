@@ -125,9 +125,6 @@ void AssetBrowser::render_directory_tree() {
             flags |= ImGuiTreeNodeFlags_DefaultOpen;
         }
         
-        // Remove the Leaf flag for empty directories to keep visual consistency
-        // Let all directories have expand arrows
-        
         std::string name = (depth == 0) ? "Resources" : path.filename().string();
         
         bool node_open = ImGui::TreeNodeEx(name.c_str(), flags);
@@ -138,7 +135,6 @@ void AssetBrowser::render_directory_tree() {
         }
         
         if (node_open) {
-            // If directory is empty, display a hint
             if (dir_info.subdirectories.empty()) {
                 ImGui::Indent();
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
@@ -176,8 +172,6 @@ void AssetBrowser::render_content_view() {
         }
         ImGui::Separator();
     }
-    
-    // Removed folder display from content view since they are already in the tree view
     
     if (m_show_previews) {
         const float thumbnail_size = 80.0f;
