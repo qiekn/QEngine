@@ -125,9 +125,8 @@ void AssetBrowser::render_directory_tree() {
             flags |= ImGuiTreeNodeFlags_DefaultOpen;
         }
         
-        if (dir_info.subdirectories.empty()) {
-            flags |= ImGuiTreeNodeFlags_Leaf;
-        }
+        // Remove the Leaf flag for empty directories to keep visual consistency
+        // Let all directories have expand arrows
         
         std::string name = (depth == 0) ? "Resources" : path.filename().string();
         
@@ -139,8 +138,17 @@ void AssetBrowser::render_directory_tree() {
         }
         
         if (node_open) {
-            for (const auto& subdir : dir_info.subdirectories) {
-                render_dir(subdir, depth + 1);
+            // If directory is empty, display a hint
+            if (dir_info.subdirectories.empty()) {
+                ImGui::Indent();
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+                ImGui::TextUnformatted("(Empty)");
+                ImGui::PopStyleColor();
+                ImGui::Unindent();
+            } else {
+                for (const auto& subdir : dir_info.subdirectories) {
+                    render_dir(subdir, depth + 1);
+                }
             }
             ImGui::TreePop();
         }
@@ -169,19 +177,7 @@ void AssetBrowser::render_content_view() {
         ImGui::Separator();
     }
     
-    for (const auto& subdir_path : dir_info.subdirectories) {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.9f, 0.0f, 1.0f));
-        
-        std::string folder_name = subdir_path.filename().string();
-        if (ImGui::Selectable(("[FOLDER] " + folder_name).c_str(), m_selected_path == subdir_path)) {
-            if (ImGui::IsMouseDoubleClicked(0)) {
-                m_current_path = subdir_path;
-            }
-            m_selected_path = subdir_path;
-        }
-        
-        ImGui::PopStyleColor();
-    }
+    // Removed folder display from content view since they are already in the tree view
     
     if (m_show_previews) {
         const float thumbnail_size = 80.0f;
