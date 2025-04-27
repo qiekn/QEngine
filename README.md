@@ -3,6 +3,7 @@
 Table of Contents
 =================
 
+* [Table of Contents](#table-of-contents)
 * [What is Zeytin ?](#what-is-zeytin-)
 * [Features](#features)
 * [Prerequisites](#prerequisites)
@@ -22,6 +23,7 @@ Table of Contents
    * [Hierarchy Panel (Left)](#hierarchy-panel-left)
    * [Console (Bottom)](#console-bottom)
    * [Asset Browser (Right)](#asset-browser-right)
+   * [Engine View (Middle)](#engine-view-middle)
    * [Running the Engine](#running-the-engine)
 * [Your First Game: Adding a Moving Cube](#your-first-game-adding-a-moving-cube)
    * [Project Structure](#project-structure)
@@ -38,7 +40,15 @@ Table of Contents
    * [Example Usage](#example-usage)
 * [SET_CALLBACK](#set_callback)
    * [Usage](#usage)
-
+* [Profiling](#profiling)
+* [Automated Smoke Tests](#automated-smoke-tests)
+   * [Example Test](#example-test)
+* [Contribution Guidelines](#contribution-guidelines)
+   * [How to Contribute](#how-to-contribute)
+   * [Coding Standards](#coding-standards)
+   * [Bug Reports and Feature Requests](#bug-reports-and-feature-requests)
+ 
+---
 
 # What is Zeytin ?
 
