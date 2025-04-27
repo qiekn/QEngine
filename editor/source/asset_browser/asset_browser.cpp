@@ -162,7 +162,7 @@ void AssetBrowser::render_content_view() {
     auto& dir_info = m_directory_cache[m_current_path];
     
     if (m_current_path != m_root_path) {
-        if (ImGui::Button("← Back")) {
+        if (ImGui::Button("<-- Back")) {
             m_current_path = m_current_path.parent_path();
             m_selected_path = m_current_path;
         }
@@ -173,7 +173,7 @@ void AssetBrowser::render_content_view() {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.9f, 0.0f, 1.0f));
         
         std::string folder_name = subdir_path.filename().string();
-        if (ImGui::Selectable(("📁 " + folder_name).c_str(), m_selected_path == subdir_path)) {
+        if (ImGui::Selectable(("[FOLDER] " + folder_name).c_str(), m_selected_path == subdir_path)) {
             if (ImGui::IsMouseDoubleClicked(0)) {
                 m_current_path = subdir_path;
             }
@@ -226,23 +226,23 @@ void AssetBrowser::render_content_view() {
                     
                     switch (file.type) {
                         case AssetType::Script:
-                            icon = "📄";
+                            icon = "[SCR]";
                             color = ImVec4(0.5f, 1.0f, 0.5f, 1.0f);
                             break;
                         case AssetType::Entity:
-                            icon = "🟠";
+                            icon = "[ENT]";
                             color = ImVec4(1.0f, 0.7f, 0.2f, 1.0f);
                             break;
                         case AssetType::Variant:
-                            icon = "🔵";
+                            icon = "[VAR]";
                             color = ImVec4(0.2f, 0.7f, 1.0f, 1.0f);
                             break;
                         case AssetType::Scene:
-                            icon = "🌐";
+                            icon = "[SCN]";
                             color = ImVec4(1.0f, 0.5f, 0.8f, 1.0f);
                             break;
                         default:
-                            icon = "📄";
+                            icon = "[.]";
                             break;
                     }
                     
