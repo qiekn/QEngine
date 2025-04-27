@@ -171,7 +171,11 @@ Upon launching the editor, you'll find an intuitive interface designed for ease 
 ## Asset Browser (Right)
   - Lets you navigate and manage project files and folders.
 
-![Zeytin Editor UI](https://github.com/user-attachments/assets/67f2b4a7-10bb-40cd-bc7b-3be628679f8d)
+## Engine View (Middle)
+  - And finally, in the middle, there is the engine view.
+
+![image](https://github.com/user-attachments/assets/2bef44c3-292a-45d9-ae6c-4d7af7120510)
+
 
 ## Running the Engine
 
@@ -532,5 +536,45 @@ private:
 };
 ```
 
+# Profiling
+
+It is possible to profile your games using Tracy. The core lifetime methods has already necesssary Tracy macros, you can enable them by defining `PROFILE=1` macro either manually or through `premake`.
+
+```cpp
+#define ZPROFILE_ZONE() ZoneScoped
+#define ZPROFILE_ZONE_NAMED(name) ZoneScopedN(name)
+#define ZPROFILE_FUNCTION() ZoneScoped
+#define ZPROFILE_TEXT(text, size) ZoneText(text, size)
+#define ZPROFILE_VALUE(value) ZoneValue(value)
+```
+
+![image](https://github.com/user-attachments/assets/c9383a40-90c0-4480-87ce-a6ef376ab4d2)
+
+
+# Automated Smoke Tests
+
+Zeytin utilizes ImGui Test Engine, which is the offical repository for automating testing for ImGui. These tests are used internally to make a sanity check after changes but the user can also add any tests to automate any process.
+Tests are registed and managed by `TestManager` class.
+
+## Example Test
+
+Below is a sample test that is used internally to check if creating an entity feature works:
+
+```cpp
+ImGuiTest* hierarchy_create_entity = IM_REGISTER_TEST(m_test_engine, "Hierarchy" , "Create Entity");
+hierarchy_create_entity->TestFunc = [](ImGuiTestContext* ctx) {
+  ctx->SetRef("Hierarchy");
+  ctx->ItemClick("+ Create New Entity");
+  ctx->SetRef("New Entity");
+  ctx->ItemClick("##EntityName");
+  ctx->KeyCharsAppend("TestEntity");
+  ctx->SetRef("New Entity");
+  ctx->ItemClick("Create");
+  ctx->SetRef("Hierarchy");
+  bool item_exists = ctx->ItemExists("**/TestEntity");
+  IM_CHECK(item_exists);
+};
+
+```
 
 
