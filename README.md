@@ -577,4 +577,35 @@ hierarchy_create_entity->TestFunc = [](ImGuiTestContext* ctx) {
 
 ```
 
+# Contribution Guidelines
+
+## How to Contribute
+
+Thank you for considering contributing to Zeytin! Here's how you can help:
+
+1. **Fork the Repository**: Create your own fork of the project.
+2. **Create a Branch**: Create a branch in your fork for your contribution.
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+3. **Make Changes**: Implement your changes, following the coding standards described below.
+4. **Test Your Changes**: Ensure your changes don't break existing functionality.
+5. **Submit a Pull Request**: Once you're satisfied with your changes, submit a pull request to the main repository.
+
+## Coding Standards
+
+- Follow the existing code style and formatting.
+- Use descriptive variable and function names.
+- Design for future, implement bare minimum.
+- Use the variant system for new game components.
+
+## Bug Reports and Feature Requests
+
+- Use the GitHub Issues tab to report bugs or request features.
+- For bugs, include detailed steps to reproduce, expected behavior, and actual behavior.
+- For feature requests, clearly describe the feature and explain why it would be valuable.
+
+I appreciate your contributions to making Zeytin better!
+
+
 
