@@ -73,6 +73,10 @@ int main(int argc, char* argv[])
         "Test Viewer", 
         true);
 
+    window_manager.add_main_menu_component([&engine_controls]{
+            engine_controls.render();
+    });
+
     while (!WindowShouldClose())
     {
         BeginDrawing();

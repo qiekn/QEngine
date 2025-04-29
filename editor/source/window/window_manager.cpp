@@ -1,4 +1,5 @@
 #include "window/window_manager.h"
+#include "imgui.h"
 #include "logger.h"
 #include <unordered_map>
 #include "imgui_internal.h""
@@ -113,6 +114,19 @@ void WindowManager::render_main_menu_bar() {
                     ImGui::MenuItem(name.c_str(), nullptr, is_open);
                 }
                 ImGui::EndMenu();
+            }
+        }
+
+        float menu_bar_width = ImGui::GetWindowWidth();
+        float current_x = ImGui::GetCursorPosX();
+
+        for(auto& component : m_main_menu_components) {
+            float component_width = 300.0f;
+            float center_x = (menu_bar_width + current_x - component_width) / 2.0f;
+
+            ImGui::SetCursorPosX(center_x);
+            if(component) {
+                component();
             }
         }
         
