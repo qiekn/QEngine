@@ -16,21 +16,23 @@
 #include "test_manager/test_manager.h"
 #include "window/window_manager.h"
 
-void RegisterEditorTests(ImGuiTestEngine* test_engine);
-
 int main(int argc, char* argv[])
 {
-    SetTraceLogLevel(LOG_ERROR);
+    SetTraceLogLevel(LOG_WARNING);
+
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT | FLAG_WINDOW_ALWAYS_RUN);
+    
+    InitWindow(1280, 720, "ZeytinEditor");
+    
+    SetTargetFPS(60);
+    
+    SetExitKey(0);
+    
+    rlImGuiSetup(true);
+    SetEditorTheme();
 
     EngineControls engine_controls;
     EngineCommunication engine_communication;
-
-    SetConfigFlags(FLAG_WINDOW_ALWAYS_RUN);
-    InitWindow(GetScreenWidth(), GetScreenHeight(), "ZeytinEditor");
-    SetTargetFPS(144);
-    SetExitKey(0);
-    rlImGuiSetup(true);
-    SetEditorTheme();
 
     EntityList entity_list{};
     VariantList variant_list{};

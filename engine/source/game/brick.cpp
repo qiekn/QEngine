@@ -27,7 +27,7 @@ void Brick::on_play_update() {
 
 void Brick::damage() {
     m_health -= 1;
-
+    
     if(m_health == 0) {
         Query::get<Collider>(this).set_enable(false);
         Query::find_first<Game>().on_break_destroyed(*this);

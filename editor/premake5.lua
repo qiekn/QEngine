@@ -30,7 +30,7 @@ workspace "ZeytinEditor"
         }
     
     filter "system:linux"
-        toolset "clang"
+        toolset "gcc"
         links {
             "raylib", "m", "pthread", "dl", "rt", "X11", "asound", "stdc++", "zmq"
         }
@@ -39,7 +39,7 @@ workspace "ZeytinEditor"
             "3rdparty/zmq/linux"
         }
         files {
-            "3rdparty/backward-cpp/backward.cpp",
+            --"3rdparty/backward-cpp/backward.cpp",
         }
         buildoptions { "-std=c++17", "-w", "-fPIC" }
     
