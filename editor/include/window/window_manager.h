@@ -3,17 +3,22 @@
 #include <functional>
 #include <vector>
 #include <string>
+#include <memory>
 #include "imgui.h"
 #include "raylib.h"
 
 struct MenuInfo {
-    std::string name;
+    std::string name;        
+    std::string menu_path;   
+    bool visible_in_menu;    
+    bool default_open;      
 };
 
 struct WindowInfo {
+    MenuInfo menu_info;
     bool is_open;
     std::function<void()> render_func;
-    MenuInfo menu_info;
+    ImGuiWindowFlags flags;
 };
 
 class WindowManager {
@@ -21,10 +26,25 @@ public:
     WindowManager();
     ~WindowManager() = default;
 
+    void init();
     void render();
     
-    void add_menu_item(const std::string& name, std::function<void()> render_func);
+    void add_window(const std::string& name, 
+                   std::function<void()> render_func,
+                   bool default_open = true,
+                   const std::string& menu_path = "Windows",
+                   bool visible_in_menu = true,
+                   ImGuiWindowFlags flags = 0);
+
+    void set_main_dockspace_id(ImGuiID id) { m_main_dockspace_id = id; }
+    ImGuiID get_main_dockspace_id() const { return m_main_dockspace_id; }
 
 private:
+    void render_main_menu_bar();
+    void create_dockspace();
+    void handle_menu_item(const std::string& menu_path, const std::string& name, bool& is_open);
+
     std::vector<WindowInfo> m_windows;
+    ImGuiID m_main_dockspace_id;
+    bool m_first_layout;
 };

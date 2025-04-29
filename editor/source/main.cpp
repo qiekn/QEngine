@@ -19,13 +19,11 @@
 int main(int argc, char* argv[])
 {
     SetTraceLogLevel(LOG_WARNING);
-
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT | FLAG_WINDOW_ALWAYS_RUN);
     
     InitWindow(1280, 720, "ZeytinEditor");
     
     SetTargetFPS(60);
-    
     SetExitKey(0);
     
     rlImGuiSetup(true);
@@ -41,31 +39,39 @@ int main(int argc, char* argv[])
     TestViewer test_viewer;
 
     WindowManager window_manager;
+    window_manager.init();
     
-    window_manager.add_menu_item("Hierarchy", 
+    window_manager.add_window("Hierarchy", 
         [&hierarchy]() {
             hierarchy.update();
-        });
+        },
+        true, 
+        "Hierarchy", 
+        true); 
     
-    window_manager.add_menu_item("Console", 
+    window_manager.add_window("Console", 
         []() {
             ConsoleWindow::get().render();
-        });
+        },
+        true,
+        "Console",
+        true);
     
-    window_manager.add_menu_item("Asset Browser", 
+    window_manager.add_window("Asset Browser", 
         []() {
             AssetBrowser::get().render();
-        });
-
-    //window_manager.add_menu_item("", "", [&engine_controls] {
-    //        engine_controls.render();
-    //    });
-
-    //TestManager test_manager;
-
-    //window_manager.add_menu_item("Tests", "Automated Tests", [&test_manager] {
-    //        test_manager.update();
-    //});
+        },
+        true,
+        "Asset Browser",
+        true);
+        
+    window_manager.add_window("Test Viewer", 
+        [&test_viewer]() {
+            test_viewer.render();
+        },
+        false, 
+        "Test Viewer", 
+        true);
 
     while (!WindowShouldClose())
     {
@@ -78,8 +84,6 @@ int main(int argc, char* argv[])
 
         rlImGuiEnd();
         EndDrawing();
-
-        //test_manager.post_swap(); // required to have it for now
     }
 
     engine_controls.kill_engine();
