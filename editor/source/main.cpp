@@ -42,42 +42,33 @@ int main(int argc, char* argv[])
 
     WindowManager window_manager;
     
-    window_manager.add_window("Hierarchy", 
-        [&hierarchy](const ImVec2&, const ImVec2&) {
+    window_manager.add_menu_item("Hierarchy", 
+        [&hierarchy]() {
             hierarchy.update();
         });
     
-    window_manager.add_window("Console", 
-        [](const ImVec2& pos, const ImVec2& size) {
-            ConsoleWindow::get().render(pos.y, size.x, size.y);
+    window_manager.add_menu_item("Console", 
+        []() {
+            ConsoleWindow::get().render();
         });
     
-    window_manager.add_window("Asset Browser", 
-        [](const ImVec2&, const ImVec2&) {
+    window_manager.add_menu_item("Asset Browser", 
+        []() {
             AssetBrowser::get().render();
         });
 
-    window_manager.add_menu_item("", "", [&engine_controls] {
-            engine_controls.render();
-        });
+    //window_manager.add_menu_item("", "", [&engine_controls] {
+    //        engine_controls.render();
+    //    });
 
-    TestManager test_manager;
+    //TestManager test_manager;
 
-    window_manager.add_menu_item("Tests", "Automated Tests", [&test_manager] {
-            test_manager.update();
-    });
+    //window_manager.add_menu_item("Tests", "Automated Tests", [&test_manager] {
+    //        test_manager.update();
+    //});
 
     while (!WindowShouldClose())
     {
-        if(IsKeyPressed(KEY_H)) {
-            if(IsWindowMinimized()) {
-                SetWindowFocused();
-            }
-            else {
-                MinimizeWindow();
-            }
-        }
-
         BeginDrawing();
         ClearBackground(BLACK);
 
@@ -88,7 +79,7 @@ int main(int argc, char* argv[])
         rlImGuiEnd();
         EndDrawing();
 
-        test_manager.post_swap(); // required to have it for now
+        //test_manager.post_swap(); // required to have it for now
     }
 
     engine_controls.kill_engine();
