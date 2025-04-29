@@ -49,6 +49,9 @@ private:
     void handle_menu_item(const std::string& menu_path, const std::string& name, bool& is_open);
     std::vector<std::function<void()>> m_main_menu_components;
     std::vector<WindowInfo> m_windows;
+
     ImGuiID m_main_dockspace_id;
     bool m_first_layout;
+    bool m_config_exists;
+    std::string m_ini_filename;
 };

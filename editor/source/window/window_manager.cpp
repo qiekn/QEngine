@@ -1,8 +1,11 @@
 #include "window/window_manager.h"
 #include "imgui.h"
 #include "logger.h"
+#include <filesystem>
 #include <unordered_map>
 #include "imgui_internal.h""
+
+#include "resource_manager/resource_manager.h""
 
 WindowManager::WindowManager() 
     : m_main_dockspace_id(0)
@@ -13,6 +16,22 @@ WindowManager::WindowManager()
 void WindowManager::init() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    
+    std::filesystem::path config_path = get_resource_manager().get_editor_path();
+    std::filesystem::path imgui_config_path = config_path / "imgui.ini";
+    
+    m_ini_filename = imgui_config_path.string();
+    io.IniFilename = m_ini_filename.c_str();
+    
+    io.IniSavingRate = 5.0f;
+    
+    if (std::filesystem::exists(imgui_config_path)) {
+        log_info() << "ImGui configuration found at: " << imgui_config_path << std::endl;
+        m_config_exists = true;
+    } else {
+        log_info() << "No ImGui configuration found, will use default layout" << std::endl;
+        m_config_exists = false;
+    }
 }
 
 void WindowManager::render() {
@@ -58,36 +77,55 @@ void WindowManager::create_dockspace() {
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
-    
+
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-    
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    
+
     ImGui::Begin("DockSpace", nullptr, window_flags);
     ImGui::PopStyleVar(3);
-    
+
     m_main_dockspace_id = ImGui::GetID("MainDockSpace");
     ImGui::DockSpace(m_main_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-    
-    if (m_first_layout && !m_windows.empty()) {
+
+    if (m_first_layout && !m_config_exists && !m_windows.empty()) {
         m_first_layout = false;
-        
+
         ImGui::DockBuilderRemoveNode(m_main_dockspace_id);
         ImGui::DockBuilderAddNode(m_main_dockspace_id, ImGuiDockNodeFlags_DockSpace);
         ImGui::DockBuilderSetNodeSize(m_main_dockspace_id, viewport->Size);
-        
+
         ImGuiID dock_main_id = m_main_dockspace_id;
-        ImGuiID dock_left_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, nullptr, &dock_main_id);
-        ImGuiID dock_right_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, nullptr, &dock_main_id);
-        ImGuiID dock_down_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
-        
+        ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
+
+        ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, nullptr, &dock_main_id);
+        ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, nullptr, &dock_main_id);
+        ImGuiID dock_id_center = dock_main_id;
+
+        for (auto& window : m_windows) {
+            if (window.menu_info.name == "Hierarchy") {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_left);
+            }
+            else if (window.menu_info.name == "Asset Browser") {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_right);
+            }
+            else if (window.menu_info.name == "Console") {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_bottom);
+            }
+            else {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_center);
+            }
+        }
+
         ImGui::DockBuilderFinish(m_main_dockspace_id);
+
+        ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
     }
-    
+
     ImGui::End();
 }
 
@@ -137,3 +175,4 @@ void WindowManager::render_main_menu_bar() {
 void WindowManager::handle_menu_item(const std::string& menu_path, const std::string& name, bool& is_open) {
     if (ImGui::MenuItem(name.c_str(), nullptr, &is_open)) {}
 }
+
