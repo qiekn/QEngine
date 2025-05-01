@@ -47,13 +47,6 @@ Zeytin::Zeytin() {
 #endif
 
     m_render_texture = load_render_texture(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-    float scaleX = (float)get_screen_width() / VIRTUAL_WIDTH;
-    float scaleY = (float)get_screen_height() / VIRTUAL_HEIGHT;
-    float scale = (scaleX < scaleY) ? scaleX : scaleY;
-    m_render_position = {
-        (get_screen_width() - (VIRTUAL_WIDTH * scale)) * 0.5f,
-        (get_screen_height() - (VIRTUAL_HEIGHT * scale)) * 0.5f
-    };
 
     m_camera.offset = {0,0},
     m_camera.target = {0, 0};
@@ -95,19 +88,7 @@ void Zeytin::run_frame() {
     begin_drawing();
     clear_background(BLACK);
 
-    float scaleX = (float)get_screen_width() / VIRTUAL_WIDTH;
-    float scaleY = (float)get_screen_height() / VIRTUAL_HEIGHT;
-    float scale = (scaleX < scaleY) ? scaleX : scaleY;
-
-    draw_texture_pro(
-        m_render_texture.texture,
-        (Rectangle){ 0, 0, (float)m_render_texture.texture.width, (float)-m_render_texture.texture.height },
-        (Rectangle){ m_render_position.x, m_render_position.y, VIRTUAL_WIDTH * scale, VIRTUAL_HEIGHT * scale },
-        (Vector2){ 0, 0 },
-        0.0f,
-        WHITE
-    );
-
+    render();
     end_drawing();
 }
 
@@ -410,6 +391,22 @@ void Zeytin::subscribe_editor_events() {
         [this](bool) {
             m_should_die = true;
         }
+    );
+}
+
+void Zeytin::render() {
+    draw_texture_pro(
+        m_render_texture.texture,
+        Rectangle{ 0, 0, (float)m_render_texture.texture.width, (float)-m_render_texture.texture.height },
+        Rectangle{
+        (get_screen_width() - VIRTUAL_WIDTH * ((get_screen_width() / VIRTUAL_WIDTH) < (get_screen_height() / VIRTUAL_HEIGHT) ? (get_screen_width() / VIRTUAL_WIDTH) : (get_screen_height() / VIRTUAL_HEIGHT))) * 0.5f,
+        (get_screen_height() - VIRTUAL_HEIGHT * ((get_screen_width() / VIRTUAL_WIDTH) < (get_screen_height() / VIRTUAL_HEIGHT) ? (get_screen_width() / VIRTUAL_WIDTH) : (get_screen_height() / VIRTUAL_HEIGHT))) * 0.5f,
+        VIRTUAL_WIDTH * ((get_screen_width() / VIRTUAL_WIDTH) < (get_screen_height() / VIRTUAL_HEIGHT) ? (get_screen_width() / VIRTUAL_WIDTH) : (get_screen_height() / VIRTUAL_HEIGHT)),
+        VIRTUAL_HEIGHT * ((get_screen_width() / VIRTUAL_WIDTH) < (get_screen_height() / VIRTUAL_HEIGHT) ? (get_screen_width() / VIRTUAL_WIDTH) : (get_screen_height() / VIRTUAL_HEIGHT))
+    },
+    Vector2{ 0, 0 },
+    0.0f,
+    WHITE
     );
 }
 

@@ -1,8 +1,11 @@
 #include "application/application.h"
 #include "core/raylib_wrapper.h"
 #include "core/zeytin.h"
-#include "raylib.h"
 #include "core/macros.h""
+#include "raylib.h"
+
+#include "config_manager/config_manager.h""
+#include "remote_logger/remote_logger.h""
 
 Application::Application() {
     init_window();
@@ -15,13 +18,22 @@ void Application::init_window() {
     SetTraceLogLevel(LOG_ERROR);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_TOPMOST | FLAG_WINDOW_ALWAYS_RUN);
 
-    const int windowWidth = 1280;
-    const int windowHeight = 720;
-    InitWindow(windowWidth, windowHeight, "Engine View");
+    const int window_width = CONFIG_GET("window_width", int, 1280);
+    const int window_height = CONFIG_GET("window_height", int, 720);
+
+    const int window_x = CONFIG_GET("window_x", int, -1);
+    const int window_y = CONFIG_GET("window_y", int, -1);
+
+    InitWindow(window_width, window_height, "Engine View");
+
+    if(window_x != window_y != -1) {
+        SetWindowPosition(window_x, window_y);
+    }
+
 #else
-    const int windowWidth = GetScreenWidth();
-    const int windowHeight = GetScreenHeight();
-    InitWindow(windowWidth, windowHeight, "Zeytin Game");
+    const int window_width = GetScreenWidth();
+    const int window_height = GetScreenHeight();
+    InitWindow(window_width, window_height, "Zeytin Game");
 #endif
 
     int monitor_refresh_rate = GetMonitorRefreshRate(GetCurrentMonitor());
@@ -42,5 +54,4 @@ bool Application::should_shutdown() {
 }
 
 void Application::shutdown() {
-
 }

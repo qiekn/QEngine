@@ -81,6 +81,7 @@ private:
 
     void initialize_camera();
     void update_camera();
+    void render();
     
     bool m_started = false;
     bool m_late_started = false;
@@ -94,7 +95,6 @@ private:
 
     // NOTE: maybe move these to somewhere else
     RenderTexture2D m_render_texture;
-    Vector2 m_render_position;
     Camera2D m_camera;
 
 #ifdef EDITOR_MODE
