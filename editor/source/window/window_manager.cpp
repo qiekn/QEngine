@@ -1,122 +1,178 @@
 #include "window/window_manager.h"
-#include "raylib.h"
+#include "imgui.h"
+#include "logger.h"
+#include <filesystem>
+#include <unordered_map>
+#include "imgui_internal.h""
 
-#include "engine/engine_event.h"
+#include "resource_manager/resource_manager.h""
 
-WindowManager::WindowManager() {}
+WindowManager::WindowManager() 
+    : m_main_dockspace_id(0)
+    , m_first_layout(true)
+{
+}
 
-void WindowManager::add_window(const std::string& name, 
-                             std::function<void(const ImVec2&, const ImVec2&)> render_func,
-                             ImVec2 default_size,
-                             bool is_visible) {
-    WindowInfo window;
-    window.name = name;
-    window.position = ImVec2(0, 0); 
-    window.size = default_size;
-    window.is_open = true;
-    window.is_visible = is_visible;
-    window.render_func = render_func;
+void WindowManager::init() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     
-    m_windows.push_back(window);
-}
-
-bool WindowManager::is_window_visible(const std::string& name) const {
-    for (const auto& window : m_windows) {
-        if (window.name == name) {
-            return window.is_visible;
-        }
+    std::filesystem::path config_path = get_resource_manager().get_editor_path();
+    std::filesystem::path imgui_config_path = config_path / "imgui.ini";
+    
+    m_ini_filename = imgui_config_path.string();
+    io.IniFilename = m_ini_filename.c_str();
+    
+    io.IniSavingRate = 5.0f;
+    
+    if (std::filesystem::exists(imgui_config_path)) {
+        log_info() << "ImGui configuration found at: " << imgui_config_path << std::endl;
+        m_config_exists = true;
+    } else {
+        log_info() << "No ImGui configuration found, will use default layout" << std::endl;
+        m_config_exists = false;
     }
-    return false;
-}
-
-void WindowManager::add_menu_item(const std::string& category, const std::string& name, std::function<void()> render_func) {
-    MenuInfo info;
-    info.category = category;
-    info.name = name;
-    info.render_func = render_func;
-    m_menus.push_back(info);
 }
 
 void WindowManager::render() {
-    const auto& layout = LayoutConfig::get();
+    create_dockspace();
+    render_main_menu_bar();
     
-    const float menu_bar_height = ImGui::GetFrameHeight();
-    const ImVec2 window_size = ImVec2(GetScreenWidth(), GetScreenHeight());
-    
-    const float main_content_height = window_size.y - menu_bar_height - layout.console_height;
-
-    const ImVec2 hierarchy_pos = ImVec2(0, menu_bar_height);
-    const ImVec2 hierarchy_size = ImVec2(layout.hierarchy_width, main_content_height);
-    
-    const ImVec2 asset_browser_pos = ImVec2(window_size.x - layout.asset_browser_width, menu_bar_height);
-    const ImVec2 asset_browser_size = ImVec2(layout.asset_browser_width, main_content_height);
-    
-    const ImVec2 console_pos = ImVec2(0, menu_bar_height + main_content_height);
-    const ImVec2 console_size = ImVec2(window_size.x, layout.console_height);
-
     for (auto& window : m_windows) {
-        if (!window.is_visible || !window.is_open)
+        if (!window.is_open)
             continue;
-            
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | 
-                                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | 
-                                 ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize;
         
-        if (window.name == "Hierarchy") {
-            window.position = hierarchy_pos;
-            window.size = hierarchy_size;
-        }
-        else if (window.name == "Asset Browser") {
-            window.position = asset_browser_pos;
-            window.size = asset_browser_size;
-        }
-        else if (window.name == "Console") {
-            window.position = console_pos;
-            window.size = console_size;
-        }
-        
-        ImGui::SetNextWindowPos(window.position);
-        ImGui::SetNextWindowSize(window.size);
-        
-        if (ImGui::Begin(window.name.c_str(), &window.is_open, flags)) {
+        if (ImGui::Begin(window.menu_info.name.c_str(), &window.is_open, window.flags)) {
             if (window.render_func) {
-                window.render_func(window.position, window.size);
+                window.render_func();
             }
             ImGui::End();
         }
     }
+}
 
-    if(ImGui::BeginMainMenuBar()) {
-        bool hasMenuItems = false;
-        for(auto& menu : m_menus) {
-            if(!menu.category.empty() && !menu.name.empty()) {
-                
-                if(ImGui::BeginMenu(menu.category.c_str())) {
-                    ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
-                    ImGui::EndMenu();
-                }
+void WindowManager::add_window(const std::string& name, 
+                              std::function<void()> render_func,
+                              bool default_open,
+                              const std::string& menu_path,
+                              bool visible_in_menu,
+                              ImGuiWindowFlags flags) {
+    MenuInfo menu_info;
+    menu_info.name = name;
+    menu_info.menu_path = menu_path;
+    menu_info.visible_in_menu = visible_in_menu;
+    menu_info.default_open = default_open;
+    
+    WindowInfo window_info;
+    window_info.menu_info = menu_info;
+    window_info.render_func = render_func;
+    window_info.is_open = default_open;
+    window_info.flags = flags;
+    
+    m_windows.push_back(window_info);
+}
+
+void WindowManager::create_dockspace() {
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    ImGui::SetNextWindowViewport(viewport->ID);
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+    ImGui::Begin("DockSpace", nullptr, window_flags);
+    ImGui::PopStyleVar(3);
+
+    m_main_dockspace_id = ImGui::GetID("MainDockSpace");
+    ImGui::DockSpace(m_main_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+    if (m_first_layout && !m_config_exists && !m_windows.empty()) {
+        m_first_layout = false;
+
+        ImGui::DockBuilderRemoveNode(m_main_dockspace_id);
+        ImGui::DockBuilderAddNode(m_main_dockspace_id, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(m_main_dockspace_id, viewport->Size);
+
+        ImGuiID dock_main_id = m_main_dockspace_id;
+        ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
+
+        ImGuiID dock_id_left = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.2f, nullptr, &dock_main_id);
+        ImGuiID dock_id_right = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.25f, nullptr, &dock_main_id);
+        ImGuiID dock_id_center = dock_main_id;
+
+        for (auto& window : m_windows) {
+            if (window.menu_info.name == "Hierarchy") {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_left);
             }
-            else if(menu.category.empty() && !menu.name.empty()) {
-                ImGui::MenuItem(menu.name.c_str(), nullptr, &menu.is_open);
+            else if (window.menu_info.name == "Asset Browser") {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_right);
+            }
+            else if (window.menu_info.name == "Console") {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_bottom);
+            }
+            else {
+                ImGui::DockBuilderDockWindow(window.menu_info.name.c_str(), dock_id_center);
+            }
+        }
+
+        ImGui::DockBuilderFinish(m_main_dockspace_id);
+
+        ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
+    }
+
+    ImGui::End();
+}
+
+void WindowManager::render_main_menu_bar() {
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Save All", "Ctrl+S")) {}
+            ImGui::Separator();
+            if (ImGui::MenuItem("Exit", "Alt+F4")) {}
+            ImGui::EndMenu();
+        }
+        
+        std::unordered_map<std::string, std::vector<std::pair<std::string, bool*>>> menu_paths;
+        
+        for (auto& window : m_windows) {
+            if (window.menu_info.visible_in_menu) {
+                menu_paths[window.menu_info.menu_path].push_back({window.menu_info.name, &window.is_open});
             }
         }
         
-        for(auto& menu : m_menus) {
-            if(menu.category.empty() && menu.name.empty()) {
-                menu.render_func();
-                break;
+        for (const auto& [menu_path, items] : menu_paths) {
+            if (ImGui::BeginMenu(menu_path.c_str())) {
+                for (const auto& [name, is_open] : items) {
+                    ImGui::MenuItem(name.c_str(), nullptr, is_open);
+                }
+                ImGui::EndMenu();
             }
         }
 
+        float menu_bar_width = ImGui::GetWindowWidth();
+        float current_x = ImGui::GetCursorPosX();
+
+        for(auto& component : m_main_menu_components) {
+            float component_width = 300.0f;
+            float center_x = (menu_bar_width + current_x - component_width) / 2.0f;
+
+            ImGui::SetCursorPosX(center_x);
+            if(component) {
+                component();
+            }
+        }
         
         ImGui::EndMainMenuBar();
     }
-
-    for(auto& menu : m_menus) {
-        if(!menu.category.empty() || !menu.name.empty()) { 
-            if(menu.is_open) {
-                menu.render_func();
-            }
-        }
-    }
 }
+
+void WindowManager::handle_menu_item(const std::string& menu_path, const std::string& name, bool& is_open) {
+    if (ImGui::MenuItem(name.c_str(), nullptr, &is_open)) {}
+}
+

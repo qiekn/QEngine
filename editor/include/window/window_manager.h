@@ -1,52 +1,24 @@
-// window_manager.h
 #pragma once
 
 #include <functional>
 #include <vector>
 #include <string>
+#include <memory>
 #include "imgui.h"
-
 #include "raylib.h"
 
-struct LayoutConfig {
-    float hierarchy_width_ratio = 0.18;
-    float console_height_ratio = 0.35;
-    float asset_browser_width_ratio = 0.315;
-    
-    float hierarchy_width;
-    float console_height;
-    float asset_browser_width;
-    
-    LayoutConfig() {
-        update_from_screen_size(GetScreenWidth(), GetScreenHeight());
-    }
-    
-    void update_from_screen_size(float screen_width, float screen_height) {
-        hierarchy_width = screen_width * hierarchy_width_ratio;
-        console_height = screen_height * console_height_ratio;
-        asset_browser_width = screen_width * asset_browser_width_ratio;
-    }
-    
-    static LayoutConfig& get() {
-        static LayoutConfig instance;
-        return instance;
-    }
+struct MenuInfo {
+    std::string name;        
+    std::string menu_path;   
+    bool visible_in_menu;    
+    bool default_open;      
 };
 
 struct WindowInfo {
-    std::string name;
-    ImVec2 position;
-    ImVec2 size;
+    MenuInfo menu_info;
     bool is_open;
-    bool is_visible;
-    std::function<void(const ImVec2&, const ImVec2&)> render_func;
-};
-
-struct MenuInfo {
-    std::string name;
-    std::string category;
     std::function<void()> render_func;
-    bool is_open = false;
+    ImGuiWindowFlags flags;
 };
 
 class WindowManager {
@@ -54,18 +26,32 @@ public:
     WindowManager();
     ~WindowManager() = default;
 
+    void init();
     void render();
     
-    void add_menu_item(const std::string& category, const std::string& name, std::function<void()> render_func);
-
     void add_window(const std::string& name, 
-                  std::function<void(const ImVec2&, const ImVec2&)> render_func,
-                  ImVec2 default_size = ImVec2(0, 0),
-                  bool is_visible = true);
+                   std::function<void()> render_func,
+                   bool default_open = true,
+                   const std::string& menu_path = "Windows",
+                   bool visible_in_menu = true,
+                   ImGuiWindowFlags flags = 0);
 
-    bool is_window_visible(const std::string& name) const;
+    void set_main_dockspace_id(ImGuiID id) { m_main_dockspace_id = id; }
+    ImGuiID get_main_dockspace_id() const { return m_main_dockspace_id; }
+
+    inline void add_main_menu_component(std::function<void()> render_func) {
+        this->m_main_menu_components.push_back(render_func);
+    }
 
 private:
+    void render_main_menu_bar();
+    void create_dockspace();
+    void handle_menu_item(const std::string& menu_path, const std::string& name, bool& is_open);
+    std::vector<std::function<void()>> m_main_menu_components;
     std::vector<WindowInfo> m_windows;
-    std::vector<MenuInfo> m_menus;
+
+    ImGuiID m_main_dockspace_id;
+    bool m_first_layout;
+    bool m_config_exists;
+    std::string m_ini_filename;
 };

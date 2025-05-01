@@ -7,7 +7,7 @@ class ConsoleWindow {
 public:    
     ConsoleWindow();
 
-    void render(float y_position, float width, float height);
+    void render();
 
     void set_show_trace(bool show) { m_show_trace = show; }
     void set_show_info(bool show) { m_show_info = show; }

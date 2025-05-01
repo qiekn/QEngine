@@ -13,12 +13,9 @@ ImVec4 ConsoleWindow::get_log_level_color(LogLevel level) const {
     }
 }
 
-void ConsoleWindow::render(float y_position, float width, float height) {
+void ConsoleWindow::render() {
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
                            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
-
-    ImGui::SetNextWindowPos(ImVec2(0, y_position));
-    ImGui::SetNextWindowSize(ImVec2(width, height));
 
     if (ImGui::Begin("Console", nullptr, flags)) {
         if (ImGui::Button("Clear")) {
@@ -181,7 +178,6 @@ void ConsoleWindow::render(float y_position, float width, float height) {
         ImGui::Separator();
         bool reclaim_focus = false;
 
-        ImGui::SetNextItemWidth(width - 120.0f);
         if (ImGui::InputText("Command", m_command_buffer, IM_ARRAYSIZE(m_command_buffer),
                             ImGuiInputTextFlags_EnterReturnsTrue)) {
             if (m_command_buffer[0] != '\0') {
