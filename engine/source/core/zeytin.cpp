@@ -1,6 +1,7 @@
 #include "core/zeytin.h"
 
 #include <cassert>
+#include <cstdio>
 #include <filesystem>
 #include <sstream>
 #include <iostream>
@@ -18,6 +19,7 @@
 #include "core/utils.h"
 
 #include "editor/editor_event.h"
+#include "raylib.h"
 #include "variant/variant_base.h"
 
 #include "remote_logger/remote_logger.h"
@@ -25,6 +27,7 @@
 #include "resource_manager/resource_manager.h"
 
 #include "core/profiling.h"
+#include "image_serializer/image_serializer.h""
 
 void Zeytin::init() {
 #ifdef EDITOR_MODE
@@ -85,15 +88,6 @@ void Zeytin::run_frame() {
 
     end_mode2d();
 
-    if(is_key_pressed(KEY_H)) {
-        if(is_window_minimized()) {
-            set_window_focused();
-        }
-        else {
-            minimize_window();
-        }
-    }
-
     if(m_is_play_mode && !m_is_pause_play_mode) {
         play_start_variants();
         play_late_start_variants();
@@ -109,9 +103,14 @@ void Zeytin::run_frame() {
     float scaleY = (float)get_screen_height() / VIRTUAL_HEIGHT;
     float scale = (scaleX < scaleY) ? scaleX : scaleY;
 
+    auto image = LoadImageFromTexture(m_render_texture.texture); // load texture from gpu to cpu
+    auto serialized = image_serializer::serialize(image);
+    Image image_deserialized = image_serializer::deserialize(serialized);
+    Texture texture = LoadTextureFromImage(image_deserialized);
+
     draw_texture_pro(
-        m_render_texture.texture,
-        (Rectangle){ 0, 0, (float)m_render_texture.texture.width, (float)-m_render_texture.texture.height },
+        texture,
+        (Rectangle){ 0, 0, (float)texture.width, (float)-texture.height },
         (Rectangle){ m_render_position.x, m_render_position.y, VIRTUAL_WIDTH * scale, VIRTUAL_HEIGHT * scale },
         (Vector2){ 0, 0 },
         0.0f,

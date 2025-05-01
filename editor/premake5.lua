@@ -39,7 +39,7 @@ workspace "ZeytinEditor"
             "3rdparty/zmq/linux"
         }
         files {
-            --"3rdparty/backward-cpp/backward.cpp",
+            "3rdparty/backward-cpp/backward.cpp",
         }
         buildoptions { "-std=c++17", "-w", "-fPIC" }
     
