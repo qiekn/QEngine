@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     SetTraceLogLevel(LOG_WARNING);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT | FLAG_WINDOW_ALWAYS_RUN);
     
-    InitWindow(1280, 720, "ZeytinEditor");
+    InitWindow(GetScreenWidth(), GetScreenHeight(), "ZeytinEditor");
     
     SetTargetFPS(60);
     SetExitKey(0);
@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
     EngineControls engine_controls;
     EngineCommunication engine_communication;
 
-    EntityList entity_list{};
-    VariantList variant_list{};
+    EntityList entity_list;
+    VariantList variant_list;
 
     Hierarchy hierarchy(entity_list.get_entities(), variant_list.get_variants());
     TestViewer test_viewer;

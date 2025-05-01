@@ -1,5 +1,8 @@
 #include "application/application.h"
+#include "core/raylib_wrapper.h"
 #include "core/zeytin.h"
+#include "raylib.h"
+#include "core/macros.h""
 
 Application::Application() {
     init_window();
@@ -10,42 +13,32 @@ void Application::init_window() {
 
 #ifdef EDITOR_MODE
     SetTraceLogLevel(LOG_ERROR);
-    SetConfigFlags(FLAG_WINDOW_TOPMOST | FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_ALWAYS_RUN);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_TOPMOST | FLAG_WINDOW_ALWAYS_RUN);
 
     const int windowWidth = 1280;
     const int windowHeight = 720;
-    InitWindow(windowWidth, windowHeight, "ZeytinEngine");
-
-    float console_height = GetScreenHeight() * 0.35; // magical aspect, from LayoutConfig editor
-    float free_height = GetScreenHeight() - console_height;
-    float window_start_height = free_height/3;
-
-    float hierarchy_width = GetScreenWidth() * 0.18; // magical aspect, from LayoutConfig editor
-    float asset_browser_width = GetScreenWidth() * 0.315; // magical aspect, from LayoutConfig editor
-    float free_width = GetScreenWidth() - hierarchy_width - asset_browser_width;
-
-
-    //SetWindowPosition(466, 172);
-    SetWindowPosition(hierarchy_width*2+5, window_start_height);
+    InitWindow(windowWidth, windowHeight, "Engine View");
 #else
-    const int windowWidth = 1920;
-    const int windowHeight = 1080;
+    const int windowWidth = GetScreenWidth();
+    const int windowHeight = GetScreenHeight();
     InitWindow(windowWidth, windowHeight, "Zeytin Game");
 #endif
 
-    SetExitKey(0);
+    int monitor_refresh_rate = GetMonitorRefreshRate(GetCurrentMonitor());
+    set_target_fps(monitor_refresh_rate);
+    set_exit_key(0);
 }
 
 void Application::init_engine() {
-    get_zeytin().init();
+    CONSTRUCT_SINGLETON(Zeytin);
 }
 
-void Application::run() {
-    get_zeytin().run_frame();
+void Application::run_frame() {
+    Zeytin::get().run_frame();
 }
 
 bool Application::should_shutdown() {
-    return get_zeytin().should_die();
+    return Zeytin::get().should_die();
 }
 
 void Application::shutdown() {

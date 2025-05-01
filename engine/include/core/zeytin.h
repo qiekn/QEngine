@@ -13,23 +13,17 @@
 #include "entity/entity.h"
 #include "editor/editor_communication.h"
 
-#define get_zeytin() Zeytin::get()
+#include "core/macros.h"
 
 constexpr float VIRTUAL_WIDTH = 1920;
 constexpr float VIRTUAL_HEIGHT = 1080;
 
 class Zeytin {
-public:
-    Zeytin(const Zeytin&) = delete;
-    Zeytin& operator=(const Zeytin&) = delete;
-    static Zeytin& get() {
-        static Zeytin instance;
-        return instance;
-    }
+    MAKE_SINGLETON(Zeytin);
 
-    void init();
+public:
     void run_frame();
-    inline bool should_die() const { return m_should_die || WindowShouldClose(); }
+    inline bool should_die() const { return m_should_die || window_should_close(); }
 
     entity_id new_entity_id();
     
@@ -82,9 +76,9 @@ public:
 #endif
 
 private:
-    Zeytin() = default;
+    Zeytin();
     ~Zeytin();
-    
+
     void initialize_camera();
     void update_camera();
     

@@ -3,19 +3,16 @@
 #include <string>
 #include <filesystem>
 
+#include "core/macros.h"
+
 #define ENTITY_FOLDER "entities"
 #define VARIANT_FOLDER  "variants"
 #define ENGINE_SCRIPTS_FOLDER "scripts"
 
-#define get_resource_manager() ResourceManager::get()
-
 class ResourceManager final {
-public:
-    static ResourceManager& get() {
-        static ResourceManager instance;
-        return instance;
-    }
+    MAKE_SINGLETON(ResourceManager);
 
+public:
     inline std::filesystem::path get_resources_path() const { return m_resources_path;}
 
     inline std::filesystem::path get_entities_path() const { return get_resource_subdir(ENTITY_FOLDER); }
@@ -30,13 +27,10 @@ public:
     std::filesystem::path get_entity_path(const std::string& name) const;
 
 private:
-    ResourceManager() {
-        construct_paths();
-    }
+    ResourceManager();
 
     void construct_paths();
     std::filesystem::path get_search_start_dir() const;
-
     std::filesystem::path m_resources_path;
 };
 

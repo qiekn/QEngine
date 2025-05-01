@@ -15,7 +15,7 @@ namespace {
 }
 
 EntityList::EntityList() {
-    load_entities(get_resource_manager().get_entities_path());
+    load_entities(ResourceManager::get().get_entities_path());
     register_event_handlers();
 }
 

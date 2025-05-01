@@ -5,7 +5,7 @@
 #include "resource_manager/resource_manager.h"
 
 AssetBrowser::AssetBrowser() 
-    : m_root_path(get_resource_manager().get_root_path())
+    : m_root_path(ResourceManager::get().get_root_path())
     , m_current_path(m_root_path)
 {
     refresh();

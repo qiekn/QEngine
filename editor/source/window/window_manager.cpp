@@ -17,7 +17,7 @@ void WindowManager::init() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     
-    std::filesystem::path config_path = get_resource_manager().get_editor_path();
+    std::filesystem::path config_path = ResourceManager::get().get_editor_path();
     std::filesystem::path imgui_config_path = config_path / "imgui.ini";
     
     m_ini_filename = imgui_config_path.string();

@@ -1,13 +1,13 @@
 #include "game/camera2d.h"
 
 void Camera2DSystem::on_init() {
-    auto& camera = get_zeytin().get_camera();
+    auto& camera = Zeytin::get().get_camera();
     camera.zoom = zoom;
     camera.target = m_target;
 }
 
 void Camera2DSystem::on_update() {
-    auto& camera = get_zeytin().get_camera();
+    auto& camera = Zeytin::get().get_camera();
     
     camera.zoom = zoom;
     
@@ -24,7 +24,7 @@ void Camera2DSystem::on_update() {
 }
 
 void Camera2DSystem::handle_dragging() {
-    auto& camera = get_zeytin().get_camera();
+    auto& camera = Zeytin::get().get_camera();
     
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
         Vector2 mouse_position = GetMousePosition();
@@ -49,7 +49,7 @@ void Camera2DSystem::handle_dragging() {
 }
 
 void Camera2DSystem::handle_zooming() {
-    auto& camera = get_zeytin().get_camera();
+    auto& camera = Zeytin::get().get_camera();
     
     float wheel = GetMouseWheelMove();
     if (wheel != 0) {
@@ -73,13 +73,13 @@ void Camera2DSystem::handle_zooming() {
 }
 
 Vector2 Camera2DSystem::screen_to_world(Vector2 screen_pos) const {
-    auto& camera = get_zeytin().get_camera();
+    auto& camera = Zeytin::get().get_camera();
     
     return GetScreenToWorld2D(screen_pos, camera);
 }
 
 Vector2 Camera2DSystem::world_to_screen(Vector2 world_pos) const {
-    auto& camera = get_zeytin().get_camera();
+    auto& camera = Zeytin::get().get_camera();
     
     return GetWorldToScreen2D(world_pos, camera);
 }

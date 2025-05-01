@@ -13,13 +13,13 @@
 namespace Query {
 
 inline entity_id create_entity() {
-    return get_zeytin().new_entity_id();
+    return Zeytin::get().new_entity_id();
 }
 
 template<typename T>
 bool has(entity_id id) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
-    auto& variants = get_zeytin().get_variants(id);
+    auto& variants = Zeytin::get().get_variants(id);
     
     for (const auto& variant : variants) {
         if (variant.get_type() == rttr::type::get<T>()) {
@@ -54,7 +54,7 @@ bool has(const VariantBase* base) {
 template<typename T>
 T& get(entity_id id) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
-    auto& variants = get_zeytin().get_variants(id);
+    auto& variants = Zeytin::get().get_variants(id);
 
     for (auto& variant : variants) {
         if (variant.get_type() == rttr::type::get<T>()) {
@@ -93,7 +93,6 @@ std::optional<std::reference_wrapper<T>> try_get(const VariantBase* base) {
     return try_get<T>(base->entity_id);
 }
 
-
 template<typename T>
 const T& read(entity_id id) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
@@ -115,13 +114,12 @@ std::tuple<const T1&, const T2&, const Rest&...> read(const VariantBase* base) {
     return read<T1, T2, Rest...>(base->entity_id);
 }
 
-
 template<typename T>
 std::optional<std::reference_wrapper<T>> try_find_first() {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     const rttr::type& type = rttr::type::get<T>();
     
-    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
         for (auto& variant : variants) {
             if (variant.get_type() == type) {
                 return std::ref(variant.get_value<T&>());
@@ -137,7 +135,7 @@ T& find_first() {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     const rttr::type& type = rttr::type::get<T>();
     
-    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
         for (auto& variant : variants) {
             if (variant.get_type() == type) {
                 return variant.get_value<T&>();
@@ -154,7 +152,7 @@ std::vector<std::reference_wrapper<T>> find_all() {
     std::vector<std::reference_wrapper<T>> results;
     const rttr::type& type = rttr::type::get<T>();
     
-    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
         for (auto& variant : variants) {
             if (variant.get_type() == type) {
                 T& component = variant.get_value<T&>();
@@ -171,7 +169,7 @@ std::vector<entity_id> find_all_with() {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     std::vector<entity_id> results;
     
-    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
         if (has<T, Rest...>(entity_id)) {
             results.push_back(entity_id);
         }
@@ -186,7 +184,7 @@ std::vector<std::reference_wrapper<T>> find_where(std::function<bool(T&)> predic
     std::vector<std::reference_wrapper<T>> results;
     const rttr::type& type = rttr::type::get<T>();
     
-    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
         for (auto& variant : variants) {
             if (variant.get_type() == type) {
                 T& component = variant.get_value<T&>();
@@ -229,7 +227,7 @@ size_t count() {
     size_t count = 0;
     const rttr::type& type = rttr::type::get<T>();
     
-    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
         for (auto& variant : variants) {
             if (variant.get_type() == type) {
                 count++;
@@ -246,7 +244,7 @@ void for_each(std::function<void(T&)> action) {
     static_assert(std::is_base_of<VariantBase, T>::value, "T must derive from VariantBase");
     const rttr::type& type = rttr::type::get<T>();
     
-    for (auto& [entity_id, variants] : get_zeytin().get_storage()) {
+    for (auto& [entity_id, variants] : Zeytin::get().get_storage()) {
         for (auto& variant : variants) {
             if (variant.get_type() == type) {
                 T& component = variant.get_value<T&>();
@@ -258,12 +256,12 @@ void for_each(std::function<void(T&)> action) {
 
 template<typename T>
 void remove_variant_from(entity_id id) {
-    get_zeytin().remove_variant(id, rttr::type::get<T>());
+    Zeytin::get().remove_variant(id, rttr::type::get<T>());
 }
 
 template<typename T>
 void remove_variant_from(const VariantBase* base) {
-    get_zeytin().remove_variant(base->entity_id, rttr::type::get<T>());
+    Zeytin::get().remove_variant(base->entity_id, rttr::type::get<T>());
 }
 
 template<typename T, typename... Args>
@@ -278,7 +276,7 @@ std::optional<std::reference_wrapper<T>> add(entity_id id, Args&&... args) {
     variant.entity_id = id;
     variant.on_init();
     
-    auto& variants = get_zeytin().get_variants(id);
+    auto& variants = Zeytin::get().get_variants(id);
     variants.push_back(std::move(variant));
 
     return std::ref(Query::get<T>(id));
@@ -291,7 +289,7 @@ std::optional<std::reference_wrapper<T>> add(VariantBase* base, Args&&... args) 
 
 template<typename T>
 void remove_entity(const T& t) {
-    get_zeytin().remove_entity(t.entity_id);
+    Zeytin::get().remove_entity(t.entity_id);
 }
 
 } 

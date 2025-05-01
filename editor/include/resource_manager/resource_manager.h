@@ -2,20 +2,18 @@
 
 #include <string>
 #include <filesystem>
+#include "utility/singleton.h"
 
 #define ENTITY_FOLDER "entities"
 #define VARIANT_FOLDER  "variants"
 #define ENGINE_SCRIPTS_FOLDER "scripts"
 
-#define get_resource_manager() ResourceManager::get()
+#include "utility/singleton.h"
 
 class ResourceManager final {
-public:
-    static ResourceManager& get() {
-        static ResourceManager instance;
-        return instance;
-    }
+    MAKE_SINGLETON(ResourceManager);
 
+public:
     inline std::filesystem::path get_resources_path() const { return m_resources_path;}
     inline std::filesystem::path get_engine_path() const { return m_engine_path; }
     inline std::filesystem::path get_editor_path() const { return m_editor_path; }
@@ -36,9 +34,7 @@ public:
 
 
 private:
-    ResourceManager() {
-        construct_paths();
-    }
+    ResourceManager();
 
     void construct_paths();
     std::filesystem::path get_search_start_dir() const;

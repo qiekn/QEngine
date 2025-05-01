@@ -1,13 +1,10 @@
 #pragma once
 
-#include <raylib.h>
-#include <string>
-
 class Application {
 public:
     Application();
 
-    void run();
+    void run_frame();
     void shutdown();
     bool should_shutdown();
 

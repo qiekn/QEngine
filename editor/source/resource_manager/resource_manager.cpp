@@ -7,6 +7,10 @@ namespace {
     const char* SHARED_RESOUCES = "shared_resources";
 }
 
+ResourceManager::ResourceManager() {
+    construct_paths();
+}
+
 void ResourceManager::construct_paths() {
     std::filesystem::path current_dir = get_search_start_dir();
 

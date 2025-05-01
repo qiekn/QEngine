@@ -10,7 +10,7 @@
 
 
 void EntityDocument::save_to_file() const {
-    std::filesystem::path path = get_resource_manager().get_entity_path(m_name);
+    std::filesystem::path path = ResourceManager::get().get_entity_path(m_name);
     std::ofstream out_file(path);
 
     if (!out_file.is_open()) {
@@ -47,7 +47,7 @@ std::string EntityDocument::as_string() const {
 }
 
 void EntityDocument::load_from_file() {
-    std::filesystem::path path = get_resource_manager().get_entity_path(m_name);
+    std::filesystem::path path = ResourceManager::get().get_entity_path(m_name);
    
     std::ifstream in_file(path);
    
@@ -122,7 +122,7 @@ void EntityDocument::load_from_file(const std::filesystem::path& path) {
 
 
 void EntityDocument::delete_entity_file() {
-    std::filesystem::path path = get_resource_manager().get_entity_path(m_name);
+    std::filesystem::path path = ResourceManager::get().get_entity_path(m_name);
 
     std::filesystem::remove(path);
 }

@@ -338,7 +338,7 @@ void Hierarchy::handle_entity_context_menu(EntityDocument& entity_document, uint
             }
 
             std::string variant_name = "[" + entity_document.get_name() + "]";
-            std::filesystem::path variant_path = get_resource_manager().get_variant_path(variant_name);
+            std::filesystem::path variant_path = ResourceManager::get().get_variant_path(variant_name);
 
             VariantDocument variant(std::move(entity_as_var), variant_name);
             m_variants.push_back(std::move(variant));
@@ -786,7 +786,7 @@ void Hierarchy::add_variant_to_entity(EntityDocument& entity_document, VariantDo
 }
 
 void Hierarchy::add_required_variants_to_entity(EntityDocument& entity_document, const std::string& variant_type) {
-    std::filesystem::path requires_path = get_resource_manager().get_variants_path() / "requires" / (variant_type + ".requires");
+    std::filesystem::path requires_path = ResourceManager::get().get_variants_path() / "requires" / (variant_type + ".requires");
 
     if (!std::filesystem::exists(requires_path)) {
         log_trace() << "Requires file not found at path: " << requires_path << std::endl;

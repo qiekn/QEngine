@@ -3,10 +3,12 @@
 #include "logger.h"
 #include "imgui.h"
 
-class ConsoleWindow {
-public:    
-    ConsoleWindow();
+#include "utility/singleton.h""
 
+class ConsoleWindow {
+    MAKE_SINGLETON(ConsoleWindow);
+
+public:    
     void render();
 
     void set_show_trace(bool show) { m_show_trace = show; }
@@ -20,12 +22,9 @@ public:
     void set_auto_scroll(bool auto_scroll) { m_auto_scroll = auto_scroll; }
     bool get_auto_scroll() const { return m_auto_scroll; }
 
-    static ConsoleWindow& get() {
-        static ConsoleWindow instance;
-        return instance;
-    }
-
 private:
+    ConsoleWindow() = default;
+
     bool m_show_trace = true;
     bool m_show_info = true;
     bool m_show_warning = true;

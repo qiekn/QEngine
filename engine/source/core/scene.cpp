@@ -15,7 +15,7 @@ bool Scene::load_from_file(const std::filesystem::path& path) {
                             std::istreambuf_iterator<char>());
     scene_file.close();
 
-    if(get_zeytin().deserialize_scene(scene_data)) {
+    if(Zeytin::get().deserialize_scene(scene_data)) {
         log_info() << "Scene loaded successfully: " << path << std::endl;
         return true;
     }
@@ -26,7 +26,7 @@ bool Scene::load_from_file(const std::filesystem::path& path) {
 bool Scene::save_to_file(const std::filesystem::path& path) {
     std::filesystem::create_directories(path.parent_path());
         
-    std::string scene_data = get_zeytin().serialize_scene();
+    std::string scene_data = Zeytin::get().serialize_scene();
     if (scene_data.empty()) {
         log_error() << "Failed to serialize scene" << std::endl;
         return false;

@@ -7,6 +7,8 @@
 #include <vector>
 #include "raylib.h"
 
+#include "utility/singleton.h""
+
 namespace fs = std::filesystem;
 
 enum class AssetType {
@@ -28,18 +30,11 @@ struct AssetItem {
 };
 
 class AssetBrowser {
+    MAKE_SINGLETON(AssetBrowser)
+
 public:
     void render();
     void refresh();
-
-    static AssetBrowser& get() {
-        static AssetBrowser instance;
-        return instance;
-    }
-
-private:
-    AssetBrowser();
-    ~AssetBrowser();
 
     AssetType determine_asset_type(const std::string& extension);
     void render_directory_tree();
@@ -66,4 +61,8 @@ private:
     
     bool m_show_previews = true;
     void load_directory(const fs::path& path);
+private:
+    AssetBrowser();
+    ~AssetBrowser();
+
 };

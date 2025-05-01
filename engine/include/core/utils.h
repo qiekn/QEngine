@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <string>
 
@@ -63,3 +65,5 @@ namespace {
         return path_parts;
     }
 }
+
+

@@ -6,6 +6,7 @@
 #include <vector>
 #include <mutex>
 #include <functional>
+#include "utility/singleton.h"
 
 enum class LogLevel {
     TRACE,  
@@ -40,12 +41,9 @@ private:
 };
 
 class Logger {
+    MAKE_SINGLETON(Logger);
+
 public:
-    static Logger& get() {
-        static Logger instance;
-        return instance;
-    }
-    
     LogStream trace() { return LogStream(*this, LogLevel::TRACE); }   
     LogStream info() { return LogStream(*this, LogLevel::INFO); }
     LogStream warning() { return LogStream(*this, LogLevel::WARNING); }
@@ -86,16 +84,12 @@ public:
     }
 
 private:
-    Logger() : m_min_log_level(LogLevel::TRACE) {}  
-    ~Logger() = default;
-    
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
-    
+    Logger() = default;
+
     std::vector<std::pair<LogLevel, std::string>> m_logs;
     std::vector<std::function<void(LogLevel, const std::string&)>> m_callbacks;
     std::mutex m_mutex;
-    LogLevel m_min_log_level;
+    LogLevel m_min_log_level = LogLevel::TRACE;
 };
 
 #define log_trace() Logger::get().trace() << "[EDITOR] "

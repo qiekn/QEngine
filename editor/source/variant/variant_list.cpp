@@ -7,7 +7,7 @@
 
 #include "resource_manager/resource_manager.h"
 
-VariantList::VariantList() : m_variant_watcher(get_resource_manager().get_variants_path(), std::chrono::milliseconds(500)) {
+VariantList::VariantList() : m_variant_watcher(ResourceManager::get().get_variants_path(), std::chrono::milliseconds(500)) {
     load_variants();
     start_watching();
 }
@@ -15,7 +15,7 @@ VariantList::VariantList() : m_variant_watcher(get_resource_manager().get_varian
 void VariantList::load_variants() {
     m_variants.clear();
 
-    for(const auto& entry : std::filesystem::directory_iterator(get_resource_manager().get_variants_path())) {
+    for(const auto& entry : std::filesystem::directory_iterator(ResourceManager::get().get_variants_path())) {
         if(!entry.is_regular_file() || entry.path().extension() != ".variant") {
             continue;
         }

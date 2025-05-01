@@ -27,9 +27,8 @@
 #include "resource_manager/resource_manager.h"
 
 #include "core/profiling.h"
-#include "image_serializer/image_serializer.h""
 
-void Zeytin::init() {
+Zeytin::Zeytin() {
 #ifdef EDITOR_MODE
     m_editor_communication = std::make_unique<EditorCommunication>();
     subscribe_editor_events();
@@ -43,7 +42,7 @@ void Zeytin::init() {
     generate_variants();
     initial_sync_editor();
 #else
-    load_scene(get_resource_manager().get_resource_subdir("scenes") / "main.scene");
+    load_scene(ResourceManager::get().get_resource_subdir("scenes") / "main.scene");
     m_is_play_mode = true; // always set to play mode true if standalone
 #endif
 
@@ -55,9 +54,6 @@ void Zeytin::init() {
         (get_screen_width() - (VIRTUAL_WIDTH * scale)) * 0.5f,
         (get_screen_height() - (VIRTUAL_HEIGHT * scale)) * 0.5f
     };
-
-    set_exit_key(0);
-    set_target_fps(60);
 
     m_camera.offset = {0,0},
     m_camera.target = {0, 0};
@@ -103,14 +99,9 @@ void Zeytin::run_frame() {
     float scaleY = (float)get_screen_height() / VIRTUAL_HEIGHT;
     float scale = (scaleX < scaleY) ? scaleX : scaleY;
 
-    auto image = LoadImageFromTexture(m_render_texture.texture); // load texture from gpu to cpu
-    auto serialized = image_serializer::serialize(image);
-    Image image_deserialized = image_serializer::deserialize(serialized);
-    Texture texture = LoadTextureFromImage(image_deserialized);
-
     draw_texture_pro(
-        texture,
-        (Rectangle){ 0, 0, (float)texture.width, (float)-texture.height },
+        m_render_texture.texture,
+        (Rectangle){ 0, 0, (float)m_render_texture.texture.width, (float)-m_render_texture.texture.height },
         (Rectangle){ m_render_position.x, m_render_position.y, VIRTUAL_WIDTH * scale, VIRTUAL_HEIGHT * scale },
         (Vector2){ 0, 0 },
         0.0f,
@@ -588,7 +579,7 @@ void Zeytin::sync_editor() {
 
 
 void Zeytin::generate_variants() {
-    for(const auto& entry : get_resource_manager().get_variant_folder()) {
+    for(const auto& entry : ResourceManager::get().get_variant_folder()) {
         if(entry.is_regular_file() && entry.path().extension() == ".variant") {
             std::filesystem::remove(entry.path());
         }

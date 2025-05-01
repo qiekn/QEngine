@@ -1,8 +1,5 @@
 #include "console/console.h"
 
-ConsoleWindow::ConsoleWindow() {
-}
-
 ImVec4 ConsoleWindow::get_log_level_color(LogLevel level) const {
     switch (level) {
         case LogLevel::TRACE:   return ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
