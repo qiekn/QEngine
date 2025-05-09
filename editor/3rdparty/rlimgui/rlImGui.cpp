@@ -1,3 +1,4 @@
+// clang-format off
 /**********************************************************************************************
 *
 *   raylibExtras * Utilities and Shared Components for Raylib
@@ -27,7 +28,7 @@
 *   SOFTWARE.
 *
 **********************************************************************************************/
-#include "rlImGui.h"
+#include "rlimgui.h"
 
 #include "imgui_impl_raylib.h"
 
@@ -65,8 +66,39 @@ bool rlImGuiIsShiftDown() { return IsKeyDown(KEY_RIGHT_SHIFT) || IsKeyDown(KEY_L
 bool rlImGuiIsAltDown() { return IsKeyDown(KEY_RIGHT_ALT) || IsKeyDown(KEY_LEFT_ALT); }
 bool rlImGuiIsSuperDown() { return IsKeyDown(KEY_RIGHT_SUPER) || IsKeyDown(KEY_LEFT_SUPER); }
 
+struct ImGui_ImplRaylib_Data
+{
+    Texture FontTexture;
+};
+
+ImGui_ImplRaylib_Data* ImGui_ImplRaylib_GetBackendData()
+{
+    return ImGui::GetCurrentContext() ? static_cast<ImGui_ImplRaylib_Data*>(ImGui::GetPlatformIO().Renderer_RenderState) : nullptr;
+}
+
+void ImGui_ImplRaylib_CreateBackendData()
+{
+	if (!ImGui::GetCurrentContext() || ImGui::GetPlatformIO().Renderer_RenderState)
+		return;
+
+	ImGui::GetPlatformIO().Renderer_RenderState = MemAlloc(sizeof(ImGui_ImplRaylib_Data));
+}
+
+void ImGui_ImplRaylib_FreeBackendData()
+{
+    if (!ImGui::GetCurrentContext())
+        return;
+
+    MemFree(ImGui::GetPlatformIO().Renderer_RenderState);
+}
+
 void ReloadFonts(void)
 {
+    auto* platData = ImGui_ImplRaylib_GetBackendData();
+    if (!platData)
+        return;
+
+    ImGuiPlatformIO& platIo = ImGui::GetPlatformIO();
     ImGuiIO& io = ImGui::GetIO();
     unsigned char* pixels = nullptr;
 
@@ -76,17 +108,13 @@ void ReloadFonts(void)
     Image image = GenImageColor(width, height, BLANK);
     memcpy(image.data, pixels, width * height * 4);
 
-    Texture2D* fontTexture = (Texture2D*)io.Fonts->TexID;
-    if (fontTexture && fontTexture->id != 0)
+    if (IsTextureValid(platData->FontTexture))
     {
-        UnloadTexture(*fontTexture);
-        MemFree(fontTexture);
+        UnloadTexture(platData->FontTexture);
     }
-
-    fontTexture = (Texture2D*)MemAlloc(sizeof(Texture2D));
-    *fontTexture = LoadTextureFromImage(image);
+    platData->FontTexture = LoadTextureFromImage(image);
     UnloadImage(image);
-    io.Fonts->TexID = (ImTextureID)fontTexture;
+    io.Fonts->TexID = static_cast<ImTextureID>(platData->FontTexture.id);
 }
 
 static const char* GetClipTextCallback(ImGuiContext*)
@@ -102,6 +130,17 @@ static void SetClipTextCallback(ImGuiContext*, const char* text)
 static void ImGuiNewFrame(float deltaTime)
 {
     ImGuiIO& io = ImGui::GetIO();
+	auto* platData = ImGui_ImplRaylib_GetBackendData();
+    if (!platData)
+    {
+        ImGui_ImplRaylib_CreateBackendData();
+        platData = ImGui_ImplRaylib_GetBackendData();
+        if (!platData)
+            return;
+    }
+
+    if (!IsTextureValid(platData->FontTexture))
+        ReloadFonts();
 
     Vector2 resolutionScale = GetWindowScaleDPI();
 
@@ -162,21 +201,18 @@ static void ImGuiNewFrame(float deltaTime)
 
 static void ImGuiTriangleVert(ImDrawVert& idx_vert)
 {
-    Color* c;
-    c = (Color*)&idx_vert.col;
+    Color *c = reinterpret_cast<Color*>(&idx_vert.col);
     rlColor4ub(c->r, c->g, c->b, c->a);
     rlTexCoord2f(idx_vert.uv.x, idx_vert.uv.y);
     rlVertex2f(idx_vert.pos.x, idx_vert.pos.y);
 }
 
-static void ImGuiRenderTriangles(unsigned int count, int indexStart, const ImVector<ImDrawIdx>& indexBuffer, const ImVector<ImDrawVert>& vertBuffer, void* texturePtr)
+static void ImGuiRenderTriangles(unsigned int count, int indexStart, const ImVector<ImDrawIdx>& indexBuffer, const ImVector<ImDrawVert>& vertBuffer, ImTextureID texturePtr)
 {
     if (count < 3)
         return;
 
-    Texture* texture = (Texture*)texturePtr;
-
-    unsigned int textureId = (texture == nullptr) ? 0 : texture->id;
+    unsigned int textureId = static_cast<unsigned int>(texturePtr);
 
     rlBegin(RL_TRIANGLES);
     rlSetTexture(textureId);
@@ -250,11 +286,13 @@ void SetupFontAwesome(void)
     ImGuiIO& io = ImGui::GetIO();
 
     float size = FONT_AWESOME_ICON_SIZE;
+#if !defined(__APPLE__)
     if (!IsWindowState(FLAG_WINDOW_HIGHDPI))
-    {
         size *= GetWindowScaleDPI().y;
-        icons_config.RasterizerMultiply = GetWindowScaleDPI().y;
-    }
+
+
+	icons_config.RasterizerMultiply = GetWindowScaleDPI().y;
+#endif
 
     io.Fonts->AddFontFromMemoryCompressedTTF((void*)fa_solid_900_compressed_data, fa_solid_900_compressed_size, size, &icons_config, icons_ranges);
 #endif
@@ -279,6 +317,8 @@ void SetupBackend(void)
     platformIO.Platform_GetClipboardTextFn = GetClipTextCallback;
 
     platformIO.Platform_ClipboardUserData = nullptr;
+
+    ImGui_ImplRaylib_CreateBackendData();
 }
 
 void rlImGuiEndInitImGui(void)
@@ -290,8 +330,6 @@ void rlImGuiEndInitImGui(void)
     SetupMouseCursors();
 
     SetupBackend();
-
-    ReloadFonts();
 }
 
 static void SetupKeymap(void)
@@ -430,12 +468,12 @@ void rlImGuiBeginInitImGui(void)
 	static constexpr int DefaultFonSize = 13;
 
     defaultConfig.SizePixels = DefaultFonSize;
-
+#if !defined(__APPLE__)
 	if (!IsWindowState(FLAG_WINDOW_HIGHDPI))
-	{
         defaultConfig.SizePixels = ceilf(defaultConfig.SizePixels * GetWindowScaleDPI().y);
-        defaultConfig.RasterizerMultiply = GetWindowScaleDPI().y;
-	}
+
+    defaultConfig.RasterizerMultiply = GetWindowScaleDPI().y;
+#endif
 
     defaultConfig.PixelSnapH = true;
     io.Fonts->AddFontDefault(&defaultConfig);
@@ -502,7 +540,7 @@ void rlImGuiImage(const Texture* image)
     if (GlobalContext)
         ImGui::SetCurrentContext(GlobalContext);
     
-    ImGui::Image((ImTextureID)image, ImVec2(float(image->width), float(image->height)));
+    ImGui::Image(ImTextureID(image->id), ImVec2(float(image->width), float(image->height)));
 }
 
 bool rlImGuiImageButton(const char* name, const Texture* image)
@@ -513,10 +551,10 @@ bool rlImGuiImageButton(const char* name, const Texture* image)
     if (GlobalContext)
         ImGui::SetCurrentContext(GlobalContext);
     
-    return ImGui::ImageButton(name, (ImTextureID)image, ImVec2(float(image->width), float(image->height)));
+    return ImGui::ImageButton(name, ImTextureID(image->id), ImVec2(float(image->width), float(image->height)));
 }
 
-bool rlImGuiImageButtonSize(const char* name, const Texture* image, ImVec2 size)
+bool rlImGuiImageButtonSize(const char* name, const Texture* image, Vector2 size)
 {
     if (!image)
         return false;
@@ -524,7 +562,7 @@ bool rlImGuiImageButtonSize(const char* name, const Texture* image, ImVec2 size)
     if (GlobalContext)
         ImGui::SetCurrentContext(GlobalContext);
    
-    return ImGui::ImageButton(name, (ImTextureID)image, size);
+    return ImGui::ImageButton(name, ImTextureID(image->id), ImVec2(size.x, size.y));
 }
 
 void rlImGuiImageSize(const Texture* image, int width, int height)
@@ -535,7 +573,7 @@ void rlImGuiImageSize(const Texture* image, int width, int height)
     if (GlobalContext)
         ImGui::SetCurrentContext(GlobalContext);
     
-    ImGui::Image((ImTextureID)image, ImVec2(float(width), float(height)));
+    ImGui::Image(ImTextureID(image->id), ImVec2(float(width), float(height)));
 }
 
 void rlImGuiImageSizeV(const Texture* image, Vector2 size)
@@ -546,7 +584,7 @@ void rlImGuiImageSizeV(const Texture* image, Vector2 size)
     if (GlobalContext)
         ImGui::SetCurrentContext(GlobalContext);
     
-    ImGui::Image((ImTextureID)image, ImVec2(size.x, size.y));
+    ImGui::Image(ImTextureID(image->id), ImVec2(size.x, size.y));
 }
 
 void rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Rectangle sourceRect)
@@ -562,27 +600,27 @@ void rlImGuiImageRect(const Texture* image, int destWidth, int destHeight, Recta
 
     if (sourceRect.width < 0)
     {
-        uv0.x = -((float)sourceRect.x / image->width);
-        uv1.x = (uv0.x - (float)(fabs(sourceRect.width) / image->width));
+        uv0.x = -sourceRect.x / image->width;
+        uv1.x = (uv0.x - float(fabs(sourceRect.width) / image->width));
     }
     else
     {
-        uv0.x = (float)sourceRect.x / image->width;
-        uv1.x = uv0.x + (float)(sourceRect.width / image->width);
+        uv0.x = sourceRect.x / image->width;
+        uv1.x = uv0.x + float(sourceRect.width / image->width);
     }
 
     if (sourceRect.height < 0)
     {
-        uv0.y = -((float)sourceRect.y / image->height);
-        uv1.y = (uv0.y - (float)(fabs(sourceRect.height) / image->height));
+        uv0.y = -sourceRect.y / image->height;
+        uv1.y = (uv0.y - fabsf(sourceRect.height) / image->height);
     }
     else
     {
-        uv0.y = (float)sourceRect.y / image->height;
-        uv1.y = uv0.y + (float)(sourceRect.height / image->height);
+        uv0.y = sourceRect.y / image->height;
+        uv1.y = uv0.y + sourceRect.height / image->height;
     }
 
-    ImGui::Image((ImTextureID)image, ImVec2(float(destWidth), float(destHeight)), uv0, uv1);
+    ImGui::Image((ImTextureID)image->id, ImVec2(float(destWidth), float(destHeight)), uv0, uv1);
 }
 
 void rlImGuiImageRenderTexture(const RenderTexture* image)
@@ -649,13 +687,15 @@ void ImGui_ImplRaylib_BuildFontAtlas(void)
 void ImGui_ImplRaylib_Shutdown()
 {
     ImGuiIO& io =ImGui::GetIO();
-    Texture2D* fontTexture = (Texture2D*)io.Fonts->TexID;
 
-    if (fontTexture)
+    auto* plat = ImGui_ImplRaylib_GetBackendData();
+
+    if (plat && IsTextureValid(plat->FontTexture))
     {
-        UnloadTexture(*fontTexture);
-        MemFree(fontTexture);
+        UnloadTexture(plat->FontTexture);
     }
+
+    ImGui_ImplRaylib_FreeBackendData();
 
     io.Fonts->TexID = 0;
 }
@@ -684,7 +724,7 @@ void ImGui_ImplRaylib_RenderDrawData(ImDrawData* draw_data)
                 continue;
             }
 
-            ImGuiRenderTriangles(cmd.ElemCount, cmd.IdxOffset, commandList->IdxBuffer, commandList->VtxBuffer, (Texture2D*)cmd.TextureId);
+            ImGuiRenderTriangles(cmd.ElemCount, cmd.IdxOffset, commandList->IdxBuffer, commandList->VtxBuffer, cmd.TextureId);
             rlDrawRenderBatchActive();
         }
     }
@@ -762,28 +802,41 @@ bool ImGui_ImplRaylib_ProcessEvents(void)
         }
     }
 
-    if (!io.WantSetMousePos)
-    {
-        io.AddMousePosEvent((float)GetMouseX(), (float)GetMouseY());
-    }
+    bool processsMouse = focused;
 
-    auto setMouseEvent = [&io](int rayMouse, int imGuiMouse)
+#if defined(RLIMGUI_ALWAYS_TRACK_MOUSE)
+    processsMouse = true;
+#endif
+
+    if (processsMouse)
+    {
+        if (!io.WantSetMousePos)
         {
-            if (IsMouseButtonPressed(rayMouse))
-                io.AddMouseButtonEvent(imGuiMouse, true);
-            else if (IsMouseButtonReleased(rayMouse))
-                io.AddMouseButtonEvent(imGuiMouse, false);
-        };
+            io.AddMousePosEvent(float(GetMouseX()), float(GetMouseY()));
+        }
 
-    setMouseEvent(MOUSE_BUTTON_LEFT, ImGuiMouseButton_Left);
-    setMouseEvent(MOUSE_BUTTON_RIGHT, ImGuiMouseButton_Right);
-    setMouseEvent(MOUSE_BUTTON_MIDDLE, ImGuiMouseButton_Middle);
-    setMouseEvent(MOUSE_BUTTON_FORWARD, ImGuiMouseButton_Middle + 1);
-    setMouseEvent(MOUSE_BUTTON_BACK, ImGuiMouseButton_Middle + 2);
+        auto setMouseEvent = [&io](int rayMouse, int imGuiMouse)
+            {
+                if (IsMouseButtonPressed(rayMouse))
+                    io.AddMouseButtonEvent(imGuiMouse, true);
+                else if (IsMouseButtonReleased(rayMouse))
+                    io.AddMouseButtonEvent(imGuiMouse, false);
+            };
 
+        setMouseEvent(MOUSE_BUTTON_LEFT, ImGuiMouseButton_Left);
+        setMouseEvent(MOUSE_BUTTON_RIGHT, ImGuiMouseButton_Right);
+        setMouseEvent(MOUSE_BUTTON_MIDDLE, ImGuiMouseButton_Middle);
+        setMouseEvent(MOUSE_BUTTON_FORWARD, ImGuiMouseButton_Middle + 1);
+        setMouseEvent(MOUSE_BUTTON_BACK, ImGuiMouseButton_Middle + 2);
+
+        {
+            Vector2 mouseWheel = GetMouseWheelMoveV();
+            io.AddMouseWheelEvent(mouseWheel.x, mouseWheel.y);
+        }
+    }
+    else
     {
-        Vector2 mouseWheel = GetMouseWheelMoveV();
-        io.AddMouseWheelEvent(mouseWheel.x, mouseWheel.y);
+        io.AddMousePosEvent(std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
     }
 
     if (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad && IsGamepadAvailable(0))
