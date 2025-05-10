@@ -1,7 +1,6 @@
 #pragma once
 
 #include "variant_document.h"
-#include <algorithm>
 #include <vector>
 
 #include "file_watcher/file_w.h"

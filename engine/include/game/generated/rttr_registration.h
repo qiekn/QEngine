@@ -73,24 +73,16 @@ RTTR_REGISTRATION
         .property("format", &Texture2D::format)
         (rttr::metadata("NO_VARIANT", true));
 
-    rttr::registration::class_<Sprite>("Sprite")
+    rttr::registration::class_<Collider>("Collider")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("path_to_sprite", &Sprite::path_to_sprite)(rttr::metadata("SET_CALLBACK", "handle_new_path"))
-
-        .method("handle_new_path", &Sprite::handle_new_path);
-
-    rttr::registration::class_<Paddle>("Paddle")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("width", &Paddle::width)
-        .property("height", &Paddle::height)
-        .property("speed", &Paddle::speed);
-
-    rttr::registration::class_<Speed>("Speed")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("value", &Speed::value);
+        .property("m_collider_type", &Collider::m_collider_type)
+        .property("m_is_trigger", &Collider::m_is_trigger)
+        .property("m_width", &Collider::m_width)
+        .property("m_height", &Collider::m_height)
+        .property("m_radius", &Collider::m_radius)
+        .property("m_static", &Collider::m_static)
+        .property("m_draw_debug", &Collider::m_draw_debug);
 
     rttr::registration::class_<Scale>("Scale")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -98,56 +90,10 @@ RTTR_REGISTRATION
         .property("x", &Scale::x)
         .property("y", &Scale::y);
 
-    rttr::registration::class_<Game>("Game")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
-
-    rttr::registration::class_<Tag>("Tag")
+    rttr::registration::class_<Speed>("Speed")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("value", &Tag::value);
-
-    rttr::registration::class_<Camera2DSystem>("Camera2DSystem")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("zoom", &Camera2DSystem::zoom)
-        .property("enable_drag", &Camera2DSystem::enable_drag)
-        .property("enable_zoom", &Camera2DSystem::enable_zoom)
-        .property("zoom_increment", &Camera2DSystem::zoom_increment)
-        .property("min_zoom", &Camera2DSystem::min_zoom)
-        .property("max_zoom", &Camera2DSystem::max_zoom)
-        .property("drag_speed", &Camera2DSystem::drag_speed)
-        .property("m_target", &Camera2DSystem::m_target);
-
-    rttr::registration::class_<Score>("Score")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("value", &Score::value)
-        .property("point_base", &Score::point_base)
-        .property("font_size", &Score::font_size)
-        .property("x", &Score::x)
-        .property("y", &Score::y);
-
-    rttr::registration::class_<Cube>("Cube")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("width", &Cube::width)
-        .property("height", &Cube::height)
-        .property("color", &Cube::color);
-
-    rttr::registration::class_<Ball>("Ball")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
-
-    rttr::registration::class_<Brick>("Brick")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
-
-    rttr::registration::class_<Velocity>("Velocity")
-        .constructor<>()(rttr::policy::ctor::as_object)
-        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("x", &Velocity::x)
-        .property("y", &Velocity::y);
+        .property("value", &Speed::value);
 
     rttr::registration::class_<BrickManager>("BrickManager")
         .constructor<>()(rttr::policy::ctor::as_object)
@@ -161,21 +107,75 @@ RTTR_REGISTRATION
         .property("start_x", &BrickManager::start_x)
         .property("start_y", &BrickManager::start_y);
 
+    rttr::registration::class_<Tag>("Tag")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("value", &Tag::value);
+
+    rttr::registration::class_<Score>("Score")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("value", &Score::value)
+        .property("point_base", &Score::point_base)
+        .property("font_size", &Score::font_size)
+        .property("x", &Score::x)
+        .property("y", &Score::y);
+
+    rttr::registration::class_<Ball>("Ball")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+
+    rttr::registration::class_<Camera2DSystem>("Camera2DSystem")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("zoom", &Camera2DSystem::zoom)
+        .property("enable_drag", &Camera2DSystem::enable_drag)
+        .property("enable_zoom", &Camera2DSystem::enable_zoom)
+        .property("zoom_increment", &Camera2DSystem::zoom_increment)
+        .property("min_zoom", &Camera2DSystem::min_zoom)
+        .property("max_zoom", &Camera2DSystem::max_zoom)
+        .property("drag_speed", &Camera2DSystem::drag_speed)
+        .property("m_target", &Camera2DSystem::m_target);
+
+    rttr::registration::class_<Cube>("Cube")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("width", &Cube::width)
+        .property("height", &Cube::height)
+        .property("color", &Cube::color);
+
+    rttr::registration::class_<Game>("Game")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+
+    rttr::registration::class_<Sprite>("Sprite")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("path_to_sprite", &Sprite::path_to_sprite)(rttr::metadata("SET_CALLBACK", "handle_new_path"))
+
+        .method("handle_new_path", &Sprite::handle_new_path);
+
+    rttr::registration::class_<Brick>("Brick")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object);
+
+    rttr::registration::class_<Paddle>("Paddle")
+        .constructor<>()(rttr::policy::ctor::as_object)
+        .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
+        .property("width", &Paddle::width)
+        .property("height", &Paddle::height)
+        .property("speed", &Paddle::speed);
+
     rttr::registration::class_<Position>("Position")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
         .property("x", &Position::x)
         .property("y", &Position::y);
 
-    rttr::registration::class_<Collider>("Collider")
+    rttr::registration::class_<Velocity>("Velocity")
         .constructor<>()(rttr::policy::ctor::as_object)
         .constructor<VariantCreateInfo>()(rttr::policy::ctor::as_object)
-        .property("m_collider_type", &Collider::m_collider_type)
-        .property("m_is_trigger", &Collider::m_is_trigger)
-        .property("m_width", &Collider::m_width)
-        .property("m_height", &Collider::m_height)
-        .property("m_radius", &Collider::m_radius)
-        .property("m_static", &Collider::m_static)
-        .property("m_draw_debug", &Collider::m_draw_debug);
+        .property("x", &Velocity::x)
+        .property("y", &Velocity::y);
 
 }

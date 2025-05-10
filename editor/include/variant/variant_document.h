@@ -1,7 +1,6 @@
 #pragma once
 
 #include <document.h>
-#include <filesystem>
 #include <string>
 
 class VariantDocument final {
