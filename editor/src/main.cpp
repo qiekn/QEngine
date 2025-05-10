@@ -1,18 +1,14 @@
-#include "raylib.h"
-#include "rlimgui.h"
-
-#include "entity/entity_list.h"
-#include "variant/variant_list.h"
-
-#include "hierarchy/hierarchy.h"
-#include "hierarchy/theme.h"
-
-#include "engine/engine_communication.h"
-#include "engine/engine_controls.h"
-
 #include "asset_browser/asset_browser.h"
 #include "console/console.h"
+#include "engine/engine_communication.h"
+#include "engine/engine_controls.h"
+#include "entity/entity_list.h"
+#include "hierarchy/hierarchy.h"
+#include "hierarchy/theme.h"
+#include "raylib.h"
+#include "rlimgui.h"
 #include "test_viewer/test_viewer.h"
+#include "variant/variant_list.h"
 #include "window/window_manager.h"
 
 int main(int argc, char *argv[]) {
@@ -20,7 +16,7 @@ int main(int argc, char *argv[]) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT |
                  FLAG_WINDOW_ALWAYS_RUN);
 
-  InitWindow(1280, 720, "Qiekn Engine");
+  InitWindow(1280, 720, "QEngine");
 
   SetTargetFPS(60);
   SetExitKey(0);

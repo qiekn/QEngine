@@ -1,4 +1,4 @@
-project(editor)
+set(EDITOR editor)
 
 #---------------------------------------------------------------------3
 #                               Editor                                |
@@ -11,13 +11,13 @@ file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
-add_executable(${PROJECT_NAME} ${SRCS})
+add_executable(${EDITOR} ${SRCS})
 
 # headers
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${EDITOR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # libraries
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${EDITOR}
     raylib rlimgui
     rapidjson
     cppzmq
@@ -25,7 +25,7 @@ target_link_libraries(${PROJECT_NAME}
 
 # checks if OSX and links appropriate frameworks (only required on macOS)
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME} "-framework IOKit")
-    target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
-    target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
+    target_link_libraries(${EDITOR} "-framework IOKit")
+    target_link_libraries(${EDITOR} "-framework Cocoa")
+    target_link_libraries(${EDITOR} "-framework OpenGL")
 endif()
