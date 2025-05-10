@@ -30,6 +30,4 @@ todo.md
 imgui.ini
 nohup.out
 shared_resources/variants/
-compile_commands.json
-.clang-format
 .cache/
