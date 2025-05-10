@@ -1,11 +1,8 @@
 #include "entity/entity_document.h"
-
 #include <fstream>
-
-#include "prettywriter.h"
-#include "stringbuffer.h"
-
 #include "logger.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
 #include "resource_manager/resource_manager.h"
 
 void EntityDocument::save_to_file() const {
@@ -68,7 +65,6 @@ void EntityDocument::load_from_file() {
 }
 
 void EntityDocument::save_to_file(const std::filesystem::path &path) const {
-
   std::filesystem::create_directories(path.parent_path());
 
   std::ofstream out_file(path);

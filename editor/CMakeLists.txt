@@ -7,11 +7,11 @@ set(EDITOR editor)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # sources
-file(GLOB_RECURSE SRCS CONFIGURE_DEPENDS
+file(GLOB_RECURSE EDITOR_SRCS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
-add_executable(${EDITOR} ${SRCS})
+add_executable(${EDITOR} ${EDITOR_SRCS})
 
 # headers
 target_include_directories(${EDITOR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

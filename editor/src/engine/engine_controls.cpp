@@ -2,14 +2,12 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
-
-#include "document.h"
-#include "imgui.h"
-#include "stringbuffer.h"
-#include "writer.h"
-
 #include "engine/engine_event.h"
+#include "imgui.h"
 #include "logger.h"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 #include "resource_manager/resource_manager.h"
 
 static void write_status_file(const std::string &status,
@@ -17,8 +15,11 @@ static void write_status_file(const std::string &status,
 static void clean_status_file();
 
 EngineControls::EngineControls()
-    : m_is_running(false), m_is_play_mode(false), m_is_paused(false),
-      m_is_engine_starting(false), m_build_status(BuildStatus::None),
+    : m_is_running(false),
+      m_is_play_mode(false),
+      m_is_paused(false),
+      m_is_engine_starting(false),
+      m_build_status(BuildStatus::None),
       m_build_monitor_active(false) {
   EngineEventBus::get().subscribe<bool>(
       EngineEvent::EngineStarted, [this](const bool &success) {
@@ -109,17 +110,17 @@ void EngineControls::render_engine_controls() {
 
   ImGui::SameLine(ImGui::GetWindowWidth() - 120);
   switch (m_build_status) {
-  case BuildStatus::Running:
-    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Building...");
-    break;
-  case BuildStatus::Success:
-    ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Build OK");
-    break;
-  case BuildStatus::Failed:
-    ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Build Failed!");
-    break;
-  default:
-    break;
+    case BuildStatus::Running:
+      ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Building...");
+      break;
+    case BuildStatus::Success:
+      ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Build OK");
+      break;
+    case BuildStatus::Failed:
+      ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Build Failed!");
+      break;
+    default:
+      break;
   }
 }
 
@@ -335,8 +336,8 @@ void EngineControls::monitor_build() {
     if (result != 0) {
       log_error() << "Build command failed with exit code: " << result
                   << std::endl;
-      write_status_file("failed", "Build process failed with code " +
-                                      std::to_string(result));
+      write_status_file(
+          "failed", "Build process failed with code " + std::to_string(result));
 
       try {
         std::filesystem::path log_path = build_status_path / "build_output.log";

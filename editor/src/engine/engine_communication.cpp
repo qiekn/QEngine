@@ -1,17 +1,16 @@
 #include "engine/engine_communication.h"
-
 #include <chrono>
-
-#include "document.h"
-#include "stringbuffer.h"
-#include "writer.h"
-
 #include "engine/engine_event.h"
 #include "logger.h"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 #include "zmq.hpp"
 
 EngineCommunication::EngineCommunication()
-    : m_running(false), m_initialized(false), m_context(1),
+    : m_running(false),
+      m_initialized(false),
+      m_context(1),
       m_publisher(m_context, zmq::socket_type::pub),
       m_subscriber(m_context, zmq::socket_type::sub) {
   initialize();
@@ -55,8 +54,7 @@ void EngineCommunication::register_event_handlers() {
 }
 
 bool EngineCommunication::initialize() {
-  if (m_initialized)
-    return true;
+  if (m_initialized) return true;
 
   try {
     m_publisher.bind("tcp://*:5555");
@@ -166,8 +164,7 @@ void EngineCommunication::raise_events() {
 }
 
 void EngineCommunication::shutdown() {
-  if (!m_initialized)
-    return;
+  if (!m_initialized) return;
 
   m_running = false;
 

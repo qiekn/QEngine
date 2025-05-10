@@ -1,16 +1,13 @@
 #include "hierarchy/hierarchy.h"
-
 #include <algorithm>
 #include <fstream>
 #include <map>
 #include <random>
-
-#include "document.h"
-#include "imgui.h"
-#include "writer.h"
-
 #include "engine/engine_event.h"
+#include "imgui.h"
 #include "logger.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
 #include "resource_manager/resource_manager.h"
 
 namespace {
@@ -25,7 +22,7 @@ void notify_engine_entity_variant_added(uint64_t entity_id,
 void notify_engine_entity_variant_removed(uint64_t entity_id,
                                           const std::string &variant_type);
 void notify_entity_removed(uint64_t entity_id);
-} // namespace
+}  // namespace
 
 Hierarchy::Hierarchy(std::vector<EntityDocument> &entities,
                      std::vector<VariantDocument> &variants)
@@ -272,8 +269,7 @@ void Hierarchy::render_add_variant_menu(EntityDocument &entity_document) {
   int displayed_count = 0;
 
   for (const auto &variant : m_variants) {
-    if (variant.is_dead() || variant.get_name().empty())
-      continue;
+    if (variant.is_dead() || variant.get_name().empty()) continue;
 
     displayed_count++;
     const std::string &variant_name = variant.get_name();
@@ -910,8 +906,7 @@ void Hierarchy::add_required_variants_to_entity(
 
       bool variant_found = false;
       for (auto &variant : m_variants) {
-        if (variant.is_dead())
-          continue;
+        if (variant.is_dead()) continue;
 
         if (variant.get_name() == required_type) {
           log_info() << "Adding required variant " << required_type
@@ -1029,4 +1024,4 @@ void notify_entity_removed(uint64_t entity_id) {
   EngineEventBus::get().publish<const std::string &>(
       EngineEvent::EntityModifiedEditor, buffer.GetString());
 }
-} // namespace
+}  // namespace

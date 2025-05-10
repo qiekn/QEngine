@@ -1,8 +1,8 @@
 #pragma once
 
-#include <document.h>
 #include <filesystem>
 #include <string>
+#include "rapidjson/document.h"
 
 class EntityDocument final {
 public:

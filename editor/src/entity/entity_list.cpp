@@ -1,18 +1,15 @@
 #include "entity/entity_list.h"
-
 #include <filesystem>
-
-#include "document.h"
-#include "writer.h"
-
 #include "engine/engine_event.h"
 #include "logger.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
 #include "resource_manager/resource_manager.h"
 
 namespace {
 constexpr const char *BACKUP_DIR = "temp_backup";
 constexpr const char *ENTITY_EXTENSION = ".entity";
-} // namespace
+}  // namespace
 
 EntityList::EntityList() {
   load_entities(ResourceManager::get().get_entities_path());
@@ -200,8 +197,7 @@ void EntityList::backup_entities() {
   }
 
   for (const auto &entity : m_entities) {
-    if (entity.is_dead())
-      continue;
+    if (entity.is_dead()) continue;
 
     std::string name = entity.get_name();
 

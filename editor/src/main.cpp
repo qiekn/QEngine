@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
   SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT |
                  FLAG_WINDOW_ALWAYS_RUN);
 
-  InitWindow(1280, 720, "QEngine");
+  InitWindow(1600, 900, "QEngine");
 
   SetTargetFPS(60);
   SetExitKey(0);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <document.h>
 #include <string>
+#include "rapidjson/document.h"
 
 class VariantDocument final {
 public:
