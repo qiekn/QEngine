@@ -1,0 +1,3 @@
+#!/bin/bash
+
+make -j10 -C build && ./build/editor/editor
