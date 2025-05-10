@@ -1,15 +1,12 @@
 #pragma once
 
 #include <filesystem>
-#include <optional>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <variant>
 #include "core/macros.h"
 #include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-#include "remote_logger/remote_logger.h"
 
 class ConfigManager {
   MAKE_SINGLETON(ConfigManager);

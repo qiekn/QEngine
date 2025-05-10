@@ -25,9 +25,12 @@ target_link_libraries(${ENGINE} PRIVATE
     rapidjson
 )
 
+
 # checks if OSX and links appropriate frameworks (only required on macOS)
 if (APPLE)
-    target_link_libraries(${ENGINE} "-framework IOKit")
-    target_link_libraries(${ENGINE} "-framework Cocoa")
-    target_link_libraries(${ENGINE} "-framework OpenGL")
+    target_link_libraries(${ENGINE} PRIVATE
+        "-framework IOKit"
+        "-framework Cocoa"
+        "-framework OpenGL"
+    )
 endif()
