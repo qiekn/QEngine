@@ -1,8 +1,8 @@
 #pragma once
 
-#include "utility/singleton.h"
 #include <filesystem>
 #include <string>
+#include "utility/singleton.h"
 
 #define ENTITY_FOLDER "entities"
 #define VARIANT_FOLDER "variants"
@@ -34,10 +34,10 @@ public:
   std::filesystem::directory_iterator get_entity_folder() const;
   std::filesystem::directory_iterator get_variant_folder() const;
 
-  std::filesystem::path
-  get_resource_subdir(const std::filesystem::path &subdir) const;
-  std::filesystem::path
-  get_engine_subdir(const std::filesystem::path &subdir) const;
+  std::filesystem::path get_resource_subdir(
+      const std::filesystem::path &subdir) const;
+  std::filesystem::path get_engine_subdir(
+      const std::filesystem::path &subdir) const;
 
   std::filesystem::path get_variant_path(const std::string &name) const;
   std::filesystem::path get_entity_path(const std::string &name) const;

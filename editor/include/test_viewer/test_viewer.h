@@ -35,8 +35,7 @@ struct TestRun {
   Status status = Status::TODO;
 
   bool is_executed() const {
-    if (status != Status::TODO)
-      return true;
+    if (status != Status::TODO) return true;
     for (const auto &step : steps) {
       if (step.status == Status::TODO || step.status == Status::NONE)
         return false;

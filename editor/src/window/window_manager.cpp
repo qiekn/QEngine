@@ -1,10 +1,9 @@
 #include "window/window_manager.h"
+#include <filesystem>
+#include <unordered_map>
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "logger.h"
-#include <filesystem>
-#include <unordered_map>
-
 #include "resource_manager/resource_manager.h"
 
 WindowManager::WindowManager() : m_main_dockspace_id(0), m_first_layout(true) {}
@@ -37,8 +36,7 @@ void WindowManager::render() {
   render_main_menu_bar();
 
   for (auto &window : m_windows) {
-    if (!window.is_open)
-      continue;
+    if (!window.is_open) continue;
 
     if (ImGui::Begin(window.menu_info.name.c_str(), &window.is_open,
                      window.flags)) {

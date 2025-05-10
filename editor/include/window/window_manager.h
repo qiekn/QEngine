@@ -1,9 +1,9 @@
 #pragma once
 
-#include "imgui.h"
 #include <functional>
 #include <string>
 #include <vector>
+#include "imgui.h"
 
 struct MenuInfo {
   std::string name;

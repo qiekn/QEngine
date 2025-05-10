@@ -1,9 +1,8 @@
 #pragma once
 
-#include "variant_document.h"
 #include <vector>
-
 #include "file_watcher/file_w.h"
+#include "variant_document.h"
 
 class VariantList final {
 public:

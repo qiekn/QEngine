@@ -5,7 +5,6 @@
 #include <string>
 
 class EntityDocument final {
-
 public:
   inline EntityDocument(std::string name) : m_name(name) {}
   inline EntityDocument(rapidjson::Document document, std::string name)

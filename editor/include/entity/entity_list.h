@@ -1,9 +1,8 @@
 #pragma once
 
-#include "entity_document.h"
-
 #include <filesystem>
 #include <vector>
+#include "entity_document.h"
 
 class EntityList final {
 public:

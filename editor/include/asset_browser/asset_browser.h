@@ -1,12 +1,11 @@
 #pragma once
 
-#include "raylib.h"
 #include <filesystem>
 #include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
+#include "raylib.h"
 #include "utility/singleton.h"
 
 namespace fs = std::filesystem;

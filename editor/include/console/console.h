@@ -2,7 +2,6 @@
 
 #include "imgui.h"
 #include "logger.h"
-
 #include "utility/singleton.h"
 
 class ConsoleWindow {

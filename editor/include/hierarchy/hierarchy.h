@@ -1,9 +1,9 @@
 #pragma once
 
-#include "entity/entity_document.h"
-#include "variant/variant_document.h"
 #include <map>
 #include <vector>
+#include "entity/entity_document.h"
+#include "variant/variant_document.h"
 
 class Hierarchy final {
 public:

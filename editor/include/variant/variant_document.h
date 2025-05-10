@@ -4,7 +4,6 @@
 #include <string>
 
 class VariantDocument final {
-
 public:
   inline VariantDocument(std::string name) : m_name(name) {}
   inline VariantDocument(rapidjson::Document document, std::string name)

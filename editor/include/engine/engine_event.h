@@ -27,7 +27,8 @@ public:
     return instance;
   }
 
-  template <typename T> void publish(EngineEvent event, const T &data) {
+  template <typename T>
+  void publish(EngineEvent event, const T &data) {
     std::shared_lock<std::shared_mutex> lock(m_mutex);
 
     auto it = m_subscribers.find(event);
@@ -59,14 +60,14 @@ public:
     if (it != m_subscribers.end()) {
       auto &callbacks = it->second;
       callbacks.erase(
-          std::remove_if(callbacks.begin(), callbacks.end(),
-                         [callback_ptr](const std::any &item) {
-                           auto func =
-                               std::any_cast<std::function<void(const T &)>>(
-                                   &item);
-                           return func && func->target_type() ==
-                                              callback_ptr->target_type();
-                         }),
+          std::remove_if(
+              callbacks.begin(), callbacks.end(),
+              [callback_ptr](const std::any &item) {
+                auto func =
+                    std::any_cast<std::function<void(const T &)>>(&item);
+                return func &&
+                       func->target_type() == callback_ptr->target_type();
+              }),
           callbacks.end());
     }
   }

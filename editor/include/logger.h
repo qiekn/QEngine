@@ -1,12 +1,12 @@
 #pragma once
 
-#include "utility/singleton.h"
 #include <functional>
 #include <iostream>
 #include <mutex>
 #include <sstream>
 #include <string>
 #include <vector>
+#include "utility/singleton.h"
 
 enum class LogLevel { TRACE, INFO, WARNING, ERROR };
 
@@ -17,7 +17,8 @@ public:
   LogStream(Logger &logger, LogLevel level);
   ~LogStream();
 
-  template <typename T> LogStream &operator<<(const T &value) {
+  template <typename T>
+  LogStream &operator<<(const T &value) {
     m_stream << value;
     return *this;
   }
@@ -45,8 +46,8 @@ public:
 
   void log(LogLevel level, const std::string &message);
 
-  const std::vector<std::pair<LogLevel, std::string>> &
-  get_log_messages() const {
+  const std::vector<std::pair<LogLevel, std::string>> &get_log_messages()
+      const {
     return m_logs;
   }
 
@@ -67,16 +68,16 @@ public:
 
   static std::string level_to_string(LogLevel level) {
     switch (level) {
-    case LogLevel::TRACE:
-      return "[TRACE]";
-    case LogLevel::INFO:
-      return "[INFO]";
-    case LogLevel::WARNING:
-      return "[WARNING]";
-    case LogLevel::ERROR:
-      return "[ERROR]";
-    default:
-      return "[UNKNOWN]";
+      case LogLevel::TRACE:
+        return "[TRACE]";
+      case LogLevel::INFO:
+        return "[INFO]";
+      case LogLevel::WARNING:
+        return "[WARNING]";
+      case LogLevel::ERROR:
+        return "[ERROR]";
+      default:
+        return "[UNKNOWN]";
     }
   }
 
