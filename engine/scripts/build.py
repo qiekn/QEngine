@@ -16,7 +16,7 @@ def main():
 
     script_path = os.path.abspath(__file__)
     script_dir = os.path.dirname(script_path)
-    
+
     if os.path.basename(script_dir) == "scripts":
         engine_dir = os.path.dirname(script_dir)
     else:
@@ -28,10 +28,10 @@ def main():
             print("Error: Cannot determine engine directory structure.")
             print(f"This script should be run from the engine directory or the scripts subdirectory.")
             return 1
-    
+
     os.chdir(script_dir)
     print(f"Changed directory to: {script_dir}")
-    
+
     print("Running parser...")
     parser_result = subprocess.run(["python3", "parser2.py"], check=False)
     if parser_result.returncode != 0:
