@@ -1,6 +1,7 @@
 #include "core/zeytin.h"
 #include <algorithm>
 #include <cassert>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -11,6 +12,7 @@
 #include "core/json/to_json.h"
 #include "core/profiling.h"
 #include "core/raylib_wrapper.h"
+#include "core/utils.h"
 #include "editor/editor_event.h"
 #include "game/generated/rttr_registration.h"  // required for registering types
 #include "rapidjson/document.h"

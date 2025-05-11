@@ -1,11 +1,11 @@
 #include "application/application.h"
 
 int main() {
-    Application app{};
+  Application app{};
 
-    while(!app.should_shutdown()) {
-        app.run_frame();
-    }
+  while (!app.should_shutdown()) {
+    app.run_frame();
+  }
 
-    app.shutdown();
+  app.shutdown();
 }

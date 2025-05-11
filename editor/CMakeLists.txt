@@ -4,8 +4,6 @@ set(EDITOR editor)
 #                               Editor                                |
 #---------------------------------------------------------------------3
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 # sources
 file(GLOB_RECURSE EDITOR_SRCS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"

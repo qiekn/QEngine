@@ -1,8 +1,10 @@
 #include "application/application.h"
+#include "config_manager/config_manager.h"
 #include "core/macros.h"
 #include "core/raylib_wrapper.h"
 #include "core/zeytin.h"
 #include "raylib.h"
+#include "remote_logger/remote_logger.h"
 
 Application::Application() {
   init_window();

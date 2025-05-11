@@ -1,12 +1,15 @@
 #pragma once
 
-#include <rttr/type.h>
 #include <filesystem>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 #include "core/macros.h"
 #include "core/raylib_wrapper.h"
+#include "editor/editor_communication.h"
 #include "entity/entity.h"
+#include "rapidjson/document.h"
+#include "rttr/variant.h"
 
 constexpr float VIRTUAL_WIDTH = 1920;
 constexpr float VIRTUAL_HEIGHT = 1080;

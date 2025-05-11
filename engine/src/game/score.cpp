@@ -1,29 +1,23 @@
 #include "game/score.h"
+#include <xlocale/_stdio.h>
+#include "core/query.h"
 #include "core/raylib_wrapper.h"
 #include "game/game.h"
-#include "core/query.h"
 
 void Score::on_play_start() {
-    auto& game = Query::find_first<Game>();
-    game.register_on_brick_destoryed([this](const auto& brick){
-        on_break_destroyed(brick);
-    });
+  auto& game = Query::find_first<Game>();
+  game.register_on_brick_destoryed(
+      [this](const auto& brick) { on_break_destroyed(brick); });
 
-    game.register_on_game_start([this](){
-        reset();
-    });
+  game.register_on_game_start([this]() { reset(); });
 }
 
-void Score::add_points(int points) {
-    value += points;
-}
+void Score::add_points(int points) { value += points; }
 
-void Score::reset() {
-    value = 0;
-}
+void Score::reset() { value = 0; }
 
 void Score::on_update() {
-    char score_text[32];
-    sprintf(score_text, "SCORE: %d", (int)value);
-    draw_text(score_text, x, y, font_size, PURPLE);
+  char score_text[32];
+  printf(score_text, "SCORE: %d", (int)value);
+  draw_text(score_text, x, y, font_size, PURPLE);
 }

@@ -1,39 +1,45 @@
 #pragma once
 
-#include "variant/variant_base.h"
 #include "game/position.h"
+#include "variant/variant_base.h"
 
 class Collider : public VariantBase {
-    VARIANT(Collider)
+  VARIANT(Collider)
 
 public:
-    int m_collider_type = 0; PROPERTY() // 0=None, 1=Rectangle, 2=Circle
-    bool m_is_trigger = false; PROPERTY()  
-    
-    float m_width = 0.0f; PROPERTY()
-    float m_height = 0.0f; PROPERTY()
-    float m_radius = 0.0f; PROPERTY()
+  int m_collider_type = 0;
+  PROPERTY()  // 0=None, 1=Rectangle, 2=Circle
+  bool m_is_trigger = false;
+  PROPERTY()
 
-    bool m_static = false; PROPERTY()
-    bool m_draw_debug = false; PROPERTY()
-    
-    void on_update() override;
-    void on_play_update() override;
-    bool intersects(const Collider& other) const;
+  float m_width = 0.0f;
+  PROPERTY()
+  float m_height = 0.0f;
+  PROPERTY()
+  float m_radius = 0.0f;
+  PROPERTY()
 
-    Rectangle get_rectangle() const;
-    Vector2 get_circle_center() const;
-    inline float get_radius() const { return m_radius; }
+  bool m_static = false;
+  PROPERTY()
+  bool m_draw_debug = false;
+  PROPERTY()
 
-    std::function<void(Collider& other)> m_callback;
+  void on_update() override;
+  void on_play_update() override;
+  bool intersects(const Collider& other) const;
 
-    inline void set_enable(bool value) { m_enable = value; }
-    inline bool is_enable() { return m_enable; }
+  Rectangle get_rectangle() const;
+  Vector2 get_circle_center() const;
+  inline float get_radius() const { return m_radius; }
+
+  std::function<void(Collider& other)> m_callback;
+
+  inline void set_enable(bool value) { m_enable = value; }
+  inline bool is_enable() { return m_enable; }
 
 private:
-    void debug_draw();
-    void check_collisions();
+  void debug_draw();
+  void check_collisions();
 
-    bool m_enable = true;
+  bool m_enable = true;
 };
-

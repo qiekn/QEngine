@@ -3,12 +3,13 @@
 #include "variant/variant_base.h"
 
 class Position : public VariantBase {
-    VARIANT(Position)
+  VARIANT(Position)
 
 public:
-    Position(float x, float y) : x(x), y(y) {}
+  Position(float x, float y) : x(x), y(y) {}
 
-    float x = 0; PROPERTY() 
-    float y = 0; PROPERTY();
+  float x = 0;
+  PROPERTY()
+  float y = 0;
+  PROPERTY();
 };
-

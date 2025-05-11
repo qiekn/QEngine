@@ -2,13 +2,13 @@
 
 class Application {
 public:
-    Application();
+  Application();
 
-    void run_frame();
-    void shutdown();
-    bool should_shutdown();
+  void run_frame();
+  void shutdown();
+  bool should_shutdown();
 
 private:
-    void init_window();
-    void init_engine();
+  void init_window();
+  void init_engine();
 };

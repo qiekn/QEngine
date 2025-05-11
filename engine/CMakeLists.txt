@@ -4,8 +4,6 @@ set(ENGINE engine)
 #                               Engine                                |
 #---------------------------------------------------------------------3
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 # sources
 file(GLOB_RECURSE ENGINE_SRCS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"

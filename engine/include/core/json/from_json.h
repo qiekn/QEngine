@@ -1,7 +1,5 @@
 #pragma once
 
-#include <rttr/argument.h>
-#include <rttr/type.h>
 #include <vector>
 #include "entity/entity.h"
 #include "rttr/variant.h"

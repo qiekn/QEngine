@@ -1,5 +1,3 @@
-#ifdef EDITOR_MODE
-
 #include <algorithm>
 #include <any>
 #include <functional>
@@ -7,6 +5,8 @@
 #include <mutex>
 #include <shared_mutex>
 #include <vector>
+
+#ifdef EDITOR_MODE
 
 enum class EditorEvent {
   EngineStartConfirmed,
